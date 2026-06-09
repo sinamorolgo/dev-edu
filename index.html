@@ -51,8 +51,7 @@
       min-height: 64px;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      gap: 16px;
+      justify-content: flex-start;
       padding: 10px 0;
     }
 
@@ -73,77 +72,17 @@
       background: var(--dark);
     }
 
-    .pill {
-      padding: 6px 10px;
-      border: 1px solid rgba(23, 33, 31, 0.12);
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.72);
-      color: var(--muted);
-      font-size: 13px;
-      font-weight: 800;
-    }
-
-    .hero {
-      padding: 46px 0 24px;
-    }
-
-    h1,
     h2,
     h3,
     p {
       margin-top: 0;
     }
 
-    h1 {
-      max-width: 760px;
-      margin-bottom: 16px;
-      font-size: 54px;
-      line-height: 1.04;
-      letter-spacing: 0;
-    }
-
-    .lead {
-      max-width: 720px;
-      margin-bottom: 22px;
-      color: var(--muted);
-      font-size: 19px;
-      word-break: keep-all;
-    }
-
-    .route {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 10px;
-      max-width: 780px;
-      margin-bottom: 28px;
-    }
-
-    .route div {
-      min-height: 78px;
-      padding: 12px;
-      border: 1px solid rgba(23, 33, 31, 0.12);
-      border-radius: 8px;
-      background: rgba(255, 255, 255, 0.76);
-    }
-
-    .route strong {
-      display: block;
-      margin-bottom: 4px;
-    }
-
-    .route p {
-      margin-bottom: 0;
-      color: var(--muted);
-      font-size: 14px;
-      line-height: 1.42;
-      word-break: keep-all;
-    }
-
     .cards {
       display: grid;
       grid-template-columns: 1fr;
       gap: 12px;
-      padding: 10px 0 34px;
+      padding: 18px 0 28px;
     }
 
     .card {
@@ -254,60 +193,15 @@
       font-weight: 900;
     }
 
-    .note {
-      padding: 18px;
-      border: 1px solid rgba(23, 33, 31, 0.12);
-      border-radius: 8px;
-      background: #fff;
-      color: var(--muted);
-      box-shadow: 0 12px 34px rgba(23, 33, 31, 0.08);
-      word-break: keep-all;
-    }
-
-    .note strong {
-      color: var(--ink);
-    }
-
-    footer {
-      padding: 28px 0 42px;
-      color: var(--muted);
-      text-align: center;
-      font-size: 14px;
-    }
-
     @media (max-width: 760px) {
       .shell {
         width: min(100% - 22px, 1060px);
       }
 
-      .top {
-        align-items: flex-start;
-        flex-direction: column;
-      }
-
-      .hero {
-        padding: 26px 0 14px;
-      }
-
-      h1 {
-        font-size: 36px;
-        line-height: 1.08;
-      }
-
-      .lead {
-        font-size: 16px;
-      }
-
-      .route,
       .cards {
         grid-template-columns: 1fr;
       }
 
-      .route {
-        gap: 8px;
-      }
-
-      .route div,
       .card {
         min-height: 0;
       }
@@ -348,30 +242,9 @@
       </span>
       <span>개발 이해 가이드</span>
     </div>
-    <span class="pill">GitHub Pages / Vercel 배포 가능</span>
   </header>
 
   <main class="shell">
-    <section class="hero">
-      <h1>비개발자도 개발 흐름을 눈으로 이해할 수 있게.</h1>
-      <p class="lead">친구나 팀원에게 링크 하나만 보내면 됩니다. Git 브랜치와 PR 실무 흐름을 모바일에서도 읽기 편하게 정리했습니다.</p>
-
-      <div class="route" aria-label="추천 학습 순서">
-        <div>
-          <strong>1. Git 실무</strong>
-          <p>branch, commit, push, PR의 위치 차이를 익힙니다.</p>
-        </div>
-        <div>
-          <strong>2. 직접 실습</strong>
-          <p>순서대로 눌러보며 잘못된 흐름도 확인합니다.</p>
-        </div>
-        <div>
-          <strong>3. 대화 전이</strong>
-          <p>개발자에게 요청할 문장으로 연결합니다.</p>
-        </div>
-      </div>
-    </section>
-
     <section class="cards" aria-label="교육 페이지 목록">
       <a class="card" href="./git-branch-pr-guide.html" style="--badge-bg:var(--soft-green);--badge-fg:var(--green);--thumb-bg:var(--soft-green);--accent:var(--green)">
         <div class="card-top">
@@ -390,14 +263,6 @@
         <span class="cta">열어보기 <svg class="icon" viewBox="0 0 24 24"><path d="M7 17 17 7"></path><path d="M7 7h10v10"></path></svg></span>
       </a>
     </section>
-
-    <section class="note">
-      <strong>공유 방식:</strong> 이 폴더를 GitHub에 올리고 GitHub Pages를 켜면 루트 주소가 이 홈 화면으로 열립니다. 예: <code>https://계정명.github.io/저장소명/</code>
-    </section>
   </main>
-
-  <footer>
-    <div class="shell">정적 파일만으로 동작하므로 GitHub Pages, Vercel, Netlify 어디에 올려도 됩니다.</div>
-  </footer>
 </body>
 </html>
