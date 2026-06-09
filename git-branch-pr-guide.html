@@ -71,12 +71,8 @@
     }
 
     .topbar {
-      position: sticky;
-      top: 0;
-      z-index: 30;
       border-bottom: 1px solid rgba(22, 33, 31, 0.1);
       background: rgba(251, 250, 246, 0.9);
-      backdrop-filter: blur(16px);
     }
 
     .topbar-inner {
@@ -102,29 +98,6 @@
       border-radius: 8px;
       color: white;
       background: var(--dark);
-    }
-
-    .nav {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-    }
-
-    .nav a {
-      padding: 8px 10px;
-      border-radius: 8px;
-      color: var(--muted);
-      font-size: 14px;
-      font-weight: 800;
-      text-decoration: none;
-      white-space: nowrap;
-    }
-
-    .nav a:hover,
-    .nav a:focus-visible {
-      color: var(--ink);
-      background: rgba(22, 33, 31, 0.07);
-      outline: none;
     }
 
     .icon {
@@ -1251,12 +1224,6 @@
         padding: 10px 0;
       }
 
-      .nav {
-        width: 100%;
-        overflow-x: auto;
-        padding-bottom: 2px;
-      }
-
       h1 {
         font-size: 34px;
         line-height: 1.08;
@@ -1477,13 +1444,6 @@
         </span>
         <span>Git 브랜치와 PR</span>
       </div>
-      <nav class="nav" aria-label="페이지 이동">
-        <a href="#map">큰 그림</a>
-        <a href="#difference">차이점</a>
-        <a href="#practice">실습</a>
-        <a href="#pr">PR 작성</a>
-        <a href="#quiz">확인</a>
-      </nav>
     </div>
   </header>
 
