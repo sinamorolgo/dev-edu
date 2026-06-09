@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Git 브랜치와 PR 설명</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f8fb;
+      --panel: #ffffff;
+      --text: #20242c;
+      --muted: #5e6775;
+      --line: #d7dce5;
+      --branch: #1d7f62;
+      --pr: #3f6edb;
+      --main: #303642;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    main {
+      width: min(920px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 48px 0;
+    }
+
+    h1 {
+      margin: 0 0 12px;
+      font-size: 34px;
+    }
+
+    h2 {
+      margin: 0 0 12px;
+      font-size: 22px;
+    }
+
+    p {
+      margin: 0 0 14px;
+    }
+
+    .lead {
+      color: var(--muted);
+      font-size: 18px;
+      margin-bottom: 28px;
+    }
+
+    .section {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 24px;
+      margin-top: 18px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .label {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      color: #ffffff;
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .branch {
+      background: var(--branch);
+    }
+
+    .pr {
+      background: var(--pr);
+    }
+
+    .flow {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .step {
+      border-left: 4px solid var(--line);
+      background: #fbfcfe;
+      padding: 12px 14px;
+    }
+
+    .step strong {
+      color: var(--main);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 14px;
+      overflow: hidden;
+    }
+
+    th,
+    td {
+      border: 1px solid var(--line);
+      padding: 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #eef2f7;
+    }
+
+    code {
+      background: #eef2f7;
+      border-radius: 4px;
+      padding: 2px 6px;
+    }
+
+    @media (max-width: 700px) {
+      main {
+        padding: 32px 0;
+      }
+
+      h1 {
+        font-size: 28px;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Git에서 브랜치와 PR의 역할</h1>
+    <p class="lead">
+      브랜치는 작업 공간이고, PR은 그 작업을 원본 코드에 합치기 전에 검토받는 요청입니다.
+    </p>
+
+    <section class="section grid" aria-label="브랜치와 PR 핵심 설명">
+      <article>
+        <span class="label branch">Branch</span>
+        <h2>브랜치</h2>
+        <p>
+          브랜치는 새로운 기능이나 수정 작업을 따로 진행하는 독립된 작업 흐름입니다.
+          예를 들어 <code>main</code> 브랜치를 건드리지 않고
+          <code>feature/login</code> 브랜치에서 로그인 기능을 만들 수 있습니다.
+        </p>
+      </article>
+
+      <article>
+        <span class="label pr">Pull Request</span>
+        <h2>PR</h2>
+        <p>
+          PR은 내가 만든 브랜치의 변경사항을 <code>main</code> 같은 기준 브랜치에
+          합쳐도 되는지 리뷰를 요청하는 공간입니다. 코드 리뷰, 테스트 결과, 수정 대화가
+          보통 여기에서 이루어집니다.
+        </p>
+      </article>
+    </section>
+
+    <section class="section">
+      <h2>일반적인 작업 흐름</h2>
+      <div class="flow">
+        <div class="step"><strong>1.</strong> <code>main</code> 브랜치에서 새 브랜치를 만듭니다.</div>
+        <div class="step"><strong>2.</strong> 새 브랜치에서 코드를 수정합니다.</div>
+        <div class="step"><strong>3.</strong> 수정 내용을 commit합니다.</div>
+        <div class="step"><strong>4.</strong> 원격 저장소에 push합니다.</div>
+        <div class="step"><strong>5.</strong> PR을 만들어 리뷰를 요청합니다.</div>
+        <div class="step"><strong>6.</strong> 문제가 없으면 <code>main</code> 브랜치에 merge합니다.</div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>한눈에 비교</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>개념</th>
+            <th>역할</th>
+            <th>HTML로 비유하면</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>브랜치</td>
+            <td>변경사항을 따로 실험하고 작업하는 공간</td>
+            <td>원본 HTML을 복사해서 별도 파일에서 수정하는 것</td>
+          </tr>
+          <tr>
+            <td>PR</td>
+            <td>브랜치의 변경사항을 합치기 전에 검토받는 요청</td>
+            <td>수정한 HTML을 원본에 반영해도 되는지 확인받는 것</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+</body>
+</html>
