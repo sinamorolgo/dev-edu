@@ -1,0 +1,1803 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>비개발자를 위한 개발 한 장 설명서</title>
+  <style>
+    :root {
+      --ink: #172124;
+      --muted: #5d686b;
+      --paper: #fbfaf5;
+      --line: #d9ded6;
+      --panel: #ffffff;
+      --blue: #2563eb;
+      --mint: #2f9e75;
+      --amber: #d88916;
+      --coral: #de5b4f;
+      --violet: #7357d6;
+      --charcoal: #233034;
+      --soft-blue: #e8f0ff;
+      --soft-mint: #e8f7ee;
+      --soft-amber: #fff2d9;
+      --soft-coral: #ffe9e6;
+      --shadow: 0 20px 60px rgba(28, 39, 43, 0.14);
+      --radius: 8px;
+      color-scheme: light;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        linear-gradient(180deg, rgba(37, 99, 235, 0.07), rgba(251, 250, 245, 0) 320px),
+        var(--paper);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.65;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    .shell {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      border-bottom: 1px solid rgba(23, 33, 36, 0.1);
+      background: rgba(251, 250, 245, 0.88);
+      backdrop-filter: blur(16px);
+    }
+
+    .topbar-inner {
+      min-height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      color: white;
+      background: var(--charcoal);
+      box-shadow: inset 0 -8px 0 rgba(255, 255, 255, 0.08);
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .nav a {
+      padding: 8px 10px;
+      border-radius: 8px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .nav a:hover,
+    .nav a:focus-visible {
+      color: var(--ink);
+      background: rgba(23, 33, 36, 0.07);
+      outline: none;
+    }
+
+    main {
+      overflow: hidden;
+    }
+
+    .hero {
+      padding: 24px 0 14px;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 0.9fr) minmax(360px, 1.1fr);
+      gap: 28px;
+      align-items: stretch;
+    }
+
+    .hero-copy {
+      min-height: 520px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 20px 0 28px;
+    }
+
+    .eyebrow {
+      width: fit-content;
+      margin: 0 0 18px;
+      padding: 6px 10px;
+      border: 1px solid rgba(35, 48, 52, 0.16);
+      border-radius: 999px;
+      color: var(--charcoal);
+      background: rgba(255, 255, 255, 0.7);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin-top: 0;
+    }
+
+    h1 {
+      margin-bottom: 18px;
+      max-width: 780px;
+      font-size: 56px;
+      line-height: 1.04;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      margin-bottom: 12px;
+      font-size: 38px;
+      line-height: 1.12;
+      letter-spacing: 0;
+    }
+
+    h3 {
+      margin-bottom: 8px;
+      font-size: 19px;
+      line-height: 1.25;
+      letter-spacing: 0;
+    }
+
+    .lead {
+      max-width: 620px;
+      margin-bottom: 24px;
+      color: var(--muted);
+      font-size: 20px;
+      word-break: keep-all;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .btn {
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border: 1px solid rgba(23, 33, 36, 0.14);
+      border-radius: 8px;
+      color: var(--ink);
+      background: white;
+      font-weight: 800;
+      text-decoration: none;
+      box-shadow: 0 10px 30px rgba(28, 39, 43, 0.08);
+    }
+
+    .btn.primary {
+      color: white;
+      border-color: var(--charcoal);
+      background: var(--charcoal);
+    }
+
+    .btn:hover,
+    .btn:focus-visible {
+      transform: translateY(-1px);
+      outline: 3px solid rgba(37, 99, 235, 0.18);
+      outline-offset: 2px;
+    }
+
+    .icon {
+      width: 18px;
+      height: 18px;
+      flex: 0 0 18px;
+      stroke: currentColor;
+      stroke-width: 2.1;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+    }
+
+    .stage {
+      min-height: 520px;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      overflow: hidden;
+      border: 1px solid rgba(23, 33, 36, 0.12);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    .stage-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(23, 33, 36, 0.1);
+      background: #f5f7f2;
+    }
+
+    .stage-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      font-weight: 900;
+    }
+
+    .stage-title span {
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .traffic {
+      display: flex;
+      gap: 6px;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 99px;
+    }
+
+    .dot:nth-child(1) {
+      background: var(--coral);
+    }
+
+    .dot:nth-child(2) {
+      background: var(--amber);
+    }
+
+    .dot:nth-child(3) {
+      background: var(--mint);
+    }
+
+    .stage-body {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      min-height: 0;
+    }
+
+    .pipeline {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+      align-content: center;
+      padding: 12px;
+      border-bottom: 1px solid rgba(23, 33, 36, 0.1);
+      background: #fbfcf8;
+    }
+
+    .pipe-step {
+      width: 100%;
+      min-height: 54px;
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      align-items: center;
+      gap: 8px;
+      padding: 8px;
+      border: 1px solid rgba(23, 33, 36, 0.12);
+      border-radius: 8px;
+      color: var(--muted);
+      background: white;
+      text-align: left;
+      transition: border-color 160ms ease, background 160ms ease, color 160ms ease;
+    }
+
+    .pipe-step strong {
+      display: block;
+      color: inherit;
+      font-size: 14px;
+      line-height: 1.15;
+    }
+
+    .pipe-step small {
+      display: block;
+      color: inherit;
+      font-size: 12px;
+      line-height: 1.2;
+    }
+
+    .step-icon {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      color: white;
+      background: var(--charcoal);
+    }
+
+    .pipe-step[data-color="blue"] .step-icon {
+      background: var(--blue);
+    }
+
+    .pipe-step[data-color="mint"] .step-icon {
+      background: var(--mint);
+    }
+
+    .pipe-step[data-color="amber"] .step-icon {
+      background: var(--amber);
+    }
+
+    .pipe-step[data-color="coral"] .step-icon {
+      background: var(--coral);
+    }
+
+    .pipe-step[data-color="violet"] .step-icon {
+      background: var(--violet);
+    }
+
+    .pipe-step.is-active {
+      color: var(--ink);
+      border-color: rgba(37, 99, 235, 0.45);
+      background: var(--soft-blue);
+    }
+
+    .explain-panel {
+      min-height: 0;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      padding: 20px;
+      gap: 18px;
+    }
+
+    .concept-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+    }
+
+    .concept-kicker {
+      margin-bottom: 5px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .concept-title {
+      margin-bottom: 8px;
+      font-size: 28px;
+      line-height: 1.1;
+      letter-spacing: 0;
+    }
+
+    .concept-text {
+      max-width: 520px;
+      margin-bottom: 0;
+      color: var(--muted);
+      word-break: keep-all;
+    }
+
+    .mini-visual {
+      width: min(190px, 32%);
+      min-width: 150px;
+      aspect-ratio: 1.2;
+      border: 1px solid rgba(23, 33, 36, 0.1);
+      border-radius: 8px;
+      background: #f7f8f4;
+    }
+
+    .concept-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+      gap: 16px;
+      min-height: 0;
+    }
+
+    .plain-box {
+      border: 1px solid rgba(23, 33, 36, 0.12);
+      border-radius: 8px;
+      background: #fff;
+      overflow: hidden;
+    }
+
+    .plain-box-header {
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(23, 33, 36, 0.1);
+      background: #f7f8f4;
+      font-weight: 900;
+    }
+
+    .plain-list {
+      margin: 0;
+      padding: 14px 18px 16px 30px;
+      color: var(--muted);
+    }
+
+    .plain-list li + li {
+      margin-top: 8px;
+    }
+
+    .example-strip {
+      display: grid;
+      gap: 10px;
+      padding: 14px;
+    }
+
+    .example-item {
+      display: grid;
+      grid-template-columns: 30px 1fr;
+      gap: 10px;
+      align-items: start;
+      padding: 10px;
+      border-radius: 8px;
+      background: #f8faf7;
+    }
+
+    .example-badge {
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      color: white;
+      background: var(--charcoal);
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .section {
+      padding: 58px 0;
+    }
+
+    .section.light {
+      background: #fff;
+      border-top: 1px solid rgba(23, 33, 36, 0.08);
+      border-bottom: 1px solid rgba(23, 33, 36, 0.08);
+    }
+
+    .section-head {
+      max-width: 760px;
+      margin-bottom: 24px;
+    }
+
+    .section-head p {
+      margin-bottom: 0;
+      color: var(--muted);
+      font-size: 18px;
+      word-break: keep-all;
+    }
+
+    .builder {
+      display: grid;
+      grid-template-columns: 320px minmax(0, 1fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .toolbox,
+    .preview-wrap,
+    .code-wrap,
+    .quiz-wrap {
+      border: 1px solid rgba(23, 33, 36, 0.12);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: 0 16px 40px rgba(28, 39, 43, 0.08);
+    }
+
+    .toolbox {
+      position: sticky;
+      top: 84px;
+      padding: 16px;
+    }
+
+    .field {
+      display: grid;
+      gap: 7px;
+      margin-bottom: 14px;
+    }
+
+    label {
+      color: var(--charcoal);
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid rgba(23, 33, 36, 0.18);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--ink);
+    }
+
+    input,
+    select {
+      min-height: 42px;
+      padding: 8px 10px;
+    }
+
+    textarea {
+      min-height: 92px;
+      padding: 10px;
+      resize: vertical;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: 3px solid rgba(37, 99, 235, 0.2);
+      border-color: var(--blue);
+    }
+
+    .swatches {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+
+    .swatch {
+      min-height: 38px;
+      border: 2px solid transparent;
+      border-radius: 8px;
+      background: var(--swatch);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+    }
+
+    .swatch.is-selected {
+      border-color: var(--ink);
+      outline: 3px solid rgba(23, 33, 36, 0.12);
+    }
+
+    .story {
+      display: grid;
+      grid-template-rows: auto auto;
+      gap: 18px;
+    }
+
+    .preview-wrap {
+      overflow: hidden;
+    }
+
+    .preview-browser {
+      border-bottom: 1px solid rgba(23, 33, 36, 0.1);
+      background: #f5f7f2;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .preview-url {
+      min-width: 0;
+      flex: 1;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #fff;
+      color: var(--muted);
+      font-size: 13px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .preview-page {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(210px, 0.56fr);
+      gap: 16px;
+      min-height: 330px;
+      padding: 22px;
+      background:
+        linear-gradient(135deg, rgba(255,255,255,0.92), rgba(255,255,255,0.7)),
+        var(--demo-soft, var(--soft-blue));
+    }
+
+    .demo-main {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-width: 0;
+    }
+
+    .demo-tag {
+      width: fit-content;
+      margin-bottom: 12px;
+      padding: 5px 9px;
+      border-radius: 999px;
+      color: var(--demo, var(--blue));
+      background: rgba(255, 255, 255, 0.72);
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .demo-title {
+      margin-bottom: 10px;
+      font-size: 34px;
+      line-height: 1.08;
+      letter-spacing: 0;
+      word-break: keep-all;
+    }
+
+    .demo-copy {
+      max-width: 520px;
+      margin-bottom: 18px;
+      color: var(--muted);
+      word-break: keep-all;
+    }
+
+    .demo-action {
+      width: fit-content;
+      min-height: 46px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      color: #fff;
+      background: var(--demo, var(--blue));
+      font-weight: 900;
+      box-shadow: 0 16px 34px rgba(23, 33, 36, 0.18);
+    }
+
+    .demo-visual {
+      display: grid;
+      align-content: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .phone {
+      width: min(230px, 100%);
+      margin-left: auto;
+      border: 10px solid #1e2b30;
+      border-radius: 22px;
+      background: #fff;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(28, 39, 43, 0.18);
+    }
+
+    .phone-screen {
+      min-height: 230px;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 12px;
+      padding: 14px;
+      background: #f8faf7;
+    }
+
+    .phone-bar {
+      height: 10px;
+      width: 42%;
+      border-radius: 999px;
+      background: rgba(23, 33, 36, 0.14);
+    }
+
+    .phone-lines {
+      display: grid;
+      gap: 8px;
+      align-content: center;
+    }
+
+    .phone-line {
+      height: 12px;
+      border-radius: 999px;
+      background: rgba(23, 33, 36, 0.11);
+    }
+
+    .phone-line:nth-child(2) {
+      width: 80%;
+    }
+
+    .phone-line:nth-child(3) {
+      width: 64%;
+    }
+
+    .phone-pill {
+      min-height: 38px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      color: #fff;
+      background: var(--demo, var(--blue));
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .code-wrap {
+      overflow: hidden;
+    }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 10px;
+      border-bottom: 1px solid rgba(23, 33, 36, 0.1);
+      background: #f7f8f4;
+    }
+
+    .tab {
+      min-height: 36px;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 10px;
+      border-radius: 8px;
+      color: var(--muted);
+      background: transparent;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .tab.is-selected {
+      color: var(--ink);
+      background: white;
+      box-shadow: inset 0 0 0 1px rgba(23, 33, 36, 0.12);
+    }
+
+    .code-area {
+      margin: 0;
+      min-height: 238px;
+      overflow: auto;
+      padding: 16px;
+      color: #e8f1f2;
+      background: #172124;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      font-size: 13px;
+      line-height: 1.65;
+      white-space: pre-wrap;
+    }
+
+    .code-line {
+      display: block;
+      min-height: 21px;
+      padding: 0 7px;
+      border-radius: 6px;
+    }
+
+    .code-line.mark {
+      color: #fff;
+      background: rgba(216, 137, 22, 0.32);
+    }
+
+    .legend {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .legend-item {
+      min-height: 110px;
+      padding: 14px;
+      border: 1px solid rgba(23, 33, 36, 0.12);
+      border-radius: 8px;
+      background: white;
+    }
+
+    .legend-item strong {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-size: 15px;
+    }
+
+    .legend-item p {
+      margin-bottom: 0;
+      color: var(--muted);
+      font-size: 14px;
+      word-break: keep-all;
+    }
+
+    .mini-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 99px;
+      background: var(--item-color);
+    }
+
+    .translator {
+      display: grid;
+      grid-template-columns: 300px minmax(0, 1fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .terms {
+      display: grid;
+      gap: 9px;
+    }
+
+    .term-btn {
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      border: 1px solid rgba(23, 33, 36, 0.12);
+      border-radius: 8px;
+      color: var(--ink);
+      background: white;
+      font-weight: 900;
+      text-align: left;
+    }
+
+    .term-btn.is-selected {
+      color: white;
+      border-color: var(--charcoal);
+      background: var(--charcoal);
+    }
+
+    .term-panel {
+      min-height: 360px;
+      padding: 24px;
+      border: 1px solid rgba(23, 33, 36, 0.12);
+      border-radius: 8px;
+      background: white;
+      box-shadow: 0 16px 40px rgba(28, 39, 43, 0.08);
+    }
+
+    .term-panel .label {
+      margin-bottom: 7px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .term-panel h3 {
+      font-size: 30px;
+    }
+
+    .term-panel p {
+      color: var(--muted);
+      word-break: keep-all;
+    }
+
+    .compare {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .compare-box {
+      padding: 14px;
+      border-radius: 8px;
+      background: #f7f8f4;
+    }
+
+    .compare-box strong {
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .recipe {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .recipe-lane {
+      border: 1px solid rgba(23, 33, 36, 0.12);
+      border-radius: 8px;
+      background: white;
+      overflow: hidden;
+    }
+
+    .recipe-title {
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(23, 33, 36, 0.1);
+      background: #f7f8f4;
+      font-weight: 900;
+    }
+
+    .recipe-steps {
+      display: grid;
+      gap: 0;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .recipe-steps li {
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      gap: 12px;
+      padding: 16px;
+      border-bottom: 1px solid rgba(23, 33, 36, 0.08);
+    }
+
+    .recipe-steps li:last-child {
+      border-bottom: 0;
+    }
+
+    .num {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      color: white;
+      background: var(--charcoal);
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .recipe-steps p {
+      margin-bottom: 0;
+      color: var(--muted);
+      word-break: keep-all;
+    }
+
+    .quiz-wrap {
+      overflow: hidden;
+    }
+
+    .quiz-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(23, 33, 36, 0.1);
+      background: #f7f8f4;
+    }
+
+    .score {
+      min-width: 72px;
+      padding: 5px 9px;
+      border-radius: 999px;
+      color: white;
+      background: var(--mint);
+      text-align: center;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .quiz-body {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      padding: 18px;
+    }
+
+    .quiz-card {
+      padding: 16px;
+      border: 1px solid rgba(23, 33, 36, 0.12);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .choices {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .choice {
+      min-height: 42px;
+      padding: 9px 10px;
+      border: 1px solid rgba(23, 33, 36, 0.14);
+      border-radius: 8px;
+      color: var(--ink);
+      background: #f8faf7;
+      text-align: left;
+      font-weight: 800;
+    }
+
+    .choice.is-correct {
+      color: #0d533a;
+      border-color: rgba(47, 158, 117, 0.45);
+      background: var(--soft-mint);
+    }
+
+    .choice.is-wrong {
+      color: #8f2f27;
+      border-color: rgba(222, 91, 79, 0.42);
+      background: var(--soft-coral);
+    }
+
+    .answer {
+      min-height: 78px;
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 8px;
+      color: var(--muted);
+      background: #f7f8f4;
+      word-break: keep-all;
+    }
+
+    .footer {
+      padding: 30px 0 42px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    @media (max-width: 980px) {
+      .hero-grid,
+      .builder,
+      .translator,
+      .recipe,
+      .quiz-body {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-copy,
+      .stage {
+        min-height: auto;
+      }
+
+      .toolbox {
+        position: static;
+      }
+
+      .legend {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 720px) {
+      .shell {
+        width: min(100% - 22px, 1180px);
+      }
+
+      .topbar-inner {
+        align-items: flex-start;
+        flex-direction: column;
+        padding: 10px 0;
+      }
+
+      .nav {
+        width: 100%;
+        overflow-x: auto;
+        padding-bottom: 2px;
+      }
+
+      .nav a {
+        white-space: nowrap;
+      }
+
+      h1 {
+        font-size: 38px;
+      }
+
+      h2 {
+        font-size: 30px;
+      }
+
+      .stage-body,
+      .concept-grid,
+      .preview-page,
+      .compare {
+        grid-template-columns: 1fr;
+      }
+
+      .pipeline {
+        grid-template-columns: repeat(5, minmax(104px, 1fr));
+        overflow-x: auto;
+        align-content: stretch;
+        border-right: 0;
+        border-bottom: 1px solid rgba(23, 33, 36, 0.1);
+      }
+
+      .pipe-step {
+        grid-template-columns: 1fr;
+        min-width: 104px;
+      }
+
+      .concept-head {
+        display: block;
+      }
+
+      .mini-visual {
+        width: 100%;
+        margin-top: 14px;
+      }
+
+      .phone {
+        margin-left: 0;
+      }
+
+      .legend {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="shell topbar-inner">
+      <div class="brand" aria-label="비개발자를 위한 개발 한 장 설명서">
+        <span class="brand-mark" aria-hidden="true">
+          <svg class="icon" viewBox="0 0 24 24"><path d="m8 9-4 3 4 3"></path><path d="m16 9 4 3-4 3"></path><path d="m14 5-4 14"></path></svg>
+        </span>
+        <span>개발 한 장 설명서</span>
+      </div>
+      <nav class="nav" aria-label="페이지 이동">
+        <a href="#map">지도</a>
+        <a href="#builder">만져보기</a>
+        <a href="#words">용어</a>
+        <a href="#talk">대화법</a>
+        <a href="#quiz">확인</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" id="map">
+      <div class="shell hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow">비개발자에게 보내는 15분짜리 개발 입문</p>
+          <h1>개발은 화면, 동작, 기억을 약속으로 연결하는 일입니다.</h1>
+          <p class="lead">개발 용어를 외우게 하지 말고, 눈앞의 서비스가 어떤 부품으로 움직이는지 먼저 보여주세요. 아래 지도에서 한 칸씩 눌러보면 전체 흐름이 잡힙니다.</p>
+          <div class="hero-actions">
+            <a class="btn primary" href="#builder">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M5 12h14"></path><path d="m13 6 6 6-6 6"></path></svg>
+              직접 만져보기
+            </a>
+            <a class="btn" href="#talk">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path></svg>
+              개발자와 대화하기
+            </a>
+          </div>
+        </div>
+
+        <div class="stage" aria-label="개발 구성요소 지도">
+          <div class="stage-top">
+            <div class="stage-title">
+              <span class="traffic" aria-hidden="true"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>
+              <span>서비스가 만들어지는 순서</span>
+            </div>
+            <span class="preview-url">idea → screen → action → data → release</span>
+          </div>
+          <div class="stage-body">
+            <div class="pipeline" role="tablist" aria-label="개발 구성요소">
+              <button class="pipe-step is-active" type="button" role="tab" aria-selected="true" data-step="idea" data-color="blue">
+                <span class="step-icon"><svg class="icon" viewBox="0 0 24 24"><path d="M12 2v4"></path><path d="M12 18v4"></path><path d="m4.93 4.93 2.83 2.83"></path><path d="m16.24 16.24 2.83 2.83"></path><path d="M2 12h4"></path><path d="M18 12h4"></path><path d="m4.93 19.07 2.83-2.83"></path><path d="m16.24 7.76 2.83-2.83"></path></svg></span>
+                <span><strong>문제</strong><small>무엇을 해결?</small></span>
+              </button>
+              <button class="pipe-step" type="button" role="tab" aria-selected="false" data-step="screen" data-color="mint">
+                <span class="step-icon"><svg class="icon" viewBox="0 0 24 24"><path d="M3 5h18v14H3z"></path><path d="M7 9h4"></path><path d="M7 13h8"></path></svg></span>
+                <span><strong>화면</strong><small>HTML</small></span>
+              </button>
+              <button class="pipe-step" type="button" role="tab" aria-selected="false" data-step="style" data-color="amber">
+                <span class="step-icon"><svg class="icon" viewBox="0 0 24 24"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5L12 2 8 9.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"></path></svg></span>
+                <span><strong>모양</strong><small>CSS</small></span>
+              </button>
+              <button class="pipe-step" type="button" role="tab" aria-selected="false" data-step="action" data-color="coral">
+                <span class="step-icon"><svg class="icon" viewBox="0 0 24 24"><path d="M15 15h.01"></path><path d="M9 9h.01"></path><path d="M15 9h.01"></path><path d="M9 15h.01"></path><path d="M5 5h14v14H5z"></path></svg></span>
+                <span><strong>동작</strong><small>JS</small></span>
+              </button>
+              <button class="pipe-step" type="button" role="tab" aria-selected="false" data-step="data" data-color="violet">
+                <span class="step-icon"><svg class="icon" viewBox="0 0 24 24"><path d="M4 6c0-2 16-2 16 0v12c0 2-16 2-16 0z"></path><path d="M4 10c0 2 16 2 16 0"></path><path d="M4 14c0 2 16 2 16 0"></path></svg></span>
+                <span><strong>기억</strong><small>API/DB</small></span>
+              </button>
+            </div>
+
+            <div class="explain-panel" role="tabpanel" aria-live="polite">
+              <div class="concept-head">
+                <div>
+                  <div class="concept-kicker" id="conceptKicker">STEP 1</div>
+                  <h2 class="concept-title" id="conceptTitle">먼저 “무슨 문제를 푸는지” 정합니다.</h2>
+                  <p class="concept-text" id="conceptText">개발은 코드를 쓰기 전에 시작됩니다. 사용자가 어떤 상황에서 무엇을 더 쉽게 해야 하는지 한 문장으로 정하면, 이후의 화면과 기능이 흔들리지 않습니다.</p>
+                </div>
+                <svg class="mini-visual" id="conceptVisual" viewBox="0 0 220 180" role="img" aria-label="개발 단계 그림">
+                  <rect x="20" y="28" width="160" height="108" rx="8" fill="#e8f0ff" stroke="#2563eb"></rect>
+                  <path d="M52 84h78" stroke="#2563eb" stroke-width="10" stroke-linecap="round"></path>
+                  <circle cx="158" cy="84" r="20" fill="#2563eb"></circle>
+                  <path d="m151 84 6 6 12-16" stroke="#fff" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+              </div>
+              <div class="concept-grid">
+                <div class="plain-box">
+                  <div class="plain-box-header">비개발자가 이해하면 좋은 것</div>
+                  <ul class="plain-list" id="conceptBullets">
+                    <li>기능은 “있으면 좋은 것”보다 “누가 언제 왜 쓰는지”가 먼저입니다.</li>
+                    <li>좋은 요구사항은 사용자의 행동과 완료 조건이 보입니다.</li>
+                    <li>애매한 문장은 개발 중간에 비용으로 돌아옵니다.</li>
+                  </ul>
+                </div>
+                <div class="plain-box">
+                  <div class="plain-box-header">예시로 바꾸면</div>
+                  <div class="example-strip" id="conceptExamples">
+                    <div class="example-item"><span class="example-badge">전</span><span>“예약 기능을 만들어 주세요.”</span></div>
+                    <div class="example-item"><span class="example-badge">후</span><span>“고객이 날짜와 시간을 고르면, 가능한 자리만 보여주고 예약 완료 문자를 받게 해주세요.”</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section light" id="builder">
+      <div class="shell">
+        <div class="section-head">
+          <h2>버튼 하나를 바꾸면, 코드의 어느 부분이 바뀌는지 보입니다.</h2>
+          <p>왼쪽 값을 바꾸면 오른쪽 서비스 화면과 코드가 함께 바뀝니다. 비개발자에게는 이 연결감이 첫 번째 이해의 문입니다.</p>
+        </div>
+
+        <div class="builder">
+          <aside class="toolbox" aria-label="미니 서비스 설정">
+            <div class="field">
+              <label for="serviceName">서비스 이름</label>
+              <input id="serviceName" type="text" value="오늘의 도시락" maxlength="24">
+            </div>
+            <div class="field">
+              <label for="serviceMessage">사용자에게 보여줄 문장</label>
+              <textarea id="serviceMessage" maxlength="120">회의 전에 메뉴 고민 없이 3분 만에 도시락을 고를 수 있게 도와줍니다.</textarea>
+            </div>
+            <div class="field">
+              <label for="buttonText">버튼 문구</label>
+              <input id="buttonText" type="text" value="메뉴 추천받기" maxlength="20">
+            </div>
+            <div class="field">
+              <label for="dataKind">저장해야 하는 데이터</label>
+              <select id="dataKind">
+                <option value="주문 내역">주문 내역</option>
+                <option value="예약 시간">예약 시간</option>
+                <option value="문의 내용">문의 내용</option>
+                <option value="학습 진도">학습 진도</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>대표 색상</label>
+              <div class="swatches" role="radiogroup" aria-label="대표 색상">
+                <button class="swatch is-selected" type="button" title="파랑" aria-label="파랑" aria-checked="true" role="radio" data-color="#2563eb" data-soft="#e8f0ff" style="--swatch:#2563eb"></button>
+                <button class="swatch" type="button" title="초록" aria-label="초록" aria-checked="false" role="radio" data-color="#2f9e75" data-soft="#e8f7ee" style="--swatch:#2f9e75"></button>
+                <button class="swatch" type="button" title="노랑" aria-label="노랑" aria-checked="false" role="radio" data-color="#d88916" data-soft="#fff2d9" style="--swatch:#d88916"></button>
+                <button class="swatch" type="button" title="빨강" aria-label="빨강" aria-checked="false" role="radio" data-color="#de5b4f" data-soft="#ffe9e6" style="--swatch:#de5b4f"></button>
+                <button class="swatch" type="button" title="보라" aria-label="보라" aria-checked="false" role="radio" data-color="#7357d6" data-soft="#eee9ff" style="--swatch:#7357d6"></button>
+              </div>
+            </div>
+          </aside>
+
+          <div class="story">
+            <div class="preview-wrap" aria-label="미니 서비스 미리보기">
+              <div class="preview-browser">
+                <span class="traffic" aria-hidden="true"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>
+                <span class="preview-url">https://example.com/my-service</span>
+              </div>
+              <div class="preview-page" id="previewPage">
+                <div class="demo-main">
+                  <span class="demo-tag">사용자 화면</span>
+                  <h2 class="demo-title" id="demoTitle">오늘의 도시락</h2>
+                  <p class="demo-copy" id="demoCopy">회의 전에 메뉴 고민 없이 3분 만에 도시락을 고를 수 있게 도와줍니다.</p>
+                  <button class="demo-action" type="button" id="demoButton">
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M5 12h14"></path><path d="m13 6 6 6-6 6"></path></svg>
+                    <span>메뉴 추천받기</span>
+                  </button>
+                </div>
+                <div class="demo-visual" aria-hidden="true">
+                  <div class="phone">
+                    <div class="phone-screen">
+                      <div class="phone-bar"></div>
+                      <div class="phone-lines">
+                        <div class="phone-line"></div>
+                        <div class="phone-line"></div>
+                        <div class="phone-line"></div>
+                      </div>
+                      <div class="phone-pill" id="phonePill">메뉴 추천받기</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="code-wrap">
+              <div class="tabs" role="tablist" aria-label="코드 종류">
+                <button class="tab is-selected" type="button" data-code="html" role="tab" aria-selected="true">
+                  <svg class="icon" viewBox="0 0 24 24"><path d="m8 9-4 3 4 3"></path><path d="m16 9 4 3-4 3"></path></svg>
+                  HTML
+                </button>
+                <button class="tab" type="button" data-code="css" role="tab" aria-selected="false">
+                  <svg class="icon" viewBox="0 0 24 24"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5L12 2 8 9.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"></path></svg>
+                  CSS
+                </button>
+                <button class="tab" type="button" data-code="js" role="tab" aria-selected="false">
+                  <svg class="icon" viewBox="0 0 24 24"><path d="M15 15h.01"></path><path d="M9 9h.01"></path><path d="M15 9h.01"></path><path d="M9 15h.01"></path></svg>
+                  JS
+                </button>
+                <button class="tab" type="button" data-code="data" role="tab" aria-selected="false">
+                  <svg class="icon" viewBox="0 0 24 24"><path d="M4 6c0-2 16-2 16 0v12c0 2-16 2-16 0z"></path><path d="M4 10c0 2 16 2 16 0"></path></svg>
+                  API/DB
+                </button>
+              </div>
+              <pre class="code-area" aria-live="polite"><code id="codeBlock"></code></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="shell">
+        <div class="section-head">
+          <h2>다섯 단어만 알면 큰 그림이 보입니다.</h2>
+          <p>처음에는 모든 기술명을 외울 필요가 없습니다. 비개발자에게는 각 부품이 맡는 역할을 구분하는 것이 훨씬 중요합니다.</p>
+        </div>
+        <div class="legend" aria-label="개발 기본 구성요소">
+          <div class="legend-item" style="--item-color:#2563eb"><strong><span class="mini-dot"></span>HTML</strong><p>페이지에 어떤 내용이 놓이는지 정하는 뼈대입니다.</p></div>
+          <div class="legend-item" style="--item-color:#d88916"><strong><span class="mini-dot"></span>CSS</strong><p>색, 간격, 크기처럼 보기 좋고 읽기 좋게 만드는 규칙입니다.</p></div>
+          <div class="legend-item" style="--item-color:#de5b4f"><strong><span class="mini-dot"></span>JavaScript</strong><p>버튼 클릭, 입력 확인, 화면 변경처럼 움직임을 담당합니다.</p></div>
+          <div class="legend-item" style="--item-color:#7357d6"><strong><span class="mini-dot"></span>API</strong><p>프론트와 서버가 정보를 주고받는 약속된 통로입니다.</p></div>
+          <div class="legend-item" style="--item-color:#2f9e75"><strong><span class="mini-dot"></span>DB</strong><p>회원, 주문, 예약처럼 사라지면 안 되는 정보를 저장합니다.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section light" id="words">
+      <div class="shell">
+        <div class="section-head">
+          <h2>개발 용어를 일상어로 번역합니다.</h2>
+          <p>용어를 무서워하지 않게 만드는 가장 빠른 방법은 “그래서 내 서비스에서는 무슨 뜻인가요?”로 바꾸는 것입니다.</p>
+        </div>
+        <div class="translator">
+          <div class="terms" role="tablist" aria-label="용어 선택">
+            <button class="term-btn is-selected" type="button" data-term="frontend" role="tab" aria-selected="true">프론트엔드 <span>→</span></button>
+            <button class="term-btn" type="button" data-term="backend" role="tab" aria-selected="false">백엔드 <span>→</span></button>
+            <button class="term-btn" type="button" data-term="deploy" role="tab" aria-selected="false">배포 <span>→</span></button>
+            <button class="term-btn" type="button" data-term="bug" role="tab" aria-selected="false">버그 <span>→</span></button>
+            <button class="term-btn" type="button" data-term="refactor" role="tab" aria-selected="false">리팩토링 <span>→</span></button>
+          </div>
+          <div class="term-panel" role="tabpanel" aria-live="polite">
+            <div class="label" id="termLabel">용어 번역</div>
+            <h3 id="termTitle">프론트엔드</h3>
+            <p id="termExplain">사용자가 직접 보는 화면과 상호작용입니다. 버튼이 어디에 있고, 문구가 무엇이고, 클릭하면 화면이 어떻게 반응하는지가 여기에 속합니다.</p>
+            <div class="compare">
+              <div class="compare-box">
+                <strong>일상어</strong>
+                <p id="termSimple">가게의 매장, 메뉴판, 주문대</p>
+              </div>
+              <div class="compare-box">
+                <strong>확인 질문</strong>
+                <p id="termQuestion">사용자가 어느 화면에서 무엇을 눌러야 하나요?</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="talk">
+      <div class="shell">
+        <div class="section-head">
+          <h2>개발자에게는 “기능명”보다 “상황, 행동, 결과”가 잘 전달됩니다.</h2>
+          <p>비개발자가 개발을 이해하면, 요구사항도 훨씬 선명해집니다. 아래 문장 구조를 그대로 쓰면 회의 시간이 줄어듭니다.</p>
+        </div>
+        <div class="recipe">
+          <div class="recipe-lane">
+            <div class="recipe-title">좋은 요청의 4칸</div>
+            <ol class="recipe-steps">
+              <li><span class="num">1</span><div><strong>사용자</strong><p>누가 쓰나요? 고객, 관리자, 파트너, 내부 운영자처럼 역할을 정합니다.</p></div></li>
+              <li><span class="num">2</span><div><strong>상황</strong><p>언제 필요하나요? 결제 전, 로그인 후, 예약 변경 중처럼 맥락을 붙입니다.</p></div></li>
+              <li><span class="num">3</span><div><strong>행동</strong><p>무엇을 해야 하나요? 선택한다, 입력한다, 확인한다, 취소한다처럼 동사로 말합니다.</p></div></li>
+              <li><span class="num">4</span><div><strong>결과</strong><p>끝나면 무엇이 보여야 하나요? 저장, 알림, 다음 화면, 실패 메시지까지 적습니다.</p></div></li>
+            </ol>
+          </div>
+          <div class="recipe-lane">
+            <div class="recipe-title">바로 쓰는 문장</div>
+            <ol class="recipe-steps">
+              <li><span class="num">A</span><div><strong>기본형</strong><p>“사용자가 [상황]에서 [행동]하면 [결과]가 되게 해주세요.”</p></div></li>
+              <li><span class="num">B</span><div><strong>예외형</strong><p>“만약 [조건]이면 [실패 메시지]를 보여주고, 다시 시도할 수 있어야 합니다.”</p></div></li>
+              <li><span class="num">C</span><div><strong>데이터형</strong><p>“완료되면 [저장할 정보]가 남아야 하고, [누가] 다시 볼 수 있어야 합니다.”</p></div></li>
+              <li><span class="num">D</span><div><strong>우선순위형</strong><p>“이번에는 [핵심 행동]까지가 필수이고, [보조 기능]은 다음 단계로 미룹니다.”</p></div></li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section light" id="quiz">
+      <div class="shell">
+        <div class="section-head">
+          <h2>마지막으로 헷갈리는 부분만 확인합니다.</h2>
+          <p>정답을 맞히는 것보다, 어떤 부품이 어떤 책임을 갖는지 구분하는 감각이 중요합니다.</p>
+        </div>
+        <div class="quiz-wrap">
+          <div class="quiz-top">
+            <strong>미니 확인</strong>
+            <span class="score" id="score">0 / 3</span>
+          </div>
+          <div class="quiz-body" id="quizBody"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="shell">이 HTML은 파일 하나로 공유할 수 있습니다. 인터넷 연결 없이도 브라우저에서 열립니다.</div>
+  </footer>
+
+  <script>
+    const steps = {
+      idea: {
+        kicker: "STEP 1",
+        title: "먼저 “무슨 문제를 푸는지” 정합니다.",
+        text: "개발은 코드를 쓰기 전에 시작됩니다. 사용자가 어떤 상황에서 무엇을 더 쉽게 해야 하는지 한 문장으로 정하면, 이후의 화면과 기능이 흔들리지 않습니다.",
+        bullets: [
+          "기능은 “있으면 좋은 것”보다 “누가 언제 왜 쓰는지”가 먼저입니다.",
+          "좋은 요구사항은 사용자의 행동과 완료 조건이 보입니다.",
+          "애매한 문장은 개발 중간에 비용으로 돌아옵니다."
+        ],
+        examples: [
+          ["전", "“예약 기능을 만들어 주세요.”"],
+          ["후", "“고객이 날짜와 시간을 고르면, 가능한 자리만 보여주고 예약 완료 문자를 받게 해주세요.”"]
+        ],
+        visual: "idea"
+      },
+      screen: {
+        kicker: "STEP 2",
+        title: "HTML은 화면에 놓을 재료를 정합니다.",
+        text: "제목, 설명, 입력칸, 버튼, 이미지처럼 사용자가 보는 내용의 구조입니다. 집으로 치면 방 이름과 가구 위치를 정하는 설계도에 가깝습니다.",
+        bullets: [
+          "화면에 어떤 정보가 필요한지 정합니다.",
+          "버튼, 폼, 목록처럼 사용자가 만질 요소를 배치합니다.",
+          "검색이나 접근성도 이 구조의 영향을 받습니다."
+        ],
+        examples: [
+          ["HTML", "<h1>예약하기</h1>"],
+          ["의미", "화면에서 가장 중요한 제목이 “예약하기”라는 뜻입니다."]
+        ],
+        visual: "screen"
+      },
+      style: {
+        kicker: "STEP 3",
+        title: "CSS는 읽기 쉽고 쓰기 좋은 모양을 만듭니다.",
+        text: "색, 여백, 크기, 반응형 레이아웃을 다룹니다. 같은 기능이라도 CSS가 정리되어야 사용자가 헤매지 않습니다.",
+        bullets: [
+          "중요한 버튼은 눈에 띄고, 덜 중요한 정보는 조용해야 합니다.",
+          "모바일과 데스크톱에서 모두 읽히게 배치합니다.",
+          "브랜드 분위기와 사용성은 CSS에서 만납니다."
+        ],
+        examples: [
+          ["CSS", "button { background: blue; }"],
+          ["의미", "버튼을 파란색으로 보여주겠다는 규칙입니다."]
+        ],
+        visual: "style"
+      },
+      action: {
+        kicker: "STEP 4",
+        title: "JavaScript는 화면에 반응을 줍니다.",
+        text: "클릭하면 열리고, 입력하면 검사하고, 선택하면 결과가 바뀌는 움직임입니다. 사용자의 행동과 서비스의 반응을 연결합니다.",
+        bullets: [
+          "버튼 클릭, 탭 전환, 입력값 검사 같은 동작을 처리합니다.",
+          "필요하면 API를 불러 서버와 대화합니다.",
+          "너무 많은 동작은 복잡도를 키우므로 흐름을 단순하게 잡습니다."
+        ],
+        examples: [
+          ["JS", "button.onclick = saveOrder"],
+          ["의미", "버튼을 누르면 주문 저장 동작을 실행한다는 뜻입니다."]
+        ],
+        visual: "action"
+      },
+      data: {
+        kicker: "STEP 5",
+        title: "API와 DB는 정보를 주고받고 기억합니다.",
+        text: "프론트엔드는 서버에 요청하고, 서버는 데이터베이스에 저장하거나 꺼냅니다. 결제, 로그인, 예약처럼 중요한 일은 이 약속이 정확해야 합니다.",
+        bullets: [
+          "API는 화면과 서버가 대화하는 주소와 규칙입니다.",
+          "DB는 나중에 다시 봐야 하는 정보를 저장합니다.",
+          "권한, 보안, 실패 상황은 이 단계에서 특히 중요합니다."
+        ],
+        examples: [
+          ["API", "POST /orders"],
+          ["의미", "새 주문 정보를 서버에 보내 저장해 달라는 약속입니다."]
+        ],
+        visual: "data"
+      }
+    };
+
+    const visuals = {
+      idea: '<rect x="20" y="28" width="160" height="108" rx="8" fill="#e8f0ff" stroke="#2563eb"></rect><path d="M52 84h78" stroke="#2563eb" stroke-width="10" stroke-linecap="round"></path><circle cx="158" cy="84" r="20" fill="#2563eb"></circle><path d="m151 84 6 6 12-16" stroke="#fff" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"></path>',
+      screen: '<rect x="28" y="26" width="164" height="122" rx="8" fill="#e8f7ee" stroke="#2f9e75"></rect><rect x="48" y="48" width="84" height="16" rx="4" fill="#2f9e75"></rect><rect x="48" y="78" width="124" height="12" rx="4" fill="#93d5b6"></rect><rect x="48" y="104" width="70" height="28" rx="8" fill="#2f9e75"></rect>',
+      style: '<rect x="32" y="32" width="156" height="116" rx="8" fill="#fff2d9" stroke="#d88916"></rect><circle cx="72" cy="86" r="24" fill="#d88916"></circle><rect x="108" y="60" width="48" height="14" rx="7" fill="#f0bd67"></rect><rect x="108" y="86" width="68" height="14" rx="7" fill="#f0bd67"></rect><rect x="108" y="112" width="36" height="14" rx="7" fill="#f0bd67"></rect>',
+      action: '<rect x="32" y="30" width="156" height="120" rx="8" fill="#ffe9e6" stroke="#de5b4f"></rect><rect x="62" y="70" width="96" height="42" rx="8" fill="#de5b4f"></rect><path d="M93 85h34M110 68v68" stroke="#fff" stroke-width="6" stroke-linecap="round"></path>',
+      data: '<ellipse cx="110" cy="48" rx="66" ry="22" fill="#eee9ff" stroke="#7357d6"></ellipse><path d="M44 48v74c0 12 30 22 66 22s66-10 66-22V48" fill="#eee9ff" stroke="#7357d6"></path><path d="M44 84c0 12 30 22 66 22s66-10 66-22" fill="none" stroke="#7357d6"></path><path d="M44 120c0 12 30 22 66 22s66-10 66-22" fill="none" stroke="#7357d6"></path>'
+    };
+
+    const terms = {
+      frontend: {
+        title: "프론트엔드",
+        explain: "사용자가 직접 보는 화면과 상호작용입니다. 버튼이 어디에 있고, 문구가 무엇이고, 클릭하면 화면이 어떻게 반응하는지가 여기에 속합니다.",
+        simple: "가게의 매장, 메뉴판, 주문대",
+        question: "사용자가 어느 화면에서 무엇을 눌러야 하나요?"
+      },
+      backend: {
+        title: "백엔드",
+        explain: "화면 뒤에서 계산하고 저장하고 권한을 확인하는 부분입니다. 사용자는 보지 못하지만 서비스의 핵심 규칙이 이곳에서 움직입니다.",
+        simple: "주방, 창고, 계산 시스템",
+        question: "이 행동이 끝나면 서버가 무엇을 확인하고 저장해야 하나요?"
+      },
+      deploy: {
+        title: "배포",
+        explain: "내 컴퓨터에서만 보이던 결과물을 실제 사용자가 접속할 수 있는 곳에 올리는 일입니다. 새 버전을 세상에 공개하는 순간입니다.",
+        simple: "매장 문을 열고 손님을 받는 일",
+        question: "이번 변경을 언제 누구에게 공개하나요?"
+      },
+      bug: {
+        title: "버그",
+        explain: "의도와 다르게 작동하는 상황입니다. 좋은 버그 설명에는 재현 순서, 기대 결과, 실제 결과가 들어갑니다.",
+        simple: "주문은 했는데 엉뚱한 메뉴가 나오는 상황",
+        question: "어떤 순서로 했을 때, 기대와 실제가 어떻게 달랐나요?"
+      },
+      refactor: {
+        title: "리팩토링",
+        explain: "겉으로 보이는 기능은 그대로 두고 내부 코드를 더 이해하기 쉽고 고치기 쉽게 정리하는 일입니다.",
+        simple: "영업은 그대로 하면서 주방 동선을 정리하는 일",
+        question: "사용자 화면은 그대로인데, 이후 변경이 쉬워지는 작업인가요?"
+      }
+    };
+
+    const quiz = [
+      {
+        question: "버튼 문구를 “예약하기”에서 “지금 예약”으로 바꾸는 일은 주로 어디에 가까울까요?",
+        choices: ["HTML", "DB", "배포"],
+        answer: 0,
+        explain: "화면에 보이는 내용 자체를 바꾸는 일이므로 HTML 쪽 이해가 먼저입니다."
+      },
+      {
+        question: "사용자가 버튼을 눌렀을 때 팝업이 열리는 동작은 어디에 가까울까요?",
+        choices: ["CSS", "JavaScript", "DB"],
+        answer: 1,
+        explain: "클릭에 반응해서 화면 상태를 바꾸는 일은 JavaScript가 담당합니다."
+      },
+      {
+        question: "예약 내역을 다음 날에도 다시 볼 수 있어야 한다면 무엇이 필요할까요?",
+        choices: ["저장할 DB", "더 큰 제목", "다른 색상"],
+        answer: 0,
+        explain: "브라우저를 닫아도 남아야 하는 정보는 서버와 DB에 저장해야 합니다."
+      }
+    ];
+
+    const state = {
+      color: "#2563eb",
+      soft: "#e8f0ff",
+      code: "html",
+      score: new Set()
+    };
+
+    const escapeHtml = (value) => value
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;");
+
+    const getValues = () => ({
+      name: document.querySelector("#serviceName").value.trim() || "나의 서비스",
+      message: document.querySelector("#serviceMessage").value.trim() || "사용자에게 필요한 설명을 적습니다.",
+      button: document.querySelector("#buttonText").value.trim() || "시작하기",
+      data: document.querySelector("#dataKind").value
+    });
+
+    function setStep(stepKey) {
+      const step = steps[stepKey];
+      document.querySelectorAll(".pipe-step").forEach((button) => {
+        const active = button.dataset.step === stepKey;
+        button.classList.toggle("is-active", active);
+        button.setAttribute("aria-selected", String(active));
+      });
+      document.querySelector("#conceptKicker").textContent = step.kicker;
+      document.querySelector("#conceptTitle").textContent = step.title;
+      document.querySelector("#conceptText").textContent = step.text;
+      document.querySelector("#conceptBullets").innerHTML = step.bullets.map((item) => `<li>${item}</li>`).join("");
+      document.querySelector("#conceptExamples").innerHTML = step.examples
+        .map(([label, text]) => `<div class="example-item"><span class="example-badge">${label}</span><span>${escapeHtml(text)}</span></div>`)
+        .join("");
+      document.querySelector("#conceptVisual").innerHTML = visuals[step.visual];
+    }
+
+    function codeTemplate(kind) {
+      const values = getValues();
+      const templates = {
+        html: [
+          '<section class="service">',
+          `  <h1>${escapeHtml(values.name)}</h1>`,
+          `  <p>${escapeHtml(values.message)}</p>`,
+          `  <button>${escapeHtml(values.button)}</button>`,
+          '</section>'
+        ],
+        css: [
+          '.service {',
+          '  padding: 24px;',
+          `  background: ${state.soft};`,
+          '}',
+          '',
+          'button {',
+          `  background: ${state.color};`,
+          '  color: white;',
+          '  border-radius: 8px;',
+          '}'
+        ],
+        js: [
+          'const button = document.querySelector("button");',
+          '',
+          'button.addEventListener("click", () => {',
+          `  alert("${escapeHtml(values.button)} 요청을 시작합니다.");`,
+          '});'
+        ],
+        data: [
+          'POST /api/requests',
+          '',
+          '{',
+          `  "service": "${escapeHtml(values.name)}",`,
+          `  "save": "${escapeHtml(values.data)}",`,
+          '  "createdAt": "사용자가 누른 시간"',
+          '}'
+        ]
+      };
+      return templates[kind];
+    }
+
+    function renderCode() {
+      const lines = codeTemplate(state.code);
+      const markMap = {
+        html: [1, 2, 3],
+        css: [2, 6],
+        js: [3],
+        data: [3, 4]
+      };
+      document.querySelector("#codeBlock").innerHTML = lines
+        .map((line, index) => {
+          const mark = markMap[state.code].includes(index) ? " mark" : "";
+          return `<span class="code-line${mark}">${escapeHtml(line || " ")}</span>`;
+        })
+        .join("");
+    }
+
+    function renderPreview() {
+      const values = getValues();
+      document.querySelector("#previewPage").style.setProperty("--demo", state.color);
+      document.querySelector("#previewPage").style.setProperty("--demo-soft", state.soft);
+      document.querySelector("#demoTitle").textContent = values.name;
+      document.querySelector("#demoCopy").textContent = values.message;
+      document.querySelector("#demoButton span").textContent = values.button;
+      document.querySelector("#phonePill").textContent = values.button;
+      renderCode();
+    }
+
+    function setCodeTab(kind) {
+      state.code = kind;
+      document.querySelectorAll(".tab").forEach((tab) => {
+        const active = tab.dataset.code === kind;
+        tab.classList.toggle("is-selected", active);
+        tab.setAttribute("aria-selected", String(active));
+      });
+      renderCode();
+    }
+
+    function setTerm(termKey) {
+      const term = terms[termKey];
+      document.querySelectorAll(".term-btn").forEach((button) => {
+        const active = button.dataset.term === termKey;
+        button.classList.toggle("is-selected", active);
+        button.setAttribute("aria-selected", String(active));
+      });
+      document.querySelector("#termTitle").textContent = term.title;
+      document.querySelector("#termExplain").textContent = term.explain;
+      document.querySelector("#termSimple").textContent = term.simple;
+      document.querySelector("#termQuestion").textContent = term.question;
+    }
+
+    function renderQuiz() {
+      const body = document.querySelector("#quizBody");
+      body.innerHTML = quiz.map((item, index) => `
+        <article class="quiz-card">
+          <h3>${index + 1}. ${item.question}</h3>
+          <div class="choices">
+            ${item.choices.map((choice, choiceIndex) => `<button class="choice" type="button" data-quiz="${index}" data-choice="${choiceIndex}">${choice}</button>`).join("")}
+          </div>
+          <div class="answer" id="answer-${index}">선택하면 해설이 여기에 표시됩니다.</div>
+        </article>
+      `).join("");
+    }
+
+    function handleQuiz(index, choiceIndex) {
+      const item = quiz[index];
+      const answerBox = document.querySelector(`#answer-${index}`);
+      document.querySelectorAll(`[data-quiz="${index}"]`).forEach((button) => {
+        const current = Number(button.dataset.choice);
+        button.classList.toggle("is-correct", current === item.answer);
+        button.classList.toggle("is-wrong", current === choiceIndex && current !== item.answer);
+      });
+      if (choiceIndex === item.answer) {
+        state.score.add(index);
+      } else {
+        state.score.delete(index);
+      }
+      answerBox.textContent = item.explain;
+      document.querySelector("#score").textContent = `${state.score.size} / ${quiz.length}`;
+    }
+
+    document.querySelectorAll(".pipe-step").forEach((button) => {
+      button.addEventListener("click", () => setStep(button.dataset.step));
+    });
+
+    document.querySelectorAll("#serviceName, #serviceMessage, #buttonText, #dataKind").forEach((field) => {
+      field.addEventListener("input", renderPreview);
+      field.addEventListener("change", renderPreview);
+    });
+
+    document.querySelectorAll(".swatch").forEach((button) => {
+      button.addEventListener("click", () => {
+        state.color = button.dataset.color;
+        state.soft = button.dataset.soft;
+        document.querySelectorAll(".swatch").forEach((swatch) => {
+          const active = swatch === button;
+          swatch.classList.toggle("is-selected", active);
+          swatch.setAttribute("aria-checked", String(active));
+        });
+        renderPreview();
+      });
+    });
+
+    document.querySelectorAll(".tab").forEach((tab) => {
+      tab.addEventListener("click", () => setCodeTab(tab.dataset.code));
+    });
+
+    document.querySelectorAll(".term-btn").forEach((button) => {
+      button.addEventListener("click", () => setTerm(button.dataset.term));
+    });
+
+    document.querySelector("#demoButton").addEventListener("click", () => {
+      const values = getValues();
+      alert(`${values.data} 저장 요청을 보냈다고 상상해보세요.`);
+    });
+
+    renderPreview();
+    renderQuiz();
+
+    document.querySelector("#quizBody").addEventListener("click", (event) => {
+      const button = event.target.closest(".choice");
+      if (!button) return;
+      handleQuiz(Number(button.dataset.quiz), Number(button.dataset.choice));
+    });
+  </script>
+</body>
+</html>

@@ -1,20 +1,27 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Git 브랜치와 PR 설명</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>비개발자를 위한 개발 이해</title>
   <style>
     :root {
-      color-scheme: light;
-      --bg: #f7f8fb;
+      --ink: #17211f;
+      --muted: #63716d;
+      --paper: #fbfaf6;
       --panel: #ffffff;
-      --text: #20242c;
-      --muted: #5e6775;
-      --line: #d7dce5;
-      --branch: #1d7f62;
-      --pr: #3f6edb;
-      --main: #303642;
+      --line: #d9ded6;
+      --dark: #20302d;
+      --green: #238362;
+      --blue: #2563eb;
+      --amber: #d88916;
+      --violet: #6f58d9;
+      --soft-green: #e8f7ee;
+      --soft-blue: #e8f0ff;
+      --soft-amber: #fff3d8;
+      --soft-violet: #eee9ff;
+      --shadow: 0 18px 46px rgba(23, 33, 31, 0.12);
+      color-scheme: light;
     }
 
     * {
@@ -23,191 +30,368 @@
 
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.6;
+      color: var(--ink);
+      background:
+        linear-gradient(180deg, rgba(37, 99, 235, 0.08), rgba(251, 250, 246, 0) 360px),
+        var(--paper);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.62;
     }
 
-    main {
-      width: min(920px, calc(100% - 32px));
+    a {
+      color: inherit;
+    }
+
+    .shell {
+      width: min(1060px, calc(100% - 32px));
       margin: 0 auto;
-      padding: 48px 0;
+    }
+
+    .top {
+      min-height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 10px 0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 900;
+    }
+
+    .mark {
+      width: 36px;
+      height: 36px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      color: #fff;
+      background: var(--dark);
+    }
+
+    .pill {
+      padding: 6px 10px;
+      border: 1px solid rgba(23, 33, 31, 0.12);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.72);
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .hero {
+      padding: 46px 0 24px;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin-top: 0;
     }
 
     h1 {
-      margin: 0 0 12px;
-      font-size: 34px;
-    }
-
-    h2 {
-      margin: 0 0 12px;
-      font-size: 22px;
-    }
-
-    p {
-      margin: 0 0 14px;
+      max-width: 760px;
+      margin-bottom: 16px;
+      font-size: 54px;
+      line-height: 1.04;
+      letter-spacing: 0;
     }
 
     .lead {
+      max-width: 720px;
+      margin-bottom: 22px;
       color: var(--muted);
-      font-size: 18px;
+      font-size: 19px;
+      word-break: keep-all;
+    }
+
+    .route {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      max-width: 780px;
       margin-bottom: 28px;
     }
 
-    .section {
-      background: var(--panel);
-      border: 1px solid var(--line);
+    .route div {
+      min-height: 78px;
+      padding: 12px;
+      border: 1px solid rgba(23, 33, 31, 0.12);
       border-radius: 8px;
-      padding: 24px;
-      margin-top: 18px;
+      background: rgba(255, 255, 255, 0.76);
     }
 
-    .grid {
+    .route strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .route p {
+      margin-bottom: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.42;
+      word-break: keep-all;
+    }
+
+    .cards {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 18px;
+      padding: 22px 0 62px;
     }
 
-    .label {
-      display: inline-block;
-      padding: 4px 10px;
+    .card {
+      min-height: 360px;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 18px;
+      padding: 20px;
+      border: 1px solid rgba(23, 33, 31, 0.12);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      text-decoration: none;
+    }
+
+    .card:hover,
+    .card:focus-visible {
+      transform: translateY(-2px);
+      outline: 3px solid rgba(37, 99, 235, 0.18);
+      outline-offset: 2px;
+    }
+
+    .card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .badge {
+      width: fit-content;
+      padding: 5px 9px;
       border-radius: 999px;
-      color: #ffffff;
-      font-size: 14px;
-      font-weight: 700;
-      margin-bottom: 10px;
+      background: var(--badge-bg);
+      color: var(--badge-fg);
+      font-size: 12px;
+      font-weight: 900;
     }
 
-    .branch {
-      background: var(--branch);
+    .icon {
+      width: 20px;
+      height: 20px;
+      flex: 0 0 20px;
+      stroke: currentColor;
+      stroke-width: 2.1;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
     }
 
-    .pr {
-      background: var(--pr);
-    }
-
-    .flow {
+    .thumb {
+      min-height: 132px;
       display: grid;
       gap: 10px;
-      margin-top: 14px;
+      align-content: center;
+      padding: 14px;
+      border-radius: 8px;
+      background: var(--thumb-bg);
     }
 
-    .step {
-      border-left: 4px solid var(--line);
-      background: #fbfcfe;
-      padding: 12px 14px;
+    .line {
+      height: 12px;
+      border-radius: 999px;
+      background: rgba(23, 33, 31, 0.13);
     }
 
-    .step strong {
-      color: var(--main);
+    .line:nth-child(1) {
+      width: 70%;
+      background: var(--accent);
     }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 14px;
-      overflow: hidden;
+    .line:nth-child(2) {
+      width: 92%;
     }
 
-    th,
-    td {
-      border: 1px solid var(--line);
-      padding: 12px;
-      text-align: left;
-      vertical-align: top;
+    .line:nth-child(3) {
+      width: 58%;
     }
 
-    th {
-      background: #eef2f7;
+    .card h2 {
+      margin-bottom: 8px;
+      font-size: 28px;
+      line-height: 1.16;
+      letter-spacing: 0;
     }
 
-    code {
-      background: #eef2f7;
-      border-radius: 4px;
-      padding: 2px 6px;
+    .card p {
+      margin-bottom: 0;
+      color: var(--muted);
+      word-break: keep-all;
     }
 
-    @media (max-width: 700px) {
-      main {
-        padding: 32px 0;
+    .cta {
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      color: #fff;
+      background: var(--dark);
+      font-weight: 900;
+    }
+
+    .note {
+      padding: 18px;
+      border: 1px solid rgba(23, 33, 31, 0.12);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--muted);
+      box-shadow: 0 12px 34px rgba(23, 33, 31, 0.08);
+      word-break: keep-all;
+    }
+
+    .note strong {
+      color: var(--ink);
+    }
+
+    footer {
+      padding: 28px 0 42px;
+      color: var(--muted);
+      text-align: center;
+      font-size: 14px;
+    }
+
+    @media (max-width: 760px) {
+      .shell {
+        width: min(100% - 22px, 1060px);
+      }
+
+      .top {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .hero {
+        padding: 26px 0 14px;
       }
 
       h1 {
-        font-size: 28px;
+        font-size: 36px;
+        line-height: 1.08;
       }
 
-      .grid {
+      .lead {
+        font-size: 16px;
+      }
+
+      .route,
+      .cards {
         grid-template-columns: 1fr;
+      }
+
+      .route {
+        gap: 8px;
+      }
+
+      .route div,
+      .card {
+        min-height: 0;
+      }
+
+      .card {
+        padding: 16px;
+      }
+
+      .card h2 {
+        font-size: 24px;
       }
     }
   </style>
 </head>
 <body>
-  <main>
-    <h1>Git에서 브랜치와 PR의 역할</h1>
-    <p class="lead">
-      브랜치는 작업 공간이고, PR은 그 작업을 원본 코드에 합치기 전에 검토받는 요청입니다.
-    </p>
+  <header class="shell top">
+    <div class="brand">
+      <span class="mark" aria-hidden="true">
+        <svg class="icon" viewBox="0 0 24 24"><path d="m8 9-4 3 4 3"></path><path d="m16 9 4 3-4 3"></path><path d="m14 5-4 14"></path></svg>
+      </span>
+      <span>개발 이해 가이드</span>
+    </div>
+    <span class="pill">GitHub Pages / Vercel 배포 가능</span>
+  </header>
 
-    <section class="section grid" aria-label="브랜치와 PR 핵심 설명">
-      <article>
-        <span class="label branch">Branch</span>
-        <h2>브랜치</h2>
-        <p>
-          브랜치는 새로운 기능이나 수정 작업을 따로 진행하는 독립된 작업 흐름입니다.
-          예를 들어 <code>main</code> 브랜치를 건드리지 않고
-          <code>feature/login</code> 브랜치에서 로그인 기능을 만들 수 있습니다.
-        </p>
-      </article>
+  <main class="shell">
+    <section class="hero">
+      <h1>비개발자도 개발 흐름을 눈으로 이해할 수 있게.</h1>
+      <p class="lead">친구나 팀원에게 링크 하나만 보내면 됩니다. 개발의 큰 그림부터 Git 브랜치와 PR 실무 흐름까지, 모바일에서도 읽기 편하게 정리했습니다.</p>
 
-      <article>
-        <span class="label pr">Pull Request</span>
-        <h2>PR</h2>
-        <p>
-          PR은 내가 만든 브랜치의 변경사항을 <code>main</code> 같은 기준 브랜치에
-          합쳐도 되는지 리뷰를 요청하는 공간입니다. 코드 리뷰, 테스트 결과, 수정 대화가
-          보통 여기에서 이루어집니다.
-        </p>
-      </article>
-    </section>
-
-    <section class="section">
-      <h2>일반적인 작업 흐름</h2>
-      <div class="flow">
-        <div class="step"><strong>1.</strong> <code>main</code> 브랜치에서 새 브랜치를 만듭니다.</div>
-        <div class="step"><strong>2.</strong> 새 브랜치에서 코드를 수정합니다.</div>
-        <div class="step"><strong>3.</strong> 수정 내용을 commit합니다.</div>
-        <div class="step"><strong>4.</strong> 원격 저장소에 push합니다.</div>
-        <div class="step"><strong>5.</strong> PR을 만들어 리뷰를 요청합니다.</div>
-        <div class="step"><strong>6.</strong> 문제가 없으면 <code>main</code> 브랜치에 merge합니다.</div>
+      <div class="route" aria-label="추천 학습 순서">
+        <div>
+          <strong>1. 전체 지도</strong>
+          <p>HTML, CSS, JS, API, DB의 역할을 먼저 잡습니다.</p>
+        </div>
+        <div>
+          <strong>2. Git 실무</strong>
+          <p>branch, commit, push, PR의 위치 차이를 익힙니다.</p>
+        </div>
+        <div>
+          <strong>3. 대화 전이</strong>
+          <p>개발자에게 요청할 문장으로 연결합니다.</p>
+        </div>
       </div>
     </section>
 
-    <section class="section">
-      <h2>한눈에 비교</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>개념</th>
-            <th>역할</th>
-            <th>HTML로 비유하면</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>브랜치</td>
-            <td>변경사항을 따로 실험하고 작업하는 공간</td>
-            <td>원본 HTML을 복사해서 별도 파일에서 수정하는 것</td>
-          </tr>
-          <tr>
-            <td>PR</td>
-            <td>브랜치의 변경사항을 합치기 전에 검토받는 요청</td>
-            <td>수정한 HTML을 원본에 반영해도 되는지 확인받는 것</td>
-          </tr>
-        </tbody>
-      </table>
+    <section class="cards" aria-label="교육 페이지 목록">
+      <a class="card" href="./dev-explained.html" style="--badge-bg:var(--soft-blue);--badge-fg:var(--blue);--thumb-bg:var(--soft-blue);--accent:var(--blue)">
+        <div class="card-top">
+          <span class="badge">입문</span>
+          <svg class="icon" viewBox="0 0 24 24"><path d="M5 12h14"></path><path d="m13 6 6 6-6 6"></path></svg>
+        </div>
+        <div>
+          <h2>개발 한 장 설명서</h2>
+          <p>서비스가 화면, 동작, 기억으로 어떻게 나뉘는지 직접 만져보며 이해합니다.</p>
+        </div>
+        <div class="thumb" aria-hidden="true">
+          <span class="line"></span>
+          <span class="line"></span>
+          <span class="line"></span>
+        </div>
+        <span class="cta">열어보기 <svg class="icon" viewBox="0 0 24 24"><path d="M7 17 17 7"></path><path d="M7 7h10v10"></path></svg></span>
+      </a>
+
+      <a class="card" href="./git-branch-pr-guide.html" style="--badge-bg:var(--soft-green);--badge-fg:var(--green);--thumb-bg:var(--soft-green);--accent:var(--green)">
+        <div class="card-top">
+          <span class="badge">실무</span>
+          <svg class="icon" viewBox="0 0 24 24"><path d="M6 3v12"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="6" r="3"></circle><path d="M18 9a9 9 0 0 1-9 9"></path></svg>
+        </div>
+        <div>
+          <h2>Git 브랜치와 PR</h2>
+          <p>commit, push, PR의 차이를 위치와 검토 흐름으로 이해하고 실무에 연결합니다.</p>
+        </div>
+        <div class="thumb" aria-hidden="true">
+          <span class="line"></span>
+          <span class="line"></span>
+          <span class="line"></span>
+        </div>
+        <span class="cta">열어보기 <svg class="icon" viewBox="0 0 24 24"><path d="M7 17 17 7"></path><path d="M7 7h10v10"></path></svg></span>
+      </a>
+    </section>
+
+    <section class="note">
+      <strong>공유 방식:</strong> 이 폴더를 GitHub에 올리고 GitHub Pages를 켜면 루트 주소가 이 홈 화면으로 열립니다. 예: <code>https://계정명.github.io/저장소명/</code>
     </section>
   </main>
+
+  <footer>
+    <div class="shell">정적 파일만으로 동작하므로 GitHub Pages, Vercel, Netlify 어디에 올려도 됩니다.</div>
+  </footer>
 </body>
 </html>
