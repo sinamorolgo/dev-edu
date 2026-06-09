@@ -5,7 +5,6 @@
 ## 포함 페이지
 
 - `index.html`: 공유용 홈
-- `dev-explained.html`: 개발 전체 흐름 설명
 - `git-branch-pr-guide.html`: Git 브랜치, commit, push, PR 설명
 
 ## GitHub Pages로 공유하기
