@@ -79,6 +79,52 @@
       backdrop-filter: blur(16px);
     }
 
+    .reference-strip {
+      color: #fff;
+      background: var(--dark);
+    }
+
+    .reference-inner {
+      min-height: 46px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 7px 0;
+    }
+
+    .reference-label {
+      flex: 0 0 auto;
+      padding: 4px 8px;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      border-radius: 8px;
+      color: rgba(255, 255, 255, 0.82);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .reference-link {
+      min-width: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      color: #fff;
+      text-align: right;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 900;
+      line-height: 1.35;
+      word-break: keep-all;
+    }
+
+    .reference-link:hover,
+    .reference-link:focus-visible {
+      outline: 3px solid rgba(255, 255, 255, 0.24);
+      outline-offset: 2px;
+      text-decoration: underline;
+    }
+
     .topbar-inner {
       min-height: 64px;
       display: flex;
@@ -1234,6 +1280,17 @@
         min-height: 58px;
       }
 
+      .reference-inner {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .reference-link {
+        justify-content: flex-start;
+        text-align: left;
+      }
+
       .brand span:last-child {
         display: none;
       }
@@ -1395,6 +1452,16 @@
   </style>
 </head>
 <body>
+  <aside class="reference-strip" aria-label="추천 참고 글">
+    <div class="shell reference-inner">
+      <span class="reference-label">추천 참고 글</span>
+      <a class="reference-link" href="https://devwriter.tistory.com/42">
+        Github의 Issue와 PR 알아보기
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7"></path><path d="M7 7h10v10"></path></svg>
+      </a>
+    </div>
+  </aside>
+
   <header class="topbar">
     <div class="shell topbar-inner">
       <a class="brand" href="./index.html" aria-label="개발 이해 가이드 홈으로">
