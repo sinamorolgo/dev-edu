@@ -5,7 +5,7 @@
 ## 포함 페이지
 
 - `index.html`: 공유용 홈
-- `git-branch-pr-guide-v2.html`: 스킬 기반으로 다시 구성한 Git 브랜치와 PR 학습 지도
+- `git-branch-pr-guide-v2.html`: Git 브랜치와 PR 학습 지도
 
 ## GitHub Pages로 공유하기
 
