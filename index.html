@@ -80,7 +80,7 @@
 
     .cards {
       display: grid;
-      grid-template-columns: 1fr;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 12px;
       padding: 18px 0 28px;
     }
@@ -261,6 +261,22 @@
           <span class="line"></span>
         </div>
         <span class="cta">열어보기 <svg class="icon" viewBox="0 0 24 24"><path d="M7 17 17 7"></path><path d="M7 7h10v10"></path></svg></span>
+      </a>
+      <a class="card" href="./git-branch-pr-guide-v2.html" style="--badge-bg:var(--soft-blue);--badge-fg:var(--blue);--thumb-bg:var(--soft-blue);--accent:var(--blue)">
+        <div class="card-top">
+          <span class="badge">새 버전</span>
+          <svg class="icon" viewBox="0 0 24 24"><path d="M7 7h6a4 4 0 0 1 0 8H7"></path><path d="M7 15l4-4-4-4"></path><path d="M17 7h1a3 3 0 0 1 3 3v8"></path><path d="M18 15l3 3 3-3"></path></svg>
+        </div>
+        <div>
+          <h2>Git 브랜치와 PR 학습 지도</h2>
+          <p>공식 문서 조사와 설명 설계를 바탕으로 브랜치, push, PR, merge를 한 흐름으로 다시 익힙니다.</p>
+        </div>
+        <div class="thumb" aria-hidden="true">
+          <span class="line"></span>
+          <span class="line"></span>
+          <span class="line"></span>
+        </div>
+        <span class="cta">비교하기 <svg class="icon" viewBox="0 0 24 24"><path d="M7 17 17 7"></path><path d="M7 7h10v10"></path></svg></span>
       </a>
     </section>
   </main>

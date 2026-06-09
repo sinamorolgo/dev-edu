@@ -1,0 +1,1997 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Git 브랜치와 PR 올리기 학습 지도</title>
+  <style>
+    :root {
+      --ink: #151b1f;
+      --muted: #5f6c71;
+      --paper: #f4f6f2;
+      --white: #ffffff;
+      --line: #d6ddd3;
+      --dark: #1f2a2f;
+      --blue: #285fd4;
+      --green: #11845b;
+      --amber: #c77716;
+      --coral: #c94f48;
+      --violet: #6558d6;
+      --cyan: #0f7784;
+      --soft-blue: #e8efff;
+      --soft-green: #e5f6ed;
+      --soft-amber: #fff0d6;
+      --soft-coral: #ffe8e5;
+      --soft-violet: #eeebff;
+      --soft-cyan: #e4f5f7;
+      --shadow: 0 16px 44px rgba(21, 27, 31, 0.11);
+      color-scheme: light;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        linear-gradient(180deg, rgba(40, 95, 212, 0.08), rgba(244, 246, 242, 0) 310px),
+        var(--paper);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.62;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    code,
+    pre {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    }
+
+    .shell {
+      width: min(1160px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      border-bottom: 1px solid rgba(21, 27, 31, 0.09);
+      background: rgba(244, 246, 242, 0.92);
+      backdrop-filter: blur(16px);
+    }
+
+    .topbar-inner {
+      min-height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .brand,
+    .mini-link,
+    .btn,
+    .step-button,
+    .quiz-choice,
+    .source-link {
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .brand {
+      justify-content: flex-start;
+      text-decoration: none;
+      font-weight: 900;
+    }
+
+    .brand-mark,
+    .mini-icon,
+    .step-mark,
+    .answer-mark {
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+    }
+
+    .brand-mark {
+      width: 36px;
+      height: 36px;
+      color: #fff;
+      background: var(--dark);
+    }
+
+    .mini-link {
+      padding: 0 12px;
+      border: 1px solid rgba(21, 27, 31, 0.12);
+      border-radius: 8px;
+      background: #fff;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .icon {
+      width: 18px;
+      height: 18px;
+      flex: 0 0 18px;
+      stroke: currentColor;
+      stroke-width: 2.1;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin-top: 0;
+    }
+
+    h1 {
+      max-width: 840px;
+      margin-bottom: 16px;
+      font-size: 52px;
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      margin-bottom: 12px;
+      font-size: 36px;
+      line-height: 1.13;
+      letter-spacing: 0;
+    }
+
+    h3 {
+      margin-bottom: 8px;
+      font-size: 20px;
+      line-height: 1.25;
+      letter-spacing: 0;
+    }
+
+    p {
+      word-break: keep-all;
+      overflow-wrap: break-word;
+    }
+
+    .eyebrow {
+      width: fit-content;
+      margin-bottom: 14px;
+      padding: 6px 10px;
+      border: 1px solid rgba(21, 27, 31, 0.14);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.78);
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .lead {
+      max-width: 760px;
+      margin-bottom: 22px;
+      color: var(--muted);
+      font-size: 19px;
+    }
+
+    .hero {
+      padding: 28px 0 30px;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 0.86fr) minmax(430px, 1.14fr);
+      gap: 28px;
+      align-items: center;
+    }
+
+    .hero-copy {
+      padding: 24px 0;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .btn {
+      padding: 10px 14px;
+      border: 1px solid rgba(21, 27, 31, 0.13);
+      border-radius: 8px;
+      background: #fff;
+      text-decoration: none;
+      font-weight: 900;
+      box-shadow: 0 10px 24px rgba(21, 27, 31, 0.08);
+    }
+
+    .btn.primary {
+      color: #fff;
+      border-color: var(--dark);
+      background: var(--dark);
+    }
+
+    .btn:hover,
+    .btn:focus-visible,
+    .mini-link:hover,
+    .mini-link:focus-visible,
+    .step-button:hover,
+    .step-button:focus-visible,
+    .quiz-choice:hover,
+    .quiz-choice:focus-visible,
+    .source-link:hover,
+    .source-link:focus-visible {
+      transform: translateY(-1px);
+      outline: 3px solid rgba(40, 95, 212, 0.18);
+      outline-offset: 2px;
+    }
+
+    .one-sentence {
+      display: grid;
+      gap: 8px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .one-sentence li {
+      display: grid;
+      grid-template-columns: 24px minmax(0, 1fr);
+      gap: 9px;
+      align-items: start;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .one-sentence strong {
+      color: var(--ink);
+    }
+
+    .tick {
+      width: 24px;
+      height: 24px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      color: #fff;
+      background: var(--green);
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .map {
+      overflow: hidden;
+      border: 1px solid rgba(21, 27, 31, 0.12);
+      border-radius: 8px;
+      background: var(--white);
+      box-shadow: var(--shadow);
+    }
+
+    .map-top {
+      min-height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(21, 27, 31, 0.1);
+      background: #f8faf5;
+    }
+
+    .traffic {
+      display: flex;
+      gap: 6px;
+      flex: 0 0 auto;
+    }
+
+    .traffic span {
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+    }
+
+    .traffic span:nth-child(1) {
+      background: var(--coral);
+    }
+
+    .traffic span:nth-child(2) {
+      background: var(--amber);
+    }
+
+    .traffic span:nth-child(3) {
+      background: var(--green);
+    }
+
+    .map-title {
+      min-width: 0;
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .map-body {
+      position: relative;
+      min-height: 470px;
+      padding: 20px;
+      background:
+        linear-gradient(90deg, rgba(21, 27, 31, 0.045) 1px, transparent 1px) 0 0 / 36px 36px,
+        linear-gradient(0deg, rgba(21, 27, 31, 0.035) 1px, transparent 1px) 0 0 / 36px 36px,
+        #fff;
+    }
+
+    .place-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .place {
+      min-height: 70px;
+      padding: 11px;
+      border: 1px solid rgba(21, 27, 31, 0.12);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.88);
+    }
+
+    .place strong,
+    .place span {
+      display: block;
+    }
+
+    .place strong {
+      margin-bottom: 3px;
+      font-size: 14px;
+    }
+
+    .place span {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .lane {
+      position: relative;
+      display: grid;
+      grid-template-columns: 112px minmax(0, 1fr);
+      gap: 14px;
+      align-items: center;
+      min-height: 82px;
+      border-bottom: 1px dashed rgba(21, 27, 31, 0.14);
+    }
+
+    .lane:last-child {
+      border-bottom: 0;
+    }
+
+    .lane-name {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .rail {
+      position: relative;
+      min-height: 68px;
+    }
+
+    .rail::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 4px;
+      border-radius: 999px;
+      background: rgba(21, 27, 31, 0.13);
+      transform: translateY(-50%);
+    }
+
+    .main-rail::before {
+      background: rgba(17, 132, 91, 0.38);
+    }
+
+    .work-rail::before {
+      background: rgba(40, 95, 212, 0.36);
+    }
+
+    .remote-rail::before {
+      background: rgba(199, 119, 22, 0.34);
+    }
+
+    .review-rail::before {
+      background: rgba(101, 88, 214, 0.33);
+    }
+
+    .node {
+      position: absolute;
+      top: 50%;
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      border: 3px solid #fff;
+      border-radius: 999px;
+      color: #fff;
+      background: var(--color);
+      box-shadow: 0 8px 18px rgba(21, 27, 31, 0.18);
+      transform: translate(-50%, -50%);
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .node.dim {
+      opacity: 0.28;
+    }
+
+    .connector {
+      position: absolute;
+      pointer-events: none;
+    }
+
+    .connector path {
+      fill: none;
+      stroke-width: 4;
+      stroke-linecap: round;
+      stroke-dasharray: 8 9;
+    }
+
+    .branch-path {
+      left: 175px;
+      top: 130px;
+      width: 180px;
+      height: 78px;
+    }
+
+    .branch-path path {
+      stroke: rgba(40, 95, 212, 0.52);
+    }
+
+    .push-path {
+      right: 120px;
+      top: 226px;
+      width: 150px;
+      height: 82px;
+    }
+
+    .push-path path {
+      stroke: rgba(199, 119, 22, 0.52);
+    }
+
+    .pr-path {
+      right: 56px;
+      top: 310px;
+      width: 180px;
+      height: 72px;
+    }
+
+    .pr-path path {
+      stroke: rgba(101, 88, 214, 0.52);
+    }
+
+    .merge-path {
+      right: 42px;
+      top: 364px;
+      width: 190px;
+      height: 74px;
+    }
+
+    .merge-path path {
+      stroke: rgba(17, 132, 91, 0.54);
+    }
+
+    .map-caption {
+      position: absolute;
+      left: 20px;
+      right: 20px;
+      bottom: 14px;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .caption-chip {
+      min-height: 54px;
+      padding: 9px;
+      border: 1px solid rgba(21, 27, 31, 0.11);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.9);
+      font-size: 12px;
+      line-height: 1.34;
+    }
+
+    .caption-chip strong {
+      display: block;
+      margin-bottom: 2px;
+      color: var(--chip-color);
+    }
+
+    .section {
+      padding: 60px 0;
+    }
+
+    .section.light {
+      border-top: 1px solid rgba(21, 27, 31, 0.08);
+      border-bottom: 1px solid rgba(21, 27, 31, 0.08);
+      background: #fff;
+    }
+
+    .section-head {
+      max-width: 830px;
+      margin-bottom: 24px;
+    }
+
+    .section-head p {
+      margin-bottom: 0;
+      color: var(--muted);
+      font-size: 18px;
+    }
+
+    .motivation-grid,
+    .definition-grid,
+    .example-grid,
+    .quiz-grid,
+    .summary-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .motivation-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .definition-grid,
+    .example-grid,
+    .quiz-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .summary-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .card,
+    .term-card,
+    .example-card,
+    .quiz-card,
+    .task-panel,
+    .compare-wrap,
+    .flow-board,
+    .source-panel {
+      border: 1px solid rgba(21, 27, 31, 0.12);
+      border-radius: 8px;
+      background: var(--white);
+      box-shadow: var(--shadow);
+    }
+
+    .card,
+    .term-card,
+    .example-card,
+    .quiz-card,
+    .task-panel,
+    .source-panel {
+      padding: 16px;
+    }
+
+    .card {
+      min-height: 170px;
+      display: grid;
+      align-content: start;
+      gap: 10px;
+    }
+
+    .card-kicker,
+    .term-kicker,
+    .quiz-kicker,
+    .step-kicker {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .card p,
+    .term-card p,
+    .example-card p,
+    .quiz-card p,
+    .task-panel p,
+    .source-panel p {
+      margin-bottom: 0;
+      color: var(--muted);
+    }
+
+    .card-mark {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      color: #fff;
+      background: var(--mark-color);
+      font-weight: 900;
+    }
+
+    .term-card {
+      display: grid;
+      gap: 10px;
+      min-height: 210px;
+    }
+
+    .plain-definition {
+      padding: 13px;
+      border-radius: 8px;
+      background: var(--soft-blue);
+      color: #17336e;
+      font-size: 18px;
+      font-weight: 900;
+      line-height: 1.4;
+      word-break: keep-all;
+    }
+
+    .formal-definition {
+      padding: 13px;
+      border-left: 4px solid var(--green);
+      border-radius: 8px;
+      background: #f8faf5;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .term-list {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .term-chip {
+      min-height: 96px;
+      padding: 13px;
+      border: 1px solid rgba(21, 27, 31, 0.12);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .term-chip strong {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 15px;
+    }
+
+    .term-chip span {
+      display: block;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.44;
+      word-break: keep-all;
+    }
+
+    .flow-board {
+      overflow: hidden;
+    }
+
+    .step-buttons {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 8px;
+      padding: 12px;
+      border-bottom: 1px solid rgba(21, 27, 31, 0.1);
+      background: #f8faf5;
+    }
+
+    .step-button {
+      width: 100%;
+      justify-content: flex-start;
+      min-height: 62px;
+      padding: 8px;
+      border: 1px solid rgba(21, 27, 31, 0.12);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--muted);
+      text-align: left;
+    }
+
+    .step-button.is-active {
+      color: var(--ink);
+      border-color: rgba(40, 95, 212, 0.42);
+      background: var(--soft-blue);
+    }
+
+    .step-mark {
+      width: 34px;
+      height: 34px;
+      flex: 0 0 34px;
+      color: #fff;
+      background: var(--step-color);
+      font-weight: 900;
+    }
+
+    .step-label {
+      display: grid;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .step-label strong,
+    .step-label span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .step-label strong {
+      font-size: 14px;
+      line-height: 1.16;
+    }
+
+    .step-label span {
+      font-size: 12px;
+      line-height: 1.16;
+    }
+
+    .flow-content {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 330px;
+      gap: 16px;
+      padding: 18px;
+    }
+
+    .step-visual {
+      position: relative;
+      min-height: 330px;
+      padding: 16px;
+      border: 1px solid rgba(21, 27, 31, 0.1);
+      border-radius: 8px;
+      background:
+        linear-gradient(90deg, rgba(21, 27, 31, 0.045) 1px, transparent 1px) 0 0 / 34px 34px,
+        #fff;
+      overflow: hidden;
+    }
+
+    .local-stack,
+    .remote-stack,
+    .pr-stack {
+      position: absolute;
+      display: grid;
+      gap: 8px;
+    }
+
+    .local-stack {
+      left: 16px;
+      top: 16px;
+      width: 35%;
+    }
+
+    .remote-stack {
+      right: 16px;
+      top: 16px;
+      width: 36%;
+    }
+
+    .pr-stack {
+      left: 26%;
+      right: 26%;
+      bottom: 18px;
+    }
+
+    .box {
+      min-height: 76px;
+      padding: 12px;
+      border: 1px solid rgba(21, 27, 31, 0.12);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .box strong,
+    .box span {
+      display: block;
+    }
+
+    .box strong {
+      margin-bottom: 4px;
+      font-size: 14px;
+    }
+
+    .box span {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+      word-break: keep-all;
+    }
+
+    .box.main {
+      border-color: rgba(17, 132, 91, 0.28);
+      background: var(--soft-green);
+    }
+
+    .box.feature {
+      border-color: rgba(40, 95, 212, 0.28);
+      background: var(--soft-blue);
+    }
+
+    .box.remote {
+      border-color: rgba(199, 119, 22, 0.28);
+      background: var(--soft-amber);
+    }
+
+    .box.pr {
+      border-color: rgba(101, 88, 214, 0.28);
+      background: var(--soft-violet);
+    }
+
+    .arrow {
+      position: absolute;
+      color: var(--muted);
+    }
+
+    .arrow svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .arrow path {
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      marker-end: url(#arrowhead);
+    }
+
+    .arrow.branch {
+      left: 32%;
+      top: 76px;
+      width: 125px;
+      height: 70px;
+      color: var(--blue);
+    }
+
+    .arrow.push {
+      left: 43%;
+      top: 136px;
+      width: 128px;
+      height: 74px;
+      color: var(--amber);
+    }
+
+    .arrow.review {
+      left: 48%;
+      top: 220px;
+      width: 120px;
+      height: 80px;
+      color: var(--violet);
+    }
+
+    .step-visual[data-active="branch"] .remote-stack,
+    .step-visual[data-active="branch"] .pr-stack,
+    .step-visual[data-active="commit"] .remote-stack,
+    .step-visual[data-active="commit"] .pr-stack,
+    .step-visual[data-active="push"] .pr-stack {
+      opacity: 0.34;
+    }
+
+    .step-visual[data-active="branch"] .arrow.push,
+    .step-visual[data-active="branch"] .arrow.review,
+    .step-visual[data-active="commit"] .arrow.push,
+    .step-visual[data-active="commit"] .arrow.review,
+    .step-visual[data-active="push"] .arrow.review {
+      opacity: 0.22;
+    }
+
+    .step-detail {
+      display: grid;
+      align-content: start;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .step-card {
+      min-height: 180px;
+      padding: 15px;
+      border: 1px solid rgba(21, 27, 31, 0.12);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .step-card h3 {
+      font-size: 22px;
+    }
+
+    .step-card p {
+      margin-bottom: 10px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .command {
+      display: block;
+      min-height: 44px;
+      padding: 12px;
+      border-radius: 8px;
+      color: #edf7f3;
+      background: #151b1f;
+      font-size: 13px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      overflow-x: auto;
+    }
+
+    .compare-wrap {
+      overflow: hidden;
+    }
+
+    .compare-grid {
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr 1.1fr 1.1fr;
+      min-width: 820px;
+    }
+
+    .compare-cell {
+      min-height: 92px;
+      padding: 15px;
+      border-right: 1px solid rgba(21, 27, 31, 0.1);
+      border-bottom: 1px solid rgba(21, 27, 31, 0.1);
+      background: #fff;
+    }
+
+    .compare-cell:nth-child(4n) {
+      border-right: 0;
+    }
+
+    .compare-cell.head {
+      min-height: 56px;
+      background: #f8faf5;
+      font-weight: 900;
+    }
+
+    .compare-cell strong {
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .compare-cell p {
+      margin-bottom: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.44;
+      word-break: keep-all;
+    }
+
+    .mobile-compare {
+      display: none;
+    }
+
+    .example-card {
+      min-height: 210px;
+    }
+
+    .example-label {
+      width: fit-content;
+      margin-bottom: 11px;
+      padding: 5px 9px;
+      border-radius: 999px;
+      background: var(--label-bg);
+      color: var(--label-fg);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .example-card ul,
+    .task-panel ul,
+    .source-panel ul,
+    .review-list {
+      display: grid;
+      gap: 8px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .example-card li,
+    .task-panel li,
+    .review-list li {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.45;
+      word-break: keep-all;
+    }
+
+    .worked {
+      display: grid;
+      grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+      gap: 14px;
+      align-items: start;
+    }
+
+    .task-panel {
+      min-height: 100%;
+    }
+
+    .scenario {
+      margin-bottom: 14px;
+      padding: 14px;
+      border-radius: 8px;
+      background: var(--soft-cyan);
+      color: #0f4f59;
+      font-weight: 900;
+      word-break: keep-all;
+    }
+
+    .recipe {
+      display: grid;
+      gap: 10px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      counter-reset: recipe;
+    }
+
+    .recipe li {
+      display: grid;
+      grid-template-columns: 32px minmax(0, 1fr);
+      gap: 10px;
+      align-items: start;
+      padding: 11px;
+      border: 1px solid rgba(21, 27, 31, 0.1);
+      border-radius: 8px;
+      background: #fff;
+      counter-increment: recipe;
+    }
+
+    .recipe li::before {
+      content: counter(recipe);
+      width: 32px;
+      height: 32px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      color: #fff;
+      background: var(--dark);
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .recipe strong,
+    .recipe span {
+      display: block;
+    }
+
+    .recipe strong {
+      margin-bottom: 4px;
+    }
+
+    .recipe span {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.44;
+      word-break: keep-all;
+    }
+
+    .quiz-card {
+      display: grid;
+      gap: 12px;
+      min-height: 260px;
+    }
+
+    .quiz-choice {
+      width: 100%;
+      justify-content: flex-start;
+      min-height: 48px;
+      padding: 10px 11px;
+      border: 1px solid rgba(21, 27, 31, 0.12);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--ink);
+      text-align: left;
+    }
+
+    .quiz-choice.is-correct {
+      border-color: rgba(17, 132, 91, 0.38);
+      background: var(--soft-green);
+    }
+
+    .quiz-choice.is-wrong {
+      border-color: rgba(201, 79, 72, 0.38);
+      background: var(--soft-coral);
+    }
+
+    .answer-mark {
+      width: 26px;
+      height: 26px;
+      flex: 0 0 26px;
+      color: #fff;
+      background: var(--muted);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .quiz-feedback {
+      min-height: 48px;
+      margin: 0;
+      padding: 10px;
+      border-radius: 8px;
+      background: #f8faf5;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.44;
+    }
+
+    .summary-card {
+      min-height: 132px;
+      padding: 15px;
+      border: 1px solid rgba(21, 27, 31, 0.12);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .summary-card strong {
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .summary-card p {
+      margin-bottom: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.46;
+    }
+
+    .source-panel {
+      display: grid;
+      gap: 12px;
+    }
+
+    .source-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .source-link {
+      min-height: 40px;
+      padding: 8px 10px;
+      border: 1px solid rgba(21, 27, 31, 0.12);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .footer {
+      padding: 26px 0 42px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    @media (max-width: 1020px) {
+      .hero-grid,
+      .flow-content,
+      .worked {
+        grid-template-columns: 1fr;
+      }
+
+      .map-body {
+        min-height: 430px;
+      }
+
+      .flow-content {
+        padding: 14px;
+      }
+
+      .step-buttons {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .step-button:nth-child(5) {
+        grid-column: 1 / -1;
+      }
+
+      .motivation-grid,
+      .summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .term-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 720px) {
+      .shell {
+        width: min(100% - 22px, 1160px);
+      }
+
+      .topbar-inner {
+        min-height: 58px;
+      }
+
+      .brand span:last-child {
+        display: none;
+      }
+
+      .mini-link {
+        padding: 0 10px;
+        font-size: 13px;
+      }
+
+      h1 {
+        font-size: 34px;
+        line-height: 1.08;
+      }
+
+      h2 {
+        font-size: 27px;
+      }
+
+      h3 {
+        font-size: 18px;
+      }
+
+      .lead,
+      .section-head p {
+        font-size: 16px;
+      }
+
+      .hero {
+        padding: 18px 0 22px;
+      }
+
+      .hero-copy {
+        padding: 12px 0 4px;
+      }
+
+      .hero-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+
+      .btn {
+        width: 100%;
+      }
+
+      .one-sentence li {
+        font-size: 14px;
+      }
+
+      .map-body {
+        min-height: 540px;
+        padding: 14px;
+      }
+
+      .place-row {
+        grid-template-columns: 1fr;
+      }
+
+      .place {
+        min-height: 58px;
+      }
+
+      .lane {
+        grid-template-columns: 96px minmax(0, 1fr);
+        min-height: 70px;
+      }
+
+      .lane-name {
+        font-size: 12px;
+      }
+
+      .connector,
+      .map-caption {
+        display: none;
+      }
+
+      .section {
+        padding: 44px 0;
+      }
+
+      .motivation-grid,
+      .definition-grid,
+      .example-grid,
+      .quiz-grid,
+      .summary-grid,
+      .term-list {
+        grid-template-columns: 1fr;
+      }
+
+      .card,
+      .term-card,
+      .example-card,
+      .quiz-card,
+      .summary-card {
+        min-height: 0;
+      }
+
+      .step-buttons {
+        grid-template-columns: 1fr;
+      }
+
+      .step-button:nth-child(5) {
+        grid-column: auto;
+      }
+
+      .flow-content {
+        gap: 12px;
+        padding: 12px;
+      }
+
+      .step-visual {
+        min-height: 440px;
+      }
+
+      .local-stack,
+      .remote-stack,
+      .pr-stack {
+        position: static;
+        width: auto;
+        margin-bottom: 8px;
+      }
+
+      .arrow {
+        display: none;
+      }
+
+      .compare-grid {
+        display: none;
+      }
+
+      .mobile-compare {
+        display: grid;
+        gap: 10px;
+        padding: 12px;
+      }
+
+      .mobile-compare .term-chip {
+        min-height: 0;
+      }
+
+      .recipe li {
+        grid-template-columns: 28px minmax(0, 1fr);
+      }
+
+      .recipe li::before {
+        width: 28px;
+        height: 28px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        transition: none !important;
+        animation: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="shell topbar-inner">
+      <a class="brand" href="./index.html" aria-label="개발 이해 가이드 홈으로">
+        <span class="brand-mark" aria-hidden="true">
+          <svg class="icon" viewBox="0 0 24 24"><path d="m8 9-4 3 4 3"></path><path d="m16 9 4 3-4 3"></path><path d="m14 5-4 14"></path></svg>
+        </span>
+        <span>개발 이해 가이드</span>
+      </a>
+      <a class="mini-link" href="./git-branch-pr-guide.html">
+        기존 버전
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7"></path><path d="M7 7h10v10"></path></svg>
+      </a>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="shell hero-grid">
+        <div class="hero-copy">
+          <div class="eyebrow">스킬 기반 새 설명안</div>
+          <h1>Git 브랜치와 PR 올리기는 “안전하게 제안하고 합치는 흐름”입니다</h1>
+          <p class="lead">브랜치, 커밋, 푸시, PR을 따로 외우면 헷갈립니다. 이 페이지는 변경사항이 어디에 놓이는지, 누가 언제 확인하는지, 마지막에 어떻게 main으로 합쳐지는지를 한 흐름으로 설명합니다.</p>
+          <div class="hero-actions">
+            <a class="btn primary" href="#map">
+              흐름 보기
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"></path><path d="m19 12-7 7-7-7"></path></svg>
+            </a>
+            <a class="btn" href="#quiz">
+              퀴즈로 확인
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+            </a>
+          </div>
+          <ul class="one-sentence">
+            <li><span class="tick">1</span><span><strong>브랜치</strong>는 main을 어지럽히지 않는 작업 줄기입니다.</span></li>
+            <li><span class="tick">2</span><span><strong>push</strong>는 내 컴퓨터의 작업 줄기를 원격 저장소에 올리는 일입니다.</span></li>
+            <li><span class="tick">3</span><span><strong>PR</strong>은 “이 브랜치를 main에 합쳐도 될까요?”라고 검토를 요청하는 제안서입니다.</span></li>
+          </ul>
+        </div>
+
+        <div class="map" id="map" aria-label="Git 브랜치와 PR 흐름 지도">
+          <div class="map-top">
+            <div class="traffic" aria-hidden="true"><span></span><span></span><span></span></div>
+            <div class="map-title">local work → remote branch → pull request → main</div>
+          </div>
+          <div class="map-body">
+            <div class="place-row">
+              <div class="place">
+                <strong>내 컴퓨터</strong>
+                <span>코드를 고치고 commit을 쌓는 곳</span>
+              </div>
+              <div class="place">
+                <strong>원격 저장소</strong>
+                <span>팀이 볼 수 있게 branch를 공유하는 곳</span>
+              </div>
+              <div class="place">
+                <strong>PR 화면</strong>
+                <span>차이, 설명, 리뷰, 승인 상태를 모으는 곳</span>
+              </div>
+            </div>
+
+            <svg class="connector branch-path" viewBox="0 0 180 78" aria-hidden="true"><path d="M8 12 C40 12 50 62 92 62 H170"></path></svg>
+            <svg class="connector push-path" viewBox="0 0 150 82" aria-hidden="true"><path d="M8 68 C38 10 92 10 142 22"></path></svg>
+            <svg class="connector pr-path" viewBox="0 0 180 72" aria-hidden="true"><path d="M8 22 C48 66 114 66 172 18"></path></svg>
+            <svg class="connector merge-path" viewBox="0 0 190 74" aria-hidden="true"><path d="M184 58 C122 18 58 18 8 46"></path></svg>
+
+            <div class="lane">
+              <div class="lane-name">main</div>
+              <div class="rail main-rail">
+                <span class="node" style="--color:var(--green);left:12%">A</span>
+                <span class="node" style="--color:var(--green);left:30%">B</span>
+                <span class="node dim" style="--color:var(--green);left:85%">F</span>
+              </div>
+            </div>
+            <div class="lane">
+              <div class="lane-name">feature branch</div>
+              <div class="rail work-rail">
+                <span class="node" style="--color:var(--blue);left:35%">C</span>
+                <span class="node" style="--color:var(--blue);left:56%">D</span>
+                <span class="node" style="--color:var(--blue);left:70%">E</span>
+              </div>
+            </div>
+            <div class="lane">
+              <div class="lane-name">origin/feature</div>
+              <div class="rail remote-rail">
+                <span class="node" style="--color:var(--amber);left:58%">D</span>
+                <span class="node" style="--color:var(--amber);left:73%">E</span>
+              </div>
+            </div>
+            <div class="lane">
+              <div class="lane-name">pull request</div>
+              <div class="rail review-rail">
+                <span class="node" style="--color:var(--violet);left:70%">검토</span>
+                <span class="node" style="--color:var(--green);left:86%">M</span>
+              </div>
+            </div>
+
+            <div class="map-caption" aria-hidden="true">
+              <div class="caption-chip" style="--chip-color:var(--blue)"><strong>branch</strong>작업 줄기를 따로 냅니다.</div>
+              <div class="caption-chip" style="--chip-color:var(--amber)"><strong>push</strong>원격 저장소에 공유합니다.</div>
+              <div class="caption-chip" style="--chip-color:var(--violet)"><strong>PR</strong>변경 제안서를 엽니다.</div>
+              <div class="caption-chip" style="--chip-color:var(--green)"><strong>merge</strong>승인된 변경만 main에 합칩니다.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section light">
+      <div class="shell">
+        <div class="section-head">
+          <div class="eyebrow">왜 필요한가</div>
+          <h2>팀 작업의 핵심 문제는 “내 변경이 모두의 코드에 언제 들어가야 하는가”입니다</h2>
+          <p>브랜치와 PR은 좋은 코드를 만드는 멋진 의식이 아니라, 실수와 충돌을 줄이기 위한 아주 현실적인 안전장치입니다.</p>
+        </div>
+        <div class="motivation-grid">
+          <article class="card">
+            <span class="card-mark" style="--mark-color:var(--green)">안전</span>
+            <div>
+              <h3>main을 바로 건드리지 않습니다</h3>
+              <p>완성 전 작업은 별도 브랜치에 둡니다. 그래서 실험, 수정, 되돌리기를 해도 기본 줄기인 main은 비교적 안정적으로 유지됩니다.</p>
+            </div>
+          </article>
+          <article class="card">
+            <span class="card-mark" style="--mark-color:var(--blue)">공유</span>
+            <div>
+              <h3>내 컴퓨터 밖으로 작업을 올립니다</h3>
+              <p>push를 해야 팀원이 같은 변경사항을 볼 수 있습니다. push 전에는 대부분 내 컴퓨터 안의 기록일 뿐입니다.</p>
+            </div>
+          </article>
+          <article class="card">
+            <span class="card-mark" style="--mark-color:var(--violet)">검토</span>
+            <div>
+              <h3>합치기 전에 맥락을 확인합니다</h3>
+              <p>PR은 코드 차이, 설명, 질문, 리뷰, 승인 여부를 한 화면에 모읍니다. “합치기 전 대화 공간”이라고 보면 됩니다.</p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="shell">
+        <div class="section-head">
+          <div class="eyebrow">쉬운 정의와 정확한 정의</div>
+          <h2>먼저 느낌으로 잡고, 그다음 기술적으로 정확히 잡습니다</h2>
+          <p>초보자가 가장 많이 헷갈리는 지점은 branch와 PR을 같은 것으로 보는 것입니다. branch는 Git의 작업 줄기이고, PR은 GitHub 같은 협업 도구에서 여는 검토 요청입니다.</p>
+        </div>
+        <div class="definition-grid">
+          <article class="term-card">
+            <div class="term-kicker">Branch</div>
+            <h3>브랜치</h3>
+            <div class="plain-definition">기준 코드에서 잠시 갈라져 나와 내 작업을 담는 줄기입니다.</div>
+            <p class="formal-definition">Git에서 브랜치는 특정 commit을 가리키는 이름입니다. 새 commit을 만들면 현재 브랜치가 그 commit을 가리키도록 이동합니다. 그래서 main과 다른 흐름의 변경 이력을 만들 수 있습니다.</p>
+          </article>
+          <article class="term-card">
+            <div class="term-kicker">Pull Request</div>
+            <h3>PR</h3>
+            <div class="plain-definition">내 브랜치의 변경사항을 main에 합치자고 제안하는 검토 요청입니다.</div>
+            <p class="formal-definition">Pull request는 한 브랜치의 변경사항을 다른 브랜치로 merge하자는 제안입니다. GitHub에서는 변경 차이, 설명, 리뷰 댓글, 승인, 충돌 상태를 함께 보여줍니다.</p>
+          </article>
+        </div>
+        <div class="term-list" aria-label="핵심 용어">
+          <div class="term-chip">
+            <strong>commit</strong>
+            <span>작업 내용을 저장한 하나의 기록 지점입니다. “사진 한 장”처럼 나중에 비교하고 되돌아갈 수 있습니다.</span>
+          </div>
+          <div class="term-chip">
+            <strong>push</strong>
+            <span>내 컴퓨터의 commit과 branch를 원격 저장소에 올려 팀이 볼 수 있게 하는 동작입니다.</span>
+          </div>
+          <div class="term-chip">
+            <strong>merge</strong>
+            <span>한 브랜치의 변경 흐름을 다른 브랜치로 합치는 동작입니다. PR의 최종 목적은 보통 merge입니다.</span>
+          </div>
+          <div class="term-chip">
+            <strong>base branch</strong>
+            <span>변경사항이 들어갈 목적지입니다. 보통 main이나 develop입니다.</span>
+          </div>
+          <div class="term-chip">
+            <strong>compare branch</strong>
+            <span>내가 작업한 출발 브랜치입니다. PR 화면에서는 이 브랜치와 base branch의 차이를 보여줍니다.</span>
+          </div>
+          <div class="term-chip">
+            <strong>review</strong>
+            <span>팀원이 변경 의도, 코드 품질, 영향 범위를 확인하고 질문하거나 수정 요청을 남기는 과정입니다.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section light" id="flow">
+      <div class="shell">
+        <div class="section-head">
+          <div class="eyebrow">단계별 흐름</div>
+          <h2>브랜치 만들기부터 merge까지는 다섯 장면으로 보면 됩니다</h2>
+          <p>아래 장면을 바꾸며 “작업이 어디에 있는지”만 따라가 보세요. 명령어는 그 위치 이동을 만드는 도구입니다.</p>
+        </div>
+        <div class="flow-board">
+          <div class="step-buttons" role="tablist" aria-label="Git PR 단계">
+            <button class="step-button is-active" type="button" role="tab" aria-selected="true" data-step="branch" style="--step-color:var(--blue)">
+              <span class="step-mark">1</span>
+              <span class="step-label"><strong>branch</strong><span>작업 줄기 만들기</span></span>
+            </button>
+            <button class="step-button" type="button" role="tab" aria-selected="false" data-step="commit" style="--step-color:var(--green)">
+              <span class="step-mark">2</span>
+              <span class="step-label"><strong>commit</strong><span>기록 저장하기</span></span>
+            </button>
+            <button class="step-button" type="button" role="tab" aria-selected="false" data-step="push" style="--step-color:var(--amber)">
+              <span class="step-mark">3</span>
+              <span class="step-label"><strong>push</strong><span>원격에 올리기</span></span>
+            </button>
+            <button class="step-button" type="button" role="tab" aria-selected="false" data-step="pr" style="--step-color:var(--violet)">
+              <span class="step-mark">4</span>
+              <span class="step-label"><strong>PR</strong><span>검토 요청하기</span></span>
+            </button>
+            <button class="step-button" type="button" role="tab" aria-selected="false" data-step="merge" style="--step-color:var(--cyan)">
+              <span class="step-mark">5</span>
+              <span class="step-label"><strong>merge</strong><span>승인 후 합치기</span></span>
+            </button>
+          </div>
+          <div class="flow-content">
+            <div class="step-visual" data-active="branch" aria-hidden="true">
+              <svg width="0" height="0">
+                <defs>
+                  <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+                    <path d="M0,0 L0,6 L9,3 z" fill="currentColor"></path>
+                  </marker>
+                </defs>
+              </svg>
+              <div class="local-stack">
+                <div class="box main"><strong>local main</strong><span>기준이 되는 안정적인 줄기</span></div>
+                <div class="box feature"><strong>local feature</strong><span>내가 고치고 commit을 쌓는 줄기</span></div>
+              </div>
+              <div class="remote-stack">
+                <div class="box remote"><strong>origin/feature</strong><span>push 후 원격 저장소에 생기는 줄기</span></div>
+              </div>
+              <div class="pr-stack">
+                <div class="box pr"><strong>PR: feature → main</strong><span>차이, 설명, 리뷰, 승인 상태</span></div>
+              </div>
+              <div class="arrow branch"><svg viewBox="0 0 125 70"><path d="M5 12 C40 8 58 64 118 56"></path></svg></div>
+              <div class="arrow push"><svg viewBox="0 0 128 74"><path d="M4 64 C42 8 84 8 122 24"></path></svg></div>
+              <div class="arrow review"><svg viewBox="0 0 120 80"><path d="M4 12 C26 58 74 72 114 34"></path></svg></div>
+            </div>
+            <div class="step-detail">
+              <article class="step-card" aria-live="polite">
+                <div class="step-kicker" id="step-kicker">1단계 · branch</div>
+                <h3 id="step-title">작업 전용 브랜치를 만듭니다</h3>
+                <p id="step-copy">main에서 바로 수정하지 않고 새 브랜치로 이동합니다. 이 순간부터 내 변경은 별도 작업 줄기에 쌓입니다.</p>
+                <code class="command" id="step-command">git switch -c feature/signup-copy</code>
+              </article>
+              <article class="step-card">
+                <div class="step-kicker">이 단계에서 확인할 질문</div>
+                <ul class="review-list" id="step-questions">
+                  <li>이 브랜치는 어떤 문제를 해결하나요?</li>
+                  <li>브랜치 이름만 봐도 목적이 보이나요?</li>
+                </ul>
+              </article>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="shell">
+        <div class="section-head">
+          <div class="eyebrow">비교해서 구분하기</div>
+          <h2>commit, push, PR, merge는 서로 다른 위치의 행동입니다</h2>
+          <p>네 단어를 같은 “올리기”로 뭉뚱그리면 헷갈립니다. 어디에서 일어나는지와 결과물이 무엇인지로 구분하면 오래 기억됩니다.</p>
+        </div>
+        <div class="compare-wrap" role="region" aria-label="commit, push, PR, merge 비교 표">
+          <div class="compare-grid">
+            <div class="compare-cell head">구분</div>
+            <div class="compare-cell head">어디에서?</div>
+            <div class="compare-cell head">무엇이 생기나?</div>
+            <div class="compare-cell head">팀원이 볼 수 있나?</div>
+
+            <div class="compare-cell"><strong>commit</strong><p>작업 저장</p></div>
+            <div class="compare-cell"><p>주로 내 컴퓨터의 현재 브랜치</p></div>
+            <div class="compare-cell"><p>변경사항을 담은 기록 지점</p></div>
+            <div class="compare-cell"><p>push 전에는 보통 볼 수 없습니다.</p></div>
+
+            <div class="compare-cell"><strong>push</strong><p>원격 공유</p></div>
+            <div class="compare-cell"><p>내 컴퓨터 → GitHub 같은 원격 저장소</p></div>
+            <div class="compare-cell"><p>origin/feature 같은 원격 브랜치</p></div>
+            <div class="compare-cell"><p>볼 수 있습니다. 하지만 아직 main에 합쳐진 것은 아닙니다.</p></div>
+
+            <div class="compare-cell"><strong>PR</strong><p>검토 요청</p></div>
+            <div class="compare-cell"><p>GitHub, GitLab 같은 협업 화면</p></div>
+            <div class="compare-cell"><p>변경 제안서, 리뷰 대화, 승인 상태</p></div>
+            <div class="compare-cell"><p>볼 수 있고 댓글과 리뷰를 남길 수 있습니다.</p></div>
+
+            <div class="compare-cell"><strong>merge</strong><p>최종 합치기</p></div>
+            <div class="compare-cell"><p>PR 화면 또는 Git 명령</p></div>
+            <div class="compare-cell"><p>feature 변경이 main에 반영된 상태</p></div>
+            <div class="compare-cell"><p>main을 받는 모든 사람이 최종 변경을 받게 됩니다.</p></div>
+          </div>
+          <div class="mobile-compare">
+            <div class="term-chip"><strong>commit</strong><span>내 브랜치에 작업 기록을 남깁니다. push 전에는 보통 팀원이 볼 수 없습니다.</span></div>
+            <div class="term-chip"><strong>push</strong><span>내 기록을 원격 저장소에 공유합니다. 아직 main에 들어간 것은 아닙니다.</span></div>
+            <div class="term-chip"><strong>PR</strong><span>원격 브랜치를 main에 합치자고 제안하고 리뷰를 받습니다.</span></div>
+            <div class="term-chip"><strong>merge</strong><span>승인된 변경을 main에 최종 반영합니다.</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section light">
+      <div class="shell">
+        <div class="section-head">
+          <div class="eyebrow">예시와 비예시</div>
+          <h2>비슷해 보이지만 핵심 조건이 다릅니다</h2>
+          <p>예시는 개념의 중심을 보여주고, 비예시는 경계를 보여줍니다. 특히 PR은 “push했다”가 아니라 “merge를 제안했다”가 핵심입니다.</p>
+        </div>
+        <div class="example-grid">
+          <article class="example-card">
+            <div class="example-label" style="--label-bg:var(--soft-green);--label-fg:var(--green)">예시</div>
+            <h3>좋은 브랜치와 PR 흐름</h3>
+            <ul>
+              <li><strong>브랜치:</strong> <code>feature/login-error-message</code>처럼 목적이 드러나는 이름으로 시작합니다.</li>
+              <li><strong>commit:</strong> “로그인 실패 메시지 문구 수정”처럼 한 덩어리의 변경을 기록합니다.</li>
+              <li><strong>PR:</strong> 무엇을 바꿨고 왜 바꿨는지, 확인 방법은 무엇인지 적어 리뷰를 요청합니다.</li>
+            </ul>
+          </article>
+          <article class="example-card">
+            <div class="example-label" style="--label-bg:var(--soft-coral);--label-fg:var(--coral)">비예시</div>
+            <h3>겉보기는 비슷하지만 다른 것</h3>
+            <ul>
+              <li><strong>수정만 한 파일:</strong> commit하지 않았다면 Git 기록으로 남지 않았습니다.</li>
+              <li><strong>push만 한 브랜치:</strong> 팀원이 볼 수는 있지만 PR이 열리지 않았다면 검토 요청은 아직 아닙니다.</li>
+              <li><strong>main 직접 수정:</strong> 브랜치와 리뷰 과정을 건너뛰므로 팀 작업에서는 위험할 수 있습니다.</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="shell">
+        <div class="section-head">
+          <div class="eyebrow">풀이 예시</div>
+          <h2>“회원가입 버튼 문구 수정”을 PR로 올려봅니다</h2>
+          <p>작은 수정이어도 흐름은 같습니다. 중요한 것은 작업을 기록하고, 공유하고, 검토받고, 합치는 순서를 지키는 것입니다.</p>
+        </div>
+        <div class="worked">
+          <article class="task-panel">
+            <div class="scenario">상황: 회원가입 버튼의 “가입” 문구를 “무료로 시작하기”로 바꾸고 싶습니다.</div>
+            <p>완료 기준은 세 가지입니다. 변경 이유가 PR 설명에 있고, 화면 확인 방법이 적혀 있고, 리뷰 후 main에 merge됩니다.</p>
+          </article>
+          <ol class="recipe">
+            <li>
+              <div>
+                <strong>새 브랜치를 만듭니다</strong>
+                <span><code>git switch -c feature/signup-button-copy</code></span>
+              </div>
+            </li>
+            <li>
+              <div>
+                <strong>파일을 수정하고 상태를 확인합니다</strong>
+                <span><code>git status</code>로 어떤 파일이 바뀌었는지 봅니다.</span>
+              </div>
+            </li>
+            <li>
+              <div>
+                <strong>변경을 commit합니다</strong>
+                <span><code>git add .</code> 후 <code>git commit -m "Update signup button copy"</code>로 기록합니다.</span>
+              </div>
+            </li>
+            <li>
+              <div>
+                <strong>원격 저장소에 push합니다</strong>
+                <span><code>git push -u origin feature/signup-button-copy</code>로 GitHub에 브랜치를 올립니다.</span>
+              </div>
+            </li>
+            <li>
+              <div>
+                <strong>PR을 열고 리뷰를 받습니다</strong>
+                <span>base는 <code>main</code>, compare는 내 feature 브랜치입니다. 승인 뒤 merge합니다.</span>
+              </div>
+            </li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <section class="section light" id="quiz">
+      <div class="shell">
+        <div class="section-head">
+          <div class="eyebrow">확인 퀴즈</div>
+          <h2>헷갈리는 지점을 바로 골라봅니다</h2>
+          <p>정답을 맞히는 것보다 왜 그런지 설명할 수 있는지가 목표입니다.</p>
+        </div>
+        <div class="quiz-grid">
+          <article class="quiz-card" data-quiz="1" data-correct="b">
+            <div class="quiz-kicker">문제 1</div>
+            <h3>PR을 열기 전에 보통 먼저 해야 하는 일은?</h3>
+            <button class="quiz-choice" type="button" data-choice="a"><span class="answer-mark">A</span>main에 바로 merge한다</button>
+            <button class="quiz-choice" type="button" data-choice="b"><span class="answer-mark">B</span>작업 브랜치를 원격 저장소에 push한다</button>
+            <button class="quiz-choice" type="button" data-choice="c"><span class="answer-mark">C</span>리뷰어가 코드를 먼저 수정한다</button>
+            <p class="quiz-feedback">답을 선택해보세요.</p>
+          </article>
+          <article class="quiz-card" data-quiz="2" data-correct="a">
+            <div class="quiz-kicker">문제 2</div>
+            <h3>브랜치를 쓰는 가장 큰 이유로 알맞은 것은?</h3>
+            <button class="quiz-choice" type="button" data-choice="a"><span class="answer-mark">A</span>main을 안정적으로 두고 별도 흐름에서 작업하기 위해</button>
+            <button class="quiz-choice" type="button" data-choice="b"><span class="answer-mark">B</span>commit을 만들지 않기 위해</button>
+            <button class="quiz-choice" type="button" data-choice="c"><span class="answer-mark">C</span>GitHub 계정을 숨기기 위해</button>
+            <p class="quiz-feedback">답을 선택해보세요.</p>
+          </article>
+          <article class="quiz-card" data-quiz="3" data-correct="c">
+            <div class="quiz-kicker">문제 3</div>
+            <h3>push와 PR의 차이를 가장 잘 설명한 것은?</h3>
+            <button class="quiz-choice" type="button" data-choice="a"><span class="answer-mark">A</span>둘 다 main에 바로 합치는 동작이다</button>
+            <button class="quiz-choice" type="button" data-choice="b"><span class="answer-mark">B</span>push는 리뷰, PR은 파일 저장이다</button>
+            <button class="quiz-choice" type="button" data-choice="c"><span class="answer-mark">C</span>push는 원격 공유, PR은 merge 검토 요청이다</button>
+            <p class="quiz-feedback">답을 선택해보세요.</p>
+          </article>
+          <article class="quiz-card" data-quiz="4" data-correct="b">
+            <div class="quiz-kicker">문제 4</div>
+            <h3>PR 설명에 있으면 좋은 내용은?</h3>
+            <button class="quiz-choice" type="button" data-choice="a"><span class="answer-mark">A</span>아무 설명 없이 제목만 둔다</button>
+            <button class="quiz-choice" type="button" data-choice="b"><span class="answer-mark">B</span>무엇을 왜 바꿨는지와 확인 방법</button>
+            <button class="quiz-choice" type="button" data-choice="c"><span class="answer-mark">C</span>리뷰어가 볼 필요 없는 개인 메모만 둔다</button>
+            <p class="quiz-feedback">답을 선택해보세요.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="shell">
+        <div class="section-head">
+          <div class="eyebrow">적용 과제</div>
+          <h2>이제 자기 작업에 바로 대입해봅니다</h2>
+          <p>아래 빈칸을 실제 업무 상황으로 바꾸면 PR을 열기 전 생각할 내용이 정리됩니다.</p>
+        </div>
+        <div class="worked">
+          <article class="task-panel">
+            <h3>내 작업 PR 초안</h3>
+            <ul>
+              <li><strong>브랜치 이름:</strong> feature/무엇을-바꾸는지</li>
+              <li><strong>PR 제목:</strong> 사용자가 보게 될 변화나 해결한 문제</li>
+              <li><strong>변경 이유:</strong> 왜 지금 이 수정이 필요한지</li>
+              <li><strong>확인 방법:</strong> 어떤 화면에서 무엇을 확인하면 되는지</li>
+              <li><strong>리뷰 요청:</strong> 특히 봐줬으면 하는 파일이나 판단 지점</li>
+            </ul>
+          </article>
+          <article class="task-panel">
+            <h3>나중에 다시 볼 질문</h3>
+            <ul>
+              <li>내 변경사항은 지금 local, remote, PR 화면 중 어디에 있나요?</li>
+              <li>이 작업은 main에 바로 들어가도 안전한가요, 검토가 필요한가요?</li>
+              <li>리뷰어가 이 PR의 목적과 확인 방법을 1분 안에 알 수 있나요?</li>
+              <li>merge 후에는 어떤 사용자가 어떤 변화를 보게 되나요?</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section light">
+      <div class="shell">
+        <div class="section-head">
+          <div class="eyebrow">핵심 요약</div>
+          <h2>기억할 문장은 네 개면 충분합니다</h2>
+        </div>
+        <div class="summary-grid">
+          <article class="summary-card">
+            <strong>브랜치</strong>
+            <p>main에서 갈라진 작업 줄기입니다. 실험과 수정을 안전하게 담습니다.</p>
+          </article>
+          <article class="summary-card">
+            <strong>commit</strong>
+            <p>작업 내용을 저장한 기록 지점입니다. 나중에 비교하고 되돌릴 수 있습니다.</p>
+          </article>
+          <article class="summary-card">
+            <strong>push</strong>
+            <p>내 브랜치의 commit을 원격 저장소에 올려 팀이 볼 수 있게 합니다.</p>
+          </article>
+          <article class="summary-card">
+            <strong>PR</strong>
+            <p>브랜치를 main에 합치기 전에 설명하고 리뷰받는 제안서입니다.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="shell">
+        <div class="source-panel">
+          <div>
+            <div class="eyebrow">참고한 공식 문서</div>
+            <h2>출처</h2>
+            <p>정의와 흐름은 Git 공식 문서와 GitHub 공식 문서를 기준으로 정리했습니다.</p>
+          </div>
+          <div class="source-list">
+            <a class="source-link" href="https://git-scm.com/book/en/v2/Git-Branching-Branches-in-a-Nutshell">Git Book: Branches in a Nutshell</a>
+            <a class="source-link" href="https://git-scm.com/docs/git-branch">Git: git-branch Documentation</a>
+            <a class="source-link" href="https://docs.github.com/articles/about-branches">GitHub Docs: About branches</a>
+            <a class="source-link" href="https://docs.github.com/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests">GitHub Docs: About pull requests</a>
+            <a class="source-link" href="https://docs.github.com/get-started/quickstart/github-flow">GitHub Docs: GitHub flow</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="shell">Git 브랜치와 PR 올리기 학습 지도 · 기존 페이지와 비교하기 위한 새 버전</div>
+  </footer>
+
+  <script>
+    const stepData = {
+      branch: {
+        kicker: "1단계 · branch",
+        title: "작업 전용 브랜치를 만듭니다",
+        copy: "main에서 바로 수정하지 않고 새 브랜치로 이동합니다. 이 순간부터 내 변경은 별도 작업 줄기에 쌓입니다.",
+        command: "git switch -c feature/signup-copy",
+        questions: ["이 브랜치는 어떤 문제를 해결하나요?", "브랜치 이름만 봐도 목적이 보이나요?"]
+      },
+      commit: {
+        kicker: "2단계 · commit",
+        title: "변경사항을 의미 있는 기록으로 저장합니다",
+        copy: "파일을 고친 뒤 commit을 만들면 Git이 그 시점의 변경 묶음을 기억합니다. 작은 단위로 남길수록 리뷰와 되돌리기가 쉬워집니다.",
+        command: "git status\ngit add .\ngit commit -m \"Update signup button copy\"",
+        questions: ["이 commit은 한 가지 목적을 담고 있나요?", "메시지만 봐도 변경 내용을 알 수 있나요?"]
+      },
+      push: {
+        kicker: "3단계 · push",
+        title: "내 브랜치를 원격 저장소에 공유합니다",
+        copy: "push하면 GitHub 같은 원격 저장소에 같은 이름의 브랜치가 생기거나 업데이트됩니다. 이제 팀원이 변경사항을 볼 준비가 됩니다.",
+        command: "git push -u origin feature/signup-copy",
+        questions: ["내 브랜치가 원격 저장소에 올라갔나요?", "base branch가 최신인지 확인했나요?"]
+      },
+      pr: {
+        kicker: "4단계 · PR",
+        title: "main에 합치기 전에 검토를 요청합니다",
+        copy: "PR은 변경 차이와 설명을 묶은 제안서입니다. 리뷰어는 이 화면에서 질문하고, 수정 요청을 남기고, 승인합니다.",
+        command: "base: main\ncompare: feature/signup-copy\nPR title: Update signup button copy",
+        questions: ["무엇을 왜 바꿨는지 설명했나요?", "확인 방법과 영향 범위를 적었나요?"]
+      },
+      merge: {
+        kicker: "5단계 · merge",
+        title: "승인된 변경을 main에 합칩니다",
+        copy: "리뷰가 끝나고 충돌이 없다면 merge합니다. 이때부터 feature 브랜치의 변경사항이 main의 일부가 됩니다.",
+        command: "Merge pull request\nDelete branch after merge",
+        questions: ["리뷰 요청이 해결됐나요?", "merge 후 삭제해도 되는 작업 브랜치인가요?"]
+      }
+    };
+
+    const buttons = document.querySelectorAll(".step-button");
+    const visual = document.querySelector(".step-visual");
+    const kicker = document.querySelector("#step-kicker");
+    const title = document.querySelector("#step-title");
+    const copy = document.querySelector("#step-copy");
+    const command = document.querySelector("#step-command");
+    const questions = document.querySelector("#step-questions");
+
+    buttons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const key = button.dataset.step;
+        const item = stepData[key];
+        buttons.forEach((candidate) => {
+          candidate.classList.toggle("is-active", candidate === button);
+          candidate.setAttribute("aria-selected", candidate === button ? "true" : "false");
+        });
+        visual.dataset.active = key;
+        kicker.textContent = item.kicker;
+        title.textContent = item.title;
+        copy.textContent = item.copy;
+        command.textContent = item.command;
+        questions.replaceChildren(
+          ...item.questions.map((question) => {
+            const listItem = document.createElement("li");
+            listItem.textContent = question;
+            return listItem;
+          })
+        );
+      });
+    });
+
+    document.querySelectorAll(".quiz-card").forEach((card) => {
+      const correct = card.dataset.correct;
+      const feedback = card.querySelector(".quiz-feedback");
+      card.querySelectorAll(".quiz-choice").forEach((choice) => {
+        choice.addEventListener("click", () => {
+          const isCorrect = choice.dataset.choice === correct;
+          card.querySelectorAll(".quiz-choice").forEach((item) => {
+            item.classList.remove("is-correct", "is-wrong");
+          });
+          choice.classList.add(isCorrect ? "is-correct" : "is-wrong");
+          feedback.textContent = isCorrect
+            ? "정답입니다. 위치와 목적을 기준으로 잘 구분했습니다."
+            : "다시 생각해보세요. 이 행동이 내 컴퓨터, 원격 저장소, PR 화면 중 어디에서 일어나는지 떠올리면 됩니다.";
+        });
+      });
+    });
+  </script>
+</body>
+</html>
