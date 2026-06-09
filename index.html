@@ -80,7 +80,7 @@
 
     .cards {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: 1fr;
       gap: 12px;
       padding: 18px 0 28px;
     }
@@ -246,25 +246,9 @@
 
   <main class="shell">
     <section class="cards" aria-label="교육 페이지 목록">
-      <a class="card" href="./git-branch-pr-guide.html" style="--badge-bg:var(--soft-green);--badge-fg:var(--green);--thumb-bg:var(--soft-green);--accent:var(--green)">
-        <div class="card-top">
-          <span class="badge">실무</span>
-          <svg class="icon" viewBox="0 0 24 24"><path d="M6 3v12"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="6" r="3"></circle><path d="M18 9a9 9 0 0 1-9 9"></path></svg>
-        </div>
-        <div>
-          <h2>Git 브랜치와 PR</h2>
-          <p>commit, push, PR의 차이를 위치와 검토 흐름으로 이해하고 실무에 연결합니다.</p>
-        </div>
-        <div class="thumb" aria-hidden="true">
-          <span class="line"></span>
-          <span class="line"></span>
-          <span class="line"></span>
-        </div>
-        <span class="cta">열어보기 <svg class="icon" viewBox="0 0 24 24"><path d="M7 17 17 7"></path><path d="M7 7h10v10"></path></svg></span>
-      </a>
       <a class="card" href="./git-branch-pr-guide-v2.html" style="--badge-bg:var(--soft-blue);--badge-fg:var(--blue);--thumb-bg:var(--soft-blue);--accent:var(--blue)">
         <div class="card-top">
-          <span class="badge">새 버전</span>
+          <span class="badge">실무</span>
           <svg class="icon" viewBox="0 0 24 24"><path d="M7 7h6a4 4 0 0 1 0 8H7"></path><path d="M7 15l4-4-4-4"></path><path d="M17 7h1a3 3 0 0 1 3 3v8"></path><path d="M18 15l3 3 3-3"></path></svg>
         </div>
         <div>
@@ -276,7 +260,7 @@
           <span class="line"></span>
           <span class="line"></span>
         </div>
-        <span class="cta">비교하기 <svg class="icon" viewBox="0 0 24 24"><path d="M7 17 17 7"></path><path d="M7 7h10v10"></path></svg></span>
+        <span class="cta">열어보기 <svg class="icon" viewBox="0 0 24 24"><path d="M7 17 17 7"></path><path d="M7 7h10v10"></path></svg></span>
       </a>
     </section>
   </main>
