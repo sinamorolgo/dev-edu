@@ -88,6 +88,12 @@
       gap: 14px;
     }
 
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
     .brand,
     .mini-link,
     .source-card,
@@ -677,6 +683,34 @@
       scroll-margin-top: 76px;
     }
 
+    .quiz-jump-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: -4px 0 20px;
+    }
+
+    .quiz-jump {
+      display: inline-flex;
+      align-items: center;
+      min-height: 40px;
+      padding: 0 12px;
+      border: 1px solid rgba(24, 32, 29, 0.13);
+      border-radius: 8px;
+      background: var(--white);
+      color: var(--ink);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .quiz-jump:hover,
+    .quiz-jump:focus-visible {
+      border-color: rgba(28, 123, 90, 0.4);
+      background: var(--soft-green);
+      color: var(--green);
+    }
+
     .quiz-level + .quiz-level {
       margin-top: 28px;
     }
@@ -959,10 +993,16 @@
         </span>
         <span>개발 이해 가이드</span>
       </a>
-      <a class="mini-link" href="#quiz">
-        <svg class="icon" viewBox="0 0 24 24"><path d="M9 11h6"></path><path d="M9 15h3"></path><path d="M5 4h14v16H5z"></path></svg>
-        퀴즈
-      </a>
+      <div class="top-actions" aria-label="학습 이동">
+        <a class="mini-link" href="#quiz">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M9 11h6"></path><path d="M9 15h3"></path><path d="M5 4h14v16H5z"></path></svg>
+          퀴즈
+        </a>
+        <a class="mini-link" href="#glossary-quiz">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M4 6h16"></path><path d="M4 12h16"></path><path d="M4 18h10"></path></svg>
+          용어
+        </a>
+      </div>
     </div>
   </header>
 
@@ -1439,7 +1479,12 @@
           <p class="lead">각 문제는 답을 고르면 정답과 해설이 표시됩니다. 틀려도 괜찮습니다. 해설을 읽으며 “모델 문제가 아니라 환경 문제로 바꿔 생각하는 법”을 익히는 것이 목표입니다.</p>
         </div>
 
-        <div class="quiz-level" style="--level-bg:var(--soft-green);--level-fg:var(--green)">
+        <nav class="quiz-jump-list" aria-label="퀴즈 바로가기">
+          <a class="quiz-jump" href="#practice-quiz">개념 적용 퀴즈</a>
+          <a class="quiz-jump" href="#glossary-quiz">용어 복습 퀴즈</a>
+        </nav>
+
+        <div class="quiz-level" id="practice-quiz" style="--level-bg:var(--soft-green);--level-fg:var(--green)">
           <div class="quiz-level-head">
             <span class="level-badge">쉬운 난이도</span>
             <h3>핵심 개념을 다시 꺼내는 문제</h3>
@@ -1634,7 +1679,7 @@
           </div>
         </div>
 
-        <div class="quiz-level" style="--level-bg:var(--soft-cyan);--level-fg:var(--cyan)">
+        <div class="quiz-level" id="glossary-quiz" style="--level-bg:var(--soft-cyan);--level-fg:var(--cyan)">
           <div class="quiz-level-head">
             <span class="level-badge">용어집 퀴즈</span>
             <h3>글에서 자주 나온 핵심 단어를 다시 잡는 문제</h3>
