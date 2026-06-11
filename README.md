@@ -7,6 +7,7 @@
 - `index.html`: 공유용 홈
 - `git-branch-pr-guide-v2.html`: Git 브랜치와 PR 학습 지도
 - `ai-harness-guide.html`: AI 개발에서 하네스 이해하기
+- `onesearch-ai-chat-tools-guide.html`: 원써치 AI Chat 툴 구조 이해하기
 
 ## GitHub Pages로 공유하기
 

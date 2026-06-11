@@ -1,0 +1,2393 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>원써치 AI Chat 툴 구조 이해하기</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23263238'/%3E%3Cpath d='M16 21h32v22H16z' fill='none' stroke='white' stroke-width='4'/%3E%3Cpath d='M23 29h18M23 36h10M44 18v8M44 38v8M12 30h8M44 30h8' stroke='white' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
+  <style>
+    :root {
+      --ink: #17201d;
+      --muted: #5e6d68;
+      --paper: #f7f8f2;
+      --white: #ffffff;
+      --line: #d8dfd2;
+      --dark: #263238;
+      --green: #1b7d61;
+      --blue: #245fbd;
+      --amber: #b87112;
+      --coral: #bf4f45;
+      --violet: #6854c9;
+      --cyan: #08727c;
+      --soft-green: #e3f5ec;
+      --soft-blue: #e7efff;
+      --soft-amber: #fff0ce;
+      --soft-coral: #ffe8e4;
+      --soft-violet: #efebff;
+      --soft-cyan: #e4f4f5;
+      --shadow: 0 16px 42px rgba(23, 32, 29, 0.11);
+      color-scheme: light;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 24px;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        linear-gradient(180deg, rgba(36, 95, 189, 0.08), rgba(247, 248, 242, 0) 360px),
+        var(--paper);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.62;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    code {
+      padding: 2px 5px;
+      border-radius: 5px;
+      background: rgba(38, 50, 56, 0.08);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      font-size: 0.94em;
+    }
+
+    .shell {
+      width: min(1160px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .source-card,
+    .pill-link,
+    .quiz-choice {
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .step-number,
+    .node,
+    .answer-mark,
+    .chip-mark {
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+    }
+
+    .icon {
+      width: 18px;
+      height: 18px;
+      flex: 0 0 18px;
+      stroke: currentColor;
+      stroke-width: 2.1;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin-top: 0;
+    }
+
+    h1,
+    h2,
+    h3 {
+      letter-spacing: 0;
+    }
+
+    h1 {
+      max-width: 920px;
+      margin-bottom: 16px;
+      font-size: 44px;
+      line-height: 1.08;
+    }
+
+    h2 {
+      margin-bottom: 12px;
+      font-size: 32px;
+      line-height: 1.14;
+    }
+
+    h3 {
+      margin-bottom: 8px;
+      font-size: 20px;
+      line-height: 1.28;
+    }
+
+    p,
+    li {
+      word-break: keep-all;
+      overflow-wrap: break-word;
+    }
+
+    .eyebrow {
+      width: fit-content;
+      margin-bottom: 12px;
+      padding: 6px 10px;
+      border: 1px solid rgba(23, 32, 29, 0.14);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.82);
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .lead {
+      max-width: 860px;
+      margin-bottom: 20px;
+      color: var(--muted);
+      font-size: 18px;
+    }
+
+    .section {
+      padding: 42px 0;
+      scroll-margin-top: 24px;
+    }
+
+    .section + .section {
+      border-top: 1px solid rgba(23, 32, 29, 0.1);
+    }
+
+    .section-head {
+      max-width: 860px;
+      margin-bottom: 18px;
+    }
+
+    .hero {
+      padding: 46px 0 32px;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
+      gap: 22px;
+      align-items: stretch;
+    }
+
+    .hero-card {
+      display: grid;
+      gap: 12px;
+      align-content: center;
+      padding: 18px;
+      border: 1px solid rgba(23, 32, 29, 0.12);
+      border-radius: 8px;
+      background: var(--white);
+      box-shadow: var(--shadow);
+    }
+
+    .chat-frame {
+      display: grid;
+      gap: 12px;
+      padding: 14px;
+      border: 1px solid rgba(23, 32, 29, 0.12);
+      border-radius: 8px;
+      background: linear-gradient(135deg, #eef4ff, #ffffff 48%, #e7f7ef);
+    }
+
+    .bubble {
+      max-width: 88%;
+      padding: 11px 12px;
+      border-radius: 8px;
+      background: var(--white);
+      box-shadow: 0 10px 24px rgba(38, 50, 56, 0.08);
+      font-size: 14px;
+    }
+
+    .bubble.user {
+      justify-self: end;
+      color: #fff;
+      background: var(--blue);
+      font-weight: 800;
+    }
+
+    .tool-call {
+      display: grid;
+      gap: 6px;
+      padding: 12px;
+      border: 1px solid rgba(27, 125, 97, 0.25);
+      border-radius: 8px;
+      background: rgba(227, 245, 236, 0.9);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      font-size: 13px;
+    }
+
+    .sources {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .source-card,
+    .info-card,
+    .fact-card,
+    .quiz-card,
+    .task-card,
+    .warning-card {
+      border: 1px solid rgba(23, 32, 29, 0.12);
+      border-radius: 8px;
+      background: var(--white);
+      box-shadow: var(--shadow);
+    }
+
+    .source-card {
+      min-height: 156px;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding: 14px;
+      text-decoration: none;
+    }
+
+    .source-card:hover,
+    .source-card:focus-visible,
+    .pill-link:hover,
+    .pill-link:focus-visible {
+      outline: 3px solid rgba(36, 95, 189, 0.18);
+      outline-offset: 2px;
+    }
+
+    .tag {
+      width: fit-content;
+      padding: 5px 8px;
+      border-radius: 999px;
+      background: var(--soft-blue);
+      color: var(--blue);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .source-card h3 {
+      font-size: 17px;
+    }
+
+    .source-card p {
+      margin-bottom: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.48;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .info-card,
+    .fact-card,
+    .warning-card {
+      padding: 16px;
+    }
+
+    .fact-card {
+      display: grid;
+      gap: 8px;
+    }
+
+    .fact-card p,
+    .warning-card p {
+      margin-bottom: 0;
+      color: var(--muted);
+    }
+
+    .callout {
+      padding: 18px;
+      border-radius: 8px;
+      background: var(--soft-cyan);
+      border: 1px solid rgba(8, 114, 124, 0.22);
+    }
+
+    .callout strong {
+      color: var(--cyan);
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(116px, 1fr));
+      gap: 10px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .flow-step {
+      min-width: 116px;
+      display: grid;
+      gap: 9px;
+      padding: 12px;
+      border: 1px solid rgba(23, 32, 29, 0.12);
+      border-radius: 8px;
+      background: var(--white);
+    }
+
+    .step-number {
+      width: 30px;
+      height: 30px;
+      color: #fff;
+      background: var(--dark);
+      font-weight: 900;
+    }
+
+    .flow-step h3 {
+      margin-bottom: 0;
+      font-size: 16px;
+    }
+
+    .flow-step p {
+      margin-bottom: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.42;
+    }
+
+    .code-map {
+      display: grid;
+      gap: 10px;
+    }
+
+    .code-row {
+      display: grid;
+      grid-template-columns: minmax(220px, 0.8fr) minmax(0, 1.2fr);
+      gap: 12px;
+      align-items: start;
+      padding: 12px;
+      border: 1px solid rgba(23, 32, 29, 0.1);
+      border-radius: 8px;
+      background: var(--white);
+    }
+
+    .code-row strong {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      font-size: 13px;
+      overflow-wrap: anywhere;
+    }
+
+    .code-row span {
+      color: var(--muted);
+    }
+
+    .snippet-stack {
+      display: grid;
+      gap: 16px;
+    }
+
+    .snippet-card {
+      overflow: hidden;
+      border: 1px solid rgba(23, 32, 29, 0.12);
+      border-radius: 8px;
+      background: var(--white);
+      box-shadow: var(--shadow);
+    }
+
+    .snippet-head {
+      display: grid;
+      gap: 4px;
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(23, 32, 29, 0.1);
+      background: rgba(38, 50, 56, 0.05);
+    }
+
+    .snippet-head strong {
+      font-size: 17px;
+    }
+
+    .snippet-head span {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .snippet-card pre {
+      margin: 0;
+      overflow-x: auto;
+      padding: 16px;
+      background: #15201d;
+      color: #eef7f0;
+      font-size: 13px;
+      line-height: 1.58;
+      tab-size: 2;
+    }
+
+    .snippet-card pre code {
+      padding: 0;
+      border-radius: 0;
+      background: transparent;
+      color: inherit;
+      font-size: inherit;
+    }
+
+    .read-notes {
+      display: grid;
+      gap: 8px;
+      margin: 0;
+      padding: 14px 18px 16px 34px;
+      color: var(--muted);
+    }
+
+    .read-notes strong {
+      color: var(--ink);
+    }
+
+    .diagram {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    .node {
+      min-height: 132px;
+      padding: 14px;
+      border: 1px solid rgba(23, 32, 29, 0.12);
+      background: var(--white);
+      text-align: center;
+    }
+
+    .node strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 18px;
+    }
+
+    .node span {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid rgba(23, 32, 29, 0.12);
+      border-radius: 8px;
+      background: var(--white);
+    }
+
+    table {
+      width: 100%;
+      min-width: 720px;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      padding: 12px;
+      border-bottom: 1px solid rgba(23, 32, 29, 0.1);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: rgba(38, 50, 56, 0.05);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    td {
+      color: var(--muted);
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .tool-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .tool-chip {
+      min-height: 96px;
+      display: grid;
+      gap: 8px;
+      align-content: start;
+      padding: 12px;
+      border: 1px solid rgba(23, 32, 29, 0.12);
+      border-radius: 8px;
+      background: var(--white);
+    }
+
+    .chip-mark {
+      width: 30px;
+      height: 30px;
+      background: var(--soft-green);
+      color: var(--green);
+      font-weight: 900;
+    }
+
+    .tool-chip strong {
+      font-size: 15px;
+    }
+
+    .tool-chip span {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.42;
+    }
+
+    .example {
+      display: grid;
+      gap: 10px;
+      padding: 16px;
+      border: 1px solid rgba(23, 32, 29, 0.12);
+      border-radius: 8px;
+      background: var(--white);
+    }
+
+    .example-line {
+      display: grid;
+      grid-template-columns: 120px minmax(0, 1fr);
+      gap: 10px;
+      padding: 10px;
+      border-radius: 8px;
+      background: rgba(38, 50, 56, 0.05);
+    }
+
+    .example-line strong {
+      color: var(--blue);
+    }
+
+    .checklist {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .checklist li {
+      padding: 12px;
+      border: 1px solid rgba(23, 32, 29, 0.12);
+      border-radius: 8px;
+      background: var(--white);
+    }
+
+    .pill-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 12px 0 18px;
+    }
+
+    .pill-link {
+      padding: 0 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(23, 32, 29, 0.13);
+      background: var(--white);
+      color: var(--dark);
+      font-size: 14px;
+      font-weight: 900;
+      text-decoration: none;
+    }
+
+    .quiz-stack {
+      display: grid;
+      gap: 10px;
+    }
+
+    .quiz-card {
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .quiz-card summary {
+      min-height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      cursor: default;
+      font-weight: 900;
+      list-style: none;
+    }
+
+    .quiz-card summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .quiz-card summary span {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .quiz-body {
+      padding: 0 16px 16px;
+      color: var(--muted);
+    }
+
+    .choices {
+      display: grid;
+      gap: 8px;
+      margin: 8px 0 0;
+      padding-left: 26px;
+    }
+
+    .choices li {
+      padding: 9px 10px;
+      border: 1px solid rgba(23, 32, 29, 0.1);
+      border-radius: 8px;
+      background: rgba(38, 50, 56, 0.04);
+      color: var(--ink);
+      cursor: pointer;
+      transition: background 140ms ease, border-color 140ms ease, transform 140ms ease;
+    }
+
+    .choices li:hover,
+    .choices li:focus-visible {
+      border-color: rgba(36, 95, 189, 0.38);
+      background: rgba(36, 95, 189, 0.08);
+      outline: none;
+      transform: translateY(-1px);
+    }
+
+    .choices li.is-correct {
+      border-color: rgba(27, 125, 97, 0.55);
+      background: var(--soft-green);
+      color: var(--green);
+      font-weight: 900;
+    }
+
+    .choices li.is-wrong {
+      border-color: rgba(191, 79, 69, 0.55);
+      background: var(--soft-coral);
+      color: var(--coral);
+      font-weight: 900;
+    }
+
+    .choice-result {
+      display: none;
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-weight: 900;
+    }
+
+    .choice-result.correct {
+      display: block;
+      background: var(--soft-green);
+      color: var(--green);
+      border: 1px solid rgba(27, 125, 97, 0.26);
+    }
+
+    .choice-result.wrong {
+      display: block;
+      background: var(--soft-coral);
+      color: var(--coral);
+      border: 1px solid rgba(191, 79, 69, 0.26);
+    }
+
+    .answer {
+      display: none;
+      grid-template-columns: 32px minmax(0, 1fr);
+      gap: 10px;
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 8px;
+      background: var(--soft-green);
+      color: var(--ink);
+    }
+
+    .quiz-card.answered .answer {
+      display: grid;
+    }
+
+    .answer-mark {
+      width: 32px;
+      height: 32px;
+      color: #fff;
+      background: var(--green);
+      font-weight: 900;
+    }
+
+    .task-card {
+      padding: 16px;
+    }
+
+    .task-card ol {
+      margin-bottom: 0;
+      padding-left: 22px;
+    }
+
+    .summary-band {
+      padding: 22px;
+      border-radius: 8px;
+      background: var(--dark);
+      color: #fff;
+    }
+
+    .summary-band p {
+      margin-bottom: 0;
+      color: rgba(255, 255, 255, 0.82);
+    }
+
+    .footer {
+      padding: 34px 0 46px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    @media (max-width: 980px) {
+      .hero-grid,
+      .grid-2,
+      .grid-3,
+      .diagram {
+        grid-template-columns: 1fr;
+      }
+
+      .sources,
+      .tool-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .checklist {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 680px) {
+      .shell {
+        width: min(100% - 22px, 1160px);
+      }
+
+      h1 {
+        font-size: 34px;
+      }
+
+      h2 {
+        font-size: 26px;
+      }
+
+      .lead {
+        font-size: 16px;
+      }
+
+      .sources,
+      .tool-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .code-row,
+      .example-line {
+        grid-template-columns: 1fr;
+      }
+
+      .section {
+        padding: 34px 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="hero shell">
+      <div class="hero-grid">
+        <div>
+          <div class="eyebrow">OneSearch AI Chat</div>
+          <h1>원써치 AI Chat의 툴은 AI에게 열어 준 업무용 버튼이다</h1>
+          <p class="lead">
+            사용자는 채팅창에 말로 요청하고, 모델은 어떤 버튼을 눌러야 할지 고릅니다. 버튼을 누른 뒤 실제 DB 조회, 체크리스트 생성, 통계 계산을 하는 곳은 모델이 아니라 원써치 백엔드입니다.
+          </p>
+          <div class="callout">
+            <strong>한 문장으로 말하면</strong>
+            <p>툴은 모델에게 DB 열쇠를 주는 방식이 아니라, 우리가 만든 안전한 업무 버튼 목록을 보여 주고 필요한 버튼만 누르게 하는 방식입니다.</p>
+          </div>
+        </div>
+
+        <div class="hero-card" aria-label="AI Chat 도구 호출 예시">
+          <div class="chat-frame">
+            <div class="bubble user">오늘 설치 예정 건 브리핑해줘.</div>
+            <div class="tool-call">
+              <span>선택한 버튼: 설치 브리핑 조회</span>
+              <span>필요한 값: 오늘</span>
+              <span>실행 위치: 원써치 백엔드</span>
+            </div>
+            <div class="bubble">오늘 설치 건을 고객, 계약, 제품, 주의사항, 후속 액션 기준으로 정리하면...</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section shell" aria-labelledby="sources-title">
+      <div class="section-head">
+        <h2 id="sources-title">먼저 읽으면 좋은 글</h2>
+        <p class="lead">툴 호출의 큰 그림과 원써치 구조를 연결해서 이해하는 데 도움이 되는 자료입니다.</p>
+      </div>
+      <div class="sources">
+        <a class="source-card" href="https://openai.github.io/openai-agents-python/tools/" target="_blank" rel="noopener">
+          <span class="tag">OpenAI</span>
+          <div>
+            <h3>Agents SDK Tools</h3>
+            <p>서버 함수가 모델이 부를 수 있는 도구가 되는 방식을 공식 문서로 확인합니다.</p>
+          </div>
+        </a>
+        <a class="source-card" href="https://www.martinfowler.com/articles/function-call-LLM.html" target="_blank" rel="noopener">
+          <span class="tag" style="background:var(--soft-amber);color:var(--amber)">Architecture</span>
+          <div>
+            <h3>Function calling using LLMs</h3>
+            <p>모델이 함수를 직접 실행하는 것이 아니라 실행 요청을 만든다는 경계를 이해하기 좋습니다.</p>
+          </div>
+        </a>
+        <a class="source-card" href="https://www.ncloud-forums.com/topic/475/" target="_blank" rel="noopener">
+          <span class="tag" style="background:var(--soft-green);color:var(--green)">한국어</span>
+          <div>
+            <h3>Function calling 활용법</h3>
+            <p>사용자 입력, 도구 선택, 외부 함수 실행, 최종 응답 생성의 순서를 쉬운 예시로 따라갑니다.</p>
+          </div>
+        </a>
+        <a class="source-card" href="https://uracle.blog/2025/03/28/agent%EC%9D%98-%EA%B8%B0%EB%B0%98%EC%9D%B4-%EB%90%98%EB%8A%94-llm-tool-calling/" target="_blank" rel="noopener">
+          <span class="tag" style="background:var(--soft-violet);color:var(--violet)">한국어</span>
+          <div>
+            <h3>LLM Tool Calling 개념</h3>
+            <p>에이전트, 도구, 도구 설명, 도구 실행 결과가 어떻게 연결되는지 개념을 먼저 잡습니다.</p>
+          </div>
+        </a>
+      </div>
+    </section>
+
+    <section class="section shell" aria-labelledby="goal-title">
+      <div class="section-head">
+        <h2 id="goal-title">이 페이지를 읽고 나면</h2>
+        <p class="lead">비개발자도 원써치 AI Chat이 어떻게 실제 업무 데이터를 가져오는지 큰 흐름으로 설명할 수 있어야 합니다.</p>
+      </div>
+      <div class="grid-3">
+        <div class="fact-card">
+          <h3>역할을 나눈다</h3>
+          <p>사용자, 화면, API, 모델, 백엔드 함수가 각각 어떤 일을 맡는지 구분할 수 있습니다.</p>
+        </div>
+        <div class="fact-card">
+          <h3>오해를 줄인다</h3>
+          <p>AI가 DB를 직접 뒤지는 것이 아니라, 서버가 허락한 도구만 요청한다는 점을 설명할 수 있습니다.</p>
+        </div>
+        <div class="fact-card">
+          <h3>새 기능을 상상한다</h3>
+          <p>새 업무 기능을 붙일 때 어떤 API와 어떤 도구 설명이 필요한지 점검할 수 있습니다.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section shell" aria-labelledby="background-title">
+      <div class="section-head">
+        <h2 id="background-title">왜 툴이 필요할까</h2>
+        <p class="lead">언어 모델은 말을 이해하고 정리하는 데 강하지만, 우리 회사 DB의 오늘 설치 일정이나 체크리스트 상태를 스스로 알고 있지는 않습니다.</p>
+      </div>
+      <div class="grid-2">
+        <div class="info-card">
+          <h3>모델만 있으면 생기는 문제</h3>
+          <p>모델은 그럴듯한 문장을 만들 수 있지만, 지금 DB에 있는 최신 설치 건수는 직접 알 수 없습니다. 그래서 업무 질문을 받으면 실제 시스템에 확인하는 통로가 필요합니다.</p>
+        </div>
+        <div class="info-card">
+          <h3>툴이 해결하는 문제</h3>
+          <p>툴은 모델이 “이 질문은 설치일정 조회 버튼을 눌러야 한다”고 판단하게 해 줍니다. 버튼을 누르면 서버가 DB에서 최신 값을 가져오고, 모델은 그 결과를 사람이 읽기 쉬운 말로 바꿉니다.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section shell" aria-labelledby="big-picture-title">
+      <div class="section-head">
+        <h2 id="big-picture-title">세 사람이 같이 일하는 구조</h2>
+        <p class="lead">원써치 AI Chat은 한 명이 모든 일을 하는 구조가 아닙니다. 말하는 사람, 판단하는 사람, 실제 업무 시스템을 움직이는 사람이 나뉘어 있습니다.</p>
+      </div>
+      <div class="diagram">
+        <div class="node" style="background:var(--soft-blue)">
+          <strong>사용자</strong>
+          <span>“오늘 설치 브리핑해줘”처럼 업무 언어로 요청합니다.</span>
+        </div>
+        <div class="node" style="background:var(--soft-amber)">
+          <strong>AI 모델</strong>
+          <span>요청의 뜻을 읽고 어떤 도구가 맞는지 고릅니다.</span>
+        </div>
+        <div class="node" style="background:var(--soft-green)">
+          <strong>원써치 서버</strong>
+          <span>허용된 함수만 실행하고 DB 결과를 다시 모델에게 돌려줍니다.</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="section shell" aria-labelledby="api-tool-title">
+      <div class="section-head">
+        <h2 id="api-tool-title">API와 툴은 어떻게 다를까</h2>
+        <p class="lead">둘 다 서버 기능과 연결되지만, 누구를 위한 입구인지가 다릅니다.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>구분</th>
+              <th>쉽게 말하면</th>
+              <th>원써치 AI Chat에서 하는 일</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>API</td>
+              <td>화면이나 다른 프로그램이 서버에 요청하는 공식 접수창입니다.</td>
+              <td>ChatKit 화면이 `/chatkit` 접수창으로 사용자 메시지를 보냅니다.</td>
+            </tr>
+            <tr>
+              <td>툴</td>
+              <td>모델이 필요할 때 서버에 부탁할 수 있는 업무용 버튼입니다.</td>
+              <td>모델이 “설치 브리핑 조회 버튼을 눌러야겠다”고 선택하면 서버 함수가 실행됩니다.</td>
+            </tr>
+            <tr>
+              <td>도구 등록</td>
+              <td>모델에게 “이 버튼들은 눌러도 된다”고 메뉴판을 보여 주는 일입니다.</td>
+              <td>Agent의 도구 목록에 설치일정, 고객조회, 체크리스트 같은 함수들을 넣습니다.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section shell" aria-labelledby="flow-title">
+      <div class="section-head">
+        <h2 id="flow-title">전체 흐름</h2>
+        <p class="lead">한 번의 질문이 화면에서 시작해 최종 답변으로 돌아오기까지의 길입니다.</p>
+      </div>
+      <div class="flow" aria-label="AI Chat 처리 흐름">
+        <div class="flow-step">
+          <span class="step-number">1</span>
+          <h3>화면</h3>
+          <p>관리자 화면의 ChatKit이 사용자 메시지를 받습니다.</p>
+        </div>
+        <div class="flow-step">
+          <span class="step-number">2</span>
+          <h3>API</h3>
+          <p>메시지가 원써치 백엔드의 채팅 접수창으로 전달됩니다.</p>
+        </div>
+        <div class="flow-step">
+          <span class="step-number">3</span>
+          <h3>지침 준비</h3>
+          <p>서버가 Prompt Studio의 운영 지침을 읽습니다.</p>
+        </div>
+        <div class="flow-step">
+          <span class="step-number">4</span>
+          <h3>대화 정리</h3>
+          <p>최근 대화와 현재 첨부파일을 모델이 읽을 수 있는 형태로 정리합니다.</p>
+        </div>
+        <div class="flow-step">
+          <span class="step-number">5</span>
+          <h3>도구 메뉴</h3>
+          <p>설치일정, 고객조회, 체크리스트 같은 허용 도구 목록을 모델에게 알려줍니다.</p>
+        </div>
+        <div class="flow-step">
+          <span class="step-number">6</span>
+          <h3>실행</h3>
+          <p>모델이 도구를 고르면 서버가 해당 함수를 실행합니다.</p>
+        </div>
+        <div class="flow-step">
+          <span class="step-number">7</span>
+          <h3>답변</h3>
+          <p>모델이 함수 결과를 읽고 한국어 브리핑으로 바꿔 화면에 보여 줍니다.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section shell" aria-labelledby="code-map-title">
+      <div class="section-head">
+        <h2 id="code-map-title">구조 지도로 보기</h2>
+        <p class="lead">파일명을 외우는 것보다 층을 이해하는 것이 먼저입니다. 원써치 AI Chat은 아래 네 층으로 나누어 보면 쉽습니다.</p>
+      </div>
+      <div class="code-map">
+        <div class="code-row">
+          <strong>화면 층</strong>
+          <span>ChatKit 화면이 메시지, 모델 선택, 첨부파일, 응답 스트리밍 표시를 담당합니다.</span>
+        </div>
+        <div class="code-row">
+          <strong>API 층</strong>
+          <span>화면에서 온 메시지를 받는 접수창입니다. 모델 목록과 첨부파일 업로드 접수창도 이 층에 있습니다.</span>
+        </div>
+        <div class="code-row">
+          <strong>대화 실행 층</strong>
+          <span>최근 대화를 불러오고, 모델과 도구 실행을 이어 주며, 결과를 스트리밍으로 화면에 돌려보냅니다.</span>
+        </div>
+        <div class="code-row">
+          <strong>도구 등록 층</strong>
+          <span>모델에게 보여 줄 도구 메뉴판을 만듭니다. 어떤 도구를 쓸 수 있고 어떤 모델을 쓸 수 있는지 정합니다.</span>
+        </div>
+        <div class="code-row">
+          <strong>업무 함수 층</strong>
+          <span>설치일정 조회, 고객 계약 조회, 체크리스트 생성, 접수 대조, 통계 분석 같은 실제 업무를 수행합니다.</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="section shell" aria-labelledby="definition-title">
+      <div class="section-head">
+        <h2 id="definition-title">도구 등록은 어떤 식으로 될까</h2>
+        <p class="lead">비개발자 관점에서는 “서버 함수 만들기 → 모델에게 보여 줄 메뉴에 넣기 → 언제 쓸지 설명하기” 세 단계로 이해하면 됩니다.</p>
+      </div>
+      <div class="grid-3">
+        <div class="info-card">
+          <h3>1. 업무 함수를 만든다</h3>
+          <p>예를 들어 “오늘 설치 브리핑을 가져오는 함수”를 서버에 만듭니다. 이 함수는 날짜를 받아 DB에서 설치 예정 건을 조회합니다.</p>
+        </div>
+        <div class="info-card">
+          <h3>2. 도구로 감싼다</h3>
+          <p>이 함수에 “모델이 호출할 수 있는 도구”라는 표시를 붙입니다. 함수 이름, 입력값, 설명이 모델에게 보이는 도구 설명이 됩니다.</p>
+        </div>
+        <div class="info-card">
+          <h3>3. 메뉴에 넣는다</h3>
+          <p>Agent의 도구 목록에 넣어야 실제로 모델이 고를 수 있습니다. 함수만 만들어 두고 메뉴에 넣지 않으면 모델은 그 도구를 모릅니다.</p>
+        </div>
+      </div>
+      <div class="example" style="margin-top:14px">
+        <div class="example-line">
+          <strong>최소 코드 느낌</strong>
+          <span>`@function_tool` 표시가 붙은 서버 함수가 Agent의 도구 목록에 들어가면 모델이 호출할 수 있는 버튼이 됩니다.</span>
+        </div>
+        <div class="example-line">
+          <strong>도구 설명</strong>
+          <span>“오늘/내일/이번 주 설치 예정 건을 브리핑할 때 사용”처럼 언제 쓰는지 설명해야 모델이 올바르게 고릅니다.</span>
+        </div>
+        <div class="example-line">
+          <strong>입력값</strong>
+          <span>“오늘” 같은 말은 도구 입력값으로 바뀝니다. 원써치에서는 `today`, `tomorrow`, `week` 같은 값으로 처리합니다.</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="section shell" aria-labelledby="terms-title">
+      <div class="section-head">
+        <h2 id="terms-title">먼저 알아야 할 말들</h2>
+        <p class="lead">AI Chat 코드를 읽기 전에 모델, API, Agent, Runner, Tool을 일상 언어로 잡아 두면 코드가 훨씬 덜 낯설어집니다.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>용어</th>
+              <th>쉬운 뜻</th>
+              <th>원써치 코드에서 보면</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>모델</td>
+              <td>사용자 말을 이해하고 다음 행동이나 답변을 고르는 AI 두뇌입니다.</td>
+              <td><code>gpt-5.5</code>처럼 선택 가능한 모델 ID가 있고, 백엔드 allowlist가 임의 모델 사용을 막습니다.</td>
+            </tr>
+            <tr>
+              <td>API</td>
+              <td>화면이 서버에 “이 요청 처리해 주세요”라고 보내는 접수창입니다.</td>
+              <td>ChatKit 화면은 <code>/chatkit</code>, 모델 목록은 <code>/chatkit/models</code>, 첨부파일은 <code>/chatkit/attachments/upload</code>로 보냅니다.</td>
+            </tr>
+            <tr>
+              <td>Agent</td>
+              <td>모델, 운영 지침, 설정, 도구 목록을 한 묶음으로 만든 실행 단위입니다.</td>
+              <td><code>OneSearch DB Assistant</code> Agent가 설치일정, 고객조회, 체크리스트 도구를 들고 실행됩니다.</td>
+            </tr>
+            <tr>
+              <td>Runner</td>
+              <td>모델에게 물어보고, 도구 호출이 나오면 실행하고, 결과를 다시 모델에게 넣는 진행자입니다.</td>
+              <td><code>Runner.run_streamed(...)</code>가 스트리밍 응답과 도구 실행 루프를 시작합니다.</td>
+            </tr>
+            <tr>
+              <td>Tool</td>
+              <td>모델이 직접 실행하지 않고 “서버야 이 함수 실행해 줘”라고 요청할 수 있는 업무 버튼입니다.</td>
+              <td><code>@function_tool</code>이 붙고 Agent의 <code>tools</code> 목록에 들어간 함수가 도구가 됩니다.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section shell" aria-labelledby="code-reading-title">
+      <div class="section-head">
+        <h2 id="code-reading-title">원써치 코드로 흐름 읽기</h2>
+        <p class="lead">아래 스니펫은 실제 구조를 학습용으로 줄인 것입니다. 핵심은 “프론트가 API로 보냄 → 백엔드가 Agent를 만듦 → Runner가 모델과 도구 실행을 이어 줌 → 도구 함수가 DB 작업을 함”입니다.</p>
+      </div>
+
+      <div class="snippet-stack">
+        <article class="snippet-card">
+          <div class="snippet-head">
+            <strong>1. 프론트: ChatKit 화면은 백엔드 접수창을 알고 있어야 한다</strong>
+            <span>관리자 AI Chat 화면은 사용자가 입력한 메시지를 ChatKit 컴포넌트에 맡기고, ChatKit은 지정된 URL로 요청을 보냅니다.</span>
+          </div>
+          <pre><code>const _getChatKitApiUrl = () =&gt; {
+  // 운영 환경에서 직접 endpoint를 지정할 수 있게 열어 둔 값입니다.
+  const explicit = import.meta.env.VITE_DB_CHATBOT_API_URL;
+  if (explicit) return explicit;
+
+  // 기본은 원써치 메인 백엔드의 /chatkit 접수창입니다.
+  return `${_stripTrailingSlash(API_BASE_URL)}/chatkit`;
+};
+
+const { control, ref: chatkitRef } = useChatKit({
+  api: {
+    url: _getChatKitApiUrl(),
+    domainKey,
+    uploadStrategy: {
+      type: "direct",
+      uploadUrl: `${_getChatKitApiUrl()}/attachments/upload`,
+    },
+  },
+  composer: {
+    // 모델 선택 UI와 첨부파일 제한도 여기서 설정합니다.
+    models: modelOptions.length ? modelOptions : undefined,
+    attachments: { enabled: true, maxSize: 24 * 1024 * 1024, maxCount: 2 },
+    placeholder: "예) 오늘 설치일정 / 체크리스트 생성 / 남은 할일",
+  },
+});</code></pre>
+          <ul class="read-notes">
+            <li><strong>읽는 포인트:</strong> 프론트는 DB를 직접 조회하지 않습니다. 채팅 메시지를 백엔드 API로 보내는 역할입니다.</li>
+            <li><strong>모델 목록:</strong> 프론트는 <code>/chatkit/models</code>에서 받은 allowlist만 모델 선택 UI에 보여 줍니다.</li>
+            <li><strong>첨부파일:</strong> 파일도 채팅 본문에 그냥 붙는 것이 아니라 별도 업로드 API를 통해 attachment ID로 연결됩니다.</li>
+          </ul>
+        </article>
+
+        <article class="snippet-card">
+          <div class="snippet-head">
+            <strong>1-1. 모델: 프론트가 고른 모델도 백엔드가 다시 확인한다</strong>
+            <span>모델은 AI 두뇌입니다. 원써치는 아무 모델명이나 실행하지 않고, 코드에 적힌 allowlist 안에서만 선택되게 합니다.</span>
+          </div>
+          <pre><code>DB_CHATBOT_DEFAULT_MODEL = "gpt-5.5"
+
+DB_CHATBOT_MODEL_IDS = [
+    "gpt-5.5",
+    "gpt-5.4",
+    "gpt-5.3-codex",
+    "gpt-5-nano",
+    "gpt-4o",
+]
+
+# 프론트 모델 선택 UI와 백엔드 검증이 같은 목록을 봅니다.
+DB_CHATBOT_MODEL_OPTIONS = _build_model_options(
+    DB_CHATBOT_MODEL_IDS,
+    default_model=DB_CHATBOT_DEFAULT_MODEL,
+)
+
+DB_CHATBOT_ALLOWED_MODELS = {
+    model["id"] for model in DB_CHATBOT_MODEL_OPTIONS if model.get("id")
+}
+
+def _pick_model_from_chatkit(input_user_message):
+    model = input_user_message.inference_options.model
+
+    # 프론트가 보낸 값이라도 allowlist 밖이면 사용하지 않습니다.
+    if model not in DB_CHATBOT_ALLOWED_MODELS:
+        return None
+
+    return model</code></pre>
+          <ul class="read-notes">
+            <li><strong>읽는 포인트:</strong> 모델 선택은 UI 편의 기능이지만, 보안 판단은 백엔드가 다시 합니다.</li>
+            <li><strong>기본 모델:</strong> 사용자가 모델을 안 고르거나 잘못된 값을 보내면 기본 모델로 돌아갑니다.</li>
+            <li><strong>개발 판단:</strong> 모델을 늘릴 때는 비용, 추론 능력, reasoning 옵션 지원 여부, 내부 정책을 같이 봐야 합니다.</li>
+          </ul>
+        </article>
+
+        <article class="snippet-card">
+          <div class="snippet-head">
+            <strong>2. API: /chatkit은 메시지를 받고 실행 문맥을 만든다</strong>
+            <span>백엔드 접수창은 요청 본문을 읽고, Prompt Studio 지침과 FastAPI app을 context에 담아 ChatKit 서버로 넘깁니다.</span>
+          </div>
+          <pre><code>@router.post("/chatkit")
+async def chatkit_endpoint(request: Request):
+    # ChatKit이 보낸 원본 요청입니다. 스레드, 메시지, 모델 선택 정보가 들어 있습니다.
+    body = await request.body()
+
+    # 운영 지침을 DB Prompt Studio에서 읽고, 실패하면 기본 지침으로 돌아갑니다.
+    prompt = await load_db_assistant_instructions()
+
+    # 도구가 FastAPI app, 사용자, 프롬프트 정보에 접근할 수 있게 문맥을 만듭니다.
+    ctx = RequestContext(
+        app=request.app,
+        user_id="debug",
+        db_assistant_prompt=prompt,
+    )
+
+    # 실제 ChatKit 프로토콜 처리는 DBChatKitServer가 맡습니다.
+    result = await db_chatkit_server.process(body, context=ctx)
+
+    if isinstance(result, StreamingResult):
+        return StreamingResponse(result, media_type="text/event-stream")</code></pre>
+          <ul class="read-notes">
+            <li><strong>읽는 포인트:</strong> API는 모델에게 바로 묻지 않습니다. 먼저 운영 지침과 실행 문맥을 준비합니다.</li>
+            <li><strong>RequestContext:</strong> 도구 함수의 <code>ctx</code>로 이어지는 내부 정보입니다. 사용자가 직접 입력하는 값이 아닙니다.</li>
+            <li><strong>StreamingResponse:</strong> 답변을 한 번에 기다리지 않고, ChatKit 화면에 조금씩 흘려보내는 방식입니다.</li>
+          </ul>
+        </article>
+
+        <article class="snippet-card">
+          <div class="snippet-head">
+            <strong>2-1. 프롬프트: 운영 지침은 DB에서 읽고, 실패하면 기본값으로 돌아간다</strong>
+            <span>도구 선택 품질은 모델만의 문제가 아닙니다. “언제 어떤 도구를 쓸지”를 알려 주는 운영 지침이 중요합니다.</span>
+          </div>
+          <pre><code>async def load_db_assistant_instructions(code: str | None = None):
+    prompt_code = code or "db_chatkit.db_assistant.instructions"
+
+    # 같은 프롬프트를 매 턴 DB에서 읽지 않도록 짧게 캐시합니다.
+    ttl = _cache_ttl_seconds()
+    cached = _CACHE.get(prompt_code)
+    if ttl &gt; 0 and cached and cached[0] &gt; _now_ts():
+        return cached[1]
+
+    try:
+        prompt_set = await repo.get_set_by_code(prompt_code)
+        active = prompt_set.active_version
+        part = _pick_part(active.parts, name="instructions")
+        content = str((part or {}).get("content") or "").strip()
+
+        if content:
+            return PromptLoadResult(
+                code=prompt_code,
+                source="db",
+                instructions=content,
+            )
+
+    except Exception:
+        logger.warning("Prompt Studio load failed; using default instructions.")
+
+    # Prompt Studio가 비어 있거나 장애가 나도 채팅 전체를 죽이지 않습니다.
+    return PromptLoadResult(
+        code=prompt_code,
+        source="default",
+        instructions=DEFAULT_INSTRUCTIONS,
+    )</code></pre>
+          <ul class="read-notes">
+            <li><strong>읽는 포인트:</strong> 프롬프트는 모델의 행동 규칙입니다. 도구 선택 기준이 여기에 들어갑니다.</li>
+            <li><strong>fallback:</strong> 운영 프롬프트 DB가 잠깐 안 열려도 기본 지침으로 서비스가 계속 동작합니다.</li>
+            <li><strong>디버깅:</strong> 원써치는 debug header로 어떤 프롬프트 버전이 쓰였는지 확인할 수 있게 해 둡니다.</li>
+          </ul>
+        </article>
+
+        <article class="snippet-card">
+          <div class="snippet-head">
+            <strong>3. 서버: 최근 대화, 첨부파일, 모델 선택을 정리한 뒤 Agent를 만든다</strong>
+            <span>DBChatKitServer는 매 요청마다 현재 지침과 선택 모델을 반영해 Agent를 만들고 Runner를 시작합니다.</span>
+          </div>
+          <pre><code>async def respond(self, thread, input_user_message, context):
+    # 최근 대화는 무한히 넣지 않고 80개까지만 가져옵니다.
+    page = await self.store.load_thread_items(thread.id, limit=80, order="desc", context=context)
+    thread_items = list(reversed(page.data))
+
+    # 오래된 첨부파일은 기록에는 보이지만 매 턴 모델 입력으로 다시 보내지 않습니다.
+    thread_items = _drop_stale_attachments(thread_items, input_user_message.id)
+
+    # ChatKit 스레드 항목을 Agents SDK가 이해하는 입력으로 변환합니다.
+    agent_input = await _THREAD_ITEM_CONVERTER.to_agent_input(thread_items)
+
+    # 프론트가 보낸 모델이 allowlist 안에 있을 때만 사용합니다.
+    requested_model = _pick_model_from_chatkit(input_user_message)
+
+    # 여기서 매 요청마다 Agent를 새로 만듭니다.
+    agent = build_db_assistant_agent(
+        instructions=context.db_assistant_prompt.instructions,
+        model=requested_model,
+    )
+
+    # Runner가 모델 호출, 도구 호출, 최종 답변 생성을 스트리밍으로 진행합니다.
+    result = Runner.run_streamed(
+        starting_agent=agent,
+        input=agent_input,
+        context=agent_context,
+        max_turns=DB_CHATBOT_MAX_TURNS,
+    )</code></pre>
+          <ul class="read-notes">
+            <li><strong>읽는 포인트:</strong> 모델을 호출하기 전에 대화 기록, 첨부파일, 모델 선택, 프롬프트를 모두 정리합니다.</li>
+            <li><strong>max_turns:</strong> 모델이 도구를 끝없이 부르는 상황을 막기 위한 실행 단계 제한입니다.</li>
+            <li><strong>매 요청 Agent 생성:</strong> Prompt Studio 지침 변경과 모델 선택이 다음 요청에 반영될 수 있습니다.</li>
+          </ul>
+        </article>
+
+        <article class="snippet-card">
+          <div class="snippet-head">
+            <strong>4. Agent: 모델에게 보여 줄 도구 메뉴를 만든다</strong>
+            <span>도구 함수가 있어도 이 목록에 들어가지 않으면 모델은 그 함수를 선택할 수 없습니다.</span>
+          </div>
+          <pre><code>def _build_agent_uncached(*, instructions: str, enable_sql_tool: bool, model: str) -&gt; Agent:
+    tools = [
+        list_db_read_endpoints,
+        call_db_read_endpoint,
+        list_db_tables,
+        describe_db_table,
+        get_installation_schedule,
+        get_customer_with_contracts,
+        get_daily_install_briefing,
+        get_daily_checklist,
+        generate_daily_checklist,
+        update_check_item,
+        get_pending_actions,
+        get_installation_stats,
+        get_data_health_report,
+    ]
+
+    # 읽기 전용 SQL은 환경변수로 끄고 켤 수 있습니다.
+    if enable_sql_tool:
+        tools.append(run_readonly_sql)
+
+    return Agent(
+        name="OneSearch DB Assistant",
+        model=model,
+        instructions=instructions,
+        tools=tools,
+    )</code></pre>
+          <ul class="read-notes">
+            <li><strong>읽는 포인트:</strong> 이 배열이 모델에게 보이는 “업무 버튼 목록”입니다.</li>
+            <li><strong>전용 도구 우선:</strong> 설치 브리핑, 체크리스트, 접수 대조처럼 업무 의미가 있는 함수는 SQL보다 먼저 쓰게 지침에 적습니다.</li>
+            <li><strong>SQL 도구:</strong> 편하지만 위험도가 높으므로 읽기 전용 가드와 환경변수 제어를 같이 둡니다.</li>
+          </ul>
+        </article>
+
+        <article class="snippet-card">
+          <div class="snippet-head">
+            <strong>5. 업무 도구: 설치 브리핑 도구는 날짜를 계산하고 DB 결과를 구조화한다</strong>
+            <span>모델이 “오늘”이라고 이해하면 도구 입력값은 <code>date_range="today"</code>가 되고, 서버 함수가 실제 날짜 범위를 계산합니다.</span>
+          </div>
+          <pre><code>@function_tool
+async def get_daily_install_briefing(
+    ctx: RunContextWrapper[Any],
+    *,
+    date_range: str = "today",
+) -&gt; dict[str, Any]:
+    """
+    일일 설치 브리핑을 생성합니다.
+    "오늘 브리핑", "내일 할일 정리" 같은 질문에 사용합니다.
+    """
+    now = now_kst_naive()
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    # 사용자의 "오늘/내일/이번 주" 말을 실제 조회 시작/끝 시간으로 바꿉니다.
+    if date_range == "tomorrow":
+        start = today_start + timedelta(days=1)
+        end = today_start + timedelta(days=2)
+        label = "내일"
+    else:
+        start = today_start
+        end = today_start + timedelta(days=1)
+        label = "오늘"
+
+    # DB에서는 설치 완료가 아닌 예정 건만 가져옵니다.
+    result = await _execute_readonly_query(sql, {"start": start, "end": end})
+    if not result["ok"]:
+        return result
+
+    items = []
+    alerts = []
+    for row in result["rows"]:
+        item = _format_contract_item(row)
+
+        # 모델이 놓치지 않도록 주의사항을 별도 배열로 모읍니다.
+        item["alerts"] = collect_alerts(item)
+
+        # 최종 답변에 바로 쓸 수 있는 체크리스트도 서버에서 만들어 줍니다.
+        item["checklist"] = build_install_checklist(item)
+        items.append(item)
+
+    return {
+        "ok": True,
+        "label": label,
+        "total": len(items),
+        "alerts_summary": alerts,
+        "items": items,
+    }</code></pre>
+          <ul class="read-notes">
+            <li><strong>읽는 포인트:</strong> 도구 함수는 “DB row 그대로 반환”하지 않고, 모델이 요약하기 좋은 구조로 다시 포장합니다.</li>
+            <li><strong>날짜 기준:</strong> 상대 날짜는 항상 KST 기준으로 시작과 끝을 계산해야 합니다.</li>
+            <li><strong>반환 형태:</strong> <code>ok</code>, <code>total</code>, <code>items</code>, <code>alerts_summary</code>처럼 성공 여부와 핵심 데이터를 분리합니다.</li>
+          </ul>
+        </article>
+
+        <article class="snippet-card">
+          <div class="snippet-head">
+            <strong>6. 안전장치: 읽기 전용 SQL도 실제 실행 전에 검문한다</strong>
+            <span>“읽기 전용”이라는 이름만 믿지 않고, 실행 전에 문장 형태와 위험 키워드를 검사합니다.</span>
+          </div>
+          <pre><code>def _validate_readonly_sql(sql: str) -&gt; str:
+    q = _strip_sql_code_fence(sql)
+    if not q:
+        raise ValueError("SQL is empty.")
+
+    # 한 번에 여러 SQL 문장을 실행하지 못하게 막습니다.
+    if ";" in q.rstrip(";"):
+        raise ValueError("Multiple statements are not allowed.")
+
+    # SELECT 또는 WITH로 시작하는 조회만 허용합니다.
+    if not re.match(r"^(select|with)\\b", q, re.IGNORECASE):
+        raise ValueError("Only SELECT/WITH queries are allowed.")
+
+    # UPDATE, DELETE, DROP 같은 위험 키워드를 막습니다.
+    if _SQL_BAD_KEYWORDS.search(q):
+        raise ValueError("Potentially unsafe SQL keyword detected.")
+
+    # SELECT ... INTO는 테이블을 만들 수 있으므로 금지합니다.
+    if re.search(r"\\binto\\b", q, re.IGNORECASE):
+        raise ValueError("SELECT ... INTO is not allowed.")
+
+    return q</code></pre>
+          <ul class="read-notes">
+            <li><strong>읽는 포인트:</strong> 모델이 만든 SQL은 신뢰하지 않고 서버가 다시 검사합니다.</li>
+            <li><strong>이중 안전:</strong> 코드 검사에 더해 Postgres에서는 read-only transaction과 statement timeout도 겁니다.</li>
+            <li><strong>운영 판단:</strong> 반복되는 업무 질문은 자유 SQL보다 전용 도구로 승격하는 편이 안전합니다.</li>
+          </ul>
+        </article>
+
+        <article class="snippet-card">
+          <div class="snippet-head">
+            <strong>7. 쓰기 도구: 체크리스트 생성은 좁은 범위에서만 DB를 바꾼다</strong>
+            <span>AI Chat에서 쓰기 작업을 열 때는 “무엇을 바꿀 수 있는지”를 작게 제한해야 합니다.</span>
+          </div>
+          <pre><code>@function_tool
+async def generate_daily_checklist(
+    ctx: RunContextWrapper[Any],
+    *,
+    date: str = "today",
+) -&gt; dict[str, Any]:
+    # 1) 날짜를 정하고 해당 날짜 설치 예정 계약만 찾습니다.
+    contracts = await find_install_contracts(date)
+
+    created = 0
+    skipped = 0
+    async with engine.begin() as conn:
+        for contract in contracts:
+            for item_key, item_label in _DEFAULT_CHECK_ITEMS:
+                # 이미 있는 체크 항목은 덮어쓰지 않습니다.
+                # 작업자가 바꾼 상태나 메모를 보존하기 위해 DO NOTHING을 씁니다.
+                await conn.execute(sql_text("""
+                    INSERT INTO contract.daily_check_item
+                        (contract_id, check_date, item_key, item_label, status)
+                    VALUES (:cid, :check_date, :item_key, :item_label, 'pending')
+                    ON CONFLICT (contract_id, check_date, item_key) DO NOTHING
+                """), params)
+
+    return {
+        "ok": True,
+        "created": created,
+        "skipped": skipped,
+        "customers": grouped_current_status,
+    }</code></pre>
+          <ul class="read-notes">
+            <li><strong>읽는 포인트:</strong> 쓰기 도구는 자유롭게 DB를 바꾸는 도구가 아니라, 정해진 테이블과 정해진 작업만 수행합니다.</li>
+            <li><strong>기존 값 보존:</strong> <code>ON CONFLICT DO NOTHING</code>은 이미 생성된 체크 항목을 덮어쓰지 않기 위한 장치입니다.</li>
+            <li><strong>결과 반환:</strong> 생성 개수와 건너뛴 개수를 돌려줘야 모델이 사용자에게 정확히 설명할 수 있습니다.</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="section shell" aria-labelledby="tools-title">
+      <div class="section-head">
+        <h2 id="tools-title">현재 도구군</h2>
+        <p class="lead">원써치 AI Chat의 도구는 업무 목적별로 나뉩니다. “DB를 아무렇게나 열어 주는 것”보다 “업무 버튼을 여러 개 나누는 것”이 안전합니다.</p>
+      </div>
+      <div class="tool-grid">
+        <div class="tool-chip">
+          <span class="chip-mark">A</span>
+          <strong>백엔드 GET API</strong>
+          <span>이미 있는 읽기 전용 API를 찾아서 호출합니다.</span>
+        </div>
+        <div class="tool-chip">
+          <span class="chip-mark" style="background:var(--soft-blue);color:var(--blue)">B</span>
+          <strong>DB 구조 확인</strong>
+          <span>어떤 표와 항목이 있는지 확인합니다.</span>
+        </div>
+        <div class="tool-chip">
+          <span class="chip-mark" style="background:var(--soft-amber);color:var(--amber)">C</span>
+          <strong>제한 SQL</strong>
+          <span>정해진 규칙 안에서 읽기 전용 조회만 허용합니다.</span>
+        </div>
+        <div class="tool-chip">
+          <span class="chip-mark" style="background:var(--soft-coral);color:var(--coral)">D</span>
+          <strong>현장 업무</strong>
+          <span>설치일정, 고객 계약, 설치 브리핑, 체크리스트, 접수 대조, 남은 할일을 처리합니다.</span>
+        </div>
+        <div class="tool-chip">
+          <span class="chip-mark" style="background:var(--soft-violet);color:var(--violet)">E</span>
+          <strong>분석/통계</strong>
+          <span>렌탈사별, 지역별, 월별 통계와 데이터 이상 징후를 요약합니다.</span>
+        </div>
+        <div class="tool-chip">
+          <span class="chip-mark" style="background:var(--soft-cyan);color:var(--cyan)">F</span>
+          <strong>쓰기 도구</strong>
+          <span>체크리스트 생성이나 항목 상태 변경처럼 목적이 좁은 작업만 맡습니다.</span>
+        </div>
+        <div class="tool-chip">
+          <span class="chip-mark">G</span>
+          <strong>첨부파일</strong>
+          <span>현재 턴의 파일은 OpenAI file attachment로 변환하고, 오래된 첨부는 재전송하지 않습니다.</span>
+        </div>
+        <div class="tool-chip">
+          <span class="chip-mark" style="background:var(--soft-blue);color:var(--blue)">H</span>
+          <strong>Analytics</strong>
+          <span>통계 질문을 개념 파악, 지표 선택, 실행, 근거 작성 단계로 나눕니다.</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="section shell" aria-labelledby="selection-title">
+      <div class="section-head">
+        <h2 id="selection-title">모델은 무엇을 보고 버튼을 고를까</h2>
+        <p class="lead">모델은 서버 코드를 마음대로 뒤지는 것이 아닙니다. 서버가 건네준 도구 설명서와 운영 지침을 보고 판단합니다.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>판단 재료</th>
+              <th>원써치에서의 역할</th>
+              <th>잘못 설계하면 생기는 문제</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>instructions</code></td>
+              <td>“설치 몇 건?”은 설치 목록 조회, “브리핑”은 설치 브리핑 조회처럼 질문 의도와 도구를 연결합니다.</td>
+              <td>비슷한 도구가 많을 때 모델이 SQL을 먼저 쓰거나, 너무 넓은 도구를 고를 수 있습니다.</td>
+            </tr>
+            <tr>
+              <td>함수명</td>
+              <td>이름만 봐도 “접수 대기 조회”, “설치 통계 조회”처럼 목적이 드러나게 합니다.</td>
+              <td>“데이터 처리”처럼 넓은 이름은 어떤 버튼인지 알기 어렵게 만듭니다.</td>
+            </tr>
+            <tr>
+              <td>docstring</td>
+              <td>사용 시점, 입력값 의미, 예시 질문을 모델에게 알려줍니다.</td>
+              <td>설명이 모호하면 사용자가 원하지 않은 도구가 호출될 수 있습니다.</td>
+            </tr>
+            <tr>
+              <td>입력값 형식</td>
+              <td>날짜 범위, 계약 ID, 카톡 복붙 내용처럼 모델이 채워야 할 값을 제한합니다.</td>
+              <td>필수값과 기본값이 부정확하면 tool 실패가 늘어납니다.</td>
+            </tr>
+            <tr>
+              <td>반환 결과</td>
+              <td>성공 여부, 목록, 건수, 오류 이유처럼 모델이 다시 설명할 수 있는 재료를 구조화합니다.</td>
+              <td>결과가 너무 크거나 불규칙하면 모델이 요약을 놓칩니다.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section shell" aria-labelledby="prompt-title">
+      <div class="section-head">
+        <h2 id="prompt-title">Prompt Studio와 기본 프롬프트</h2>
+        <p class="lead">모델에게 “우리 회사에서는 이렇게 답하고, 이런 질문에는 이런 도구를 써라”라고 알려 주는 운영 설명서입니다.</p>
+      </div>
+      <div class="grid-2">
+        <div class="fact-card">
+          <h3>운영 경로</h3>
+          <p>서버는 Prompt Studio에서 활성화된 AI Chat 지침을 읽습니다. 운영자가 지침을 바꾸면 비교적 빠르게 새 대화에 반영됩니다.</p>
+        </div>
+        <div class="fact-card">
+          <h3>fallback 경로</h3>
+          <p>Prompt Studio를 읽지 못하면 코드에 들어 있는 기본 지침으로 돌아갑니다. 프롬프트 DB 문제 때문에 채팅 기능 전체가 바로 멈추지 않게 하는 장치입니다.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section shell" aria-labelledby="safety-title">
+      <div class="section-head">
+        <h2 id="safety-title">안전장치</h2>
+        <p class="lead">툴 호출 구조의 핵심은 “모델이 알아서 무엇이든 한다”가 아니라, 허용된 함수와 허용된 입력 범위 안에서만 실행되게 만드는 것입니다.</p>
+      </div>
+      <div class="grid-2">
+        <div class="warning-card">
+          <h3>SQL 도구 제한</h3>
+          <p>자유 조회가 필요한 경우에도 읽기 전용만 허용합니다. 여러 문장, 삭제나 수정, 위험 함수, 너무 긴 쿼리는 막습니다.</p>
+        </div>
+        <div class="warning-card">
+          <h3>모델 allowlist</h3>
+          <p>화면에서 아무 모델 이름이나 보낼 수 없게 허용 목록을 둡니다. 백엔드도 같은 목록을 확인해 임의 모델 사용을 막습니다.</p>
+        </div>
+        <div class="warning-card">
+          <h3>단계 제한</h3>
+          <p>모델이 도구를 너무 오래 반복해서 부르지 않도록 최대 실행 단계를 둡니다. 복잡한 질문은 범위를 좁히라고 안내합니다.</p>
+        </div>
+        <div class="warning-card">
+          <h3>첨부파일 제한</h3>
+          <p>파일 크기와 개수를 제한하고, 오래된 첨부파일을 매번 다시 보내지 않아 비용과 입력 크기를 줄입니다.</p>
+        </div>
+        <div class="warning-card">
+          <h3>쓰기 도구 분리</h3>
+          <p>DB를 바꾸는 도구는 체크리스트 생성과 항목 상태 변경처럼 업무 목적이 좁게 정해져 있습니다. 일반 분석은 읽기 도구를 우선합니다.</p>
+        </div>
+        <div class="warning-card">
+          <h3>Analytics 가드레일</h3>
+          <p>Analytics Orchestrator는 쓰기 의도와 민감정보 대량 요청을 입력 가드레일로 막고, 최종 답변에는 metric 또는 fallback 근거가 들어가도록 출력 가드레일을 둡니다.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section shell" aria-labelledby="analytics-title">
+      <div class="section-head">
+        <h2 id="analytics-title">일반 DB Chat과 Analytics의 차이</h2>
+        <p class="lead">일반 업무 질문은 바로 업무 버튼을 누르는 방식에 가깝고, Analytics는 여러 전문가에게 순서대로 일을 맡기는 방식에 가깝습니다.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>구분</th>
+              <th>일반 DB Chat</th>
+              <th>Analytics</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>등록 단위</td>
+              <td>설치일정 조회 같은 업무 함수를 직접 도구로 등록합니다.</td>
+              <td>개념 분석 담당, 지표 선택 담당, 실행 담당, 근거 작성 담당을 도구처럼 연결합니다.</td>
+            </tr>
+            <tr>
+              <td>주요 목표</td>
+              <td>설치, 고객, 접수, 체크리스트, DB 조회 같은 현장 업무를 빠르게 처리합니다.</td>
+              <td>질문을 비즈니스 개념, metric 정의, 실행 경로, 근거 포함 답변으로 나눕니다.</td>
+            </tr>
+            <tr>
+              <td>실행 순서</td>
+              <td>질문 의도에 맞는 업무 도구를 고릅니다.</td>
+              <td>개념 파악, 지표 선택, 실행, 근거 작성 순서를 강하게 지킵니다.</td>
+            </tr>
+            <tr>
+              <td>안전 기준</td>
+              <td>전용 도구 우선, SQL 가드, 모델 allowlist, max turns가 중심입니다.</td>
+              <td>input/output guardrail, policy handoff, metric registry 우선 경로가 중심입니다.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section shell" aria-labelledby="example-title">
+      <div class="section-head">
+        <h2 id="example-title">예시로 따라가기</h2>
+        <p class="lead">“오늘 설치 예정 건 브리핑해줘”라는 말이 들어왔을 때 실제로 어떤 일이 벌어지는지 사람 말로 풀어 보면 이렇습니다.</p>
+      </div>
+      <div class="example">
+        <div class="example-line">
+          <strong>1. 사용자</strong>
+          <span>오늘 설치 예정 건 브리핑해줘.</span>
+        </div>
+        <div class="example-line">
+          <strong>2. 모델 판단</strong>
+          <span>“브리핑”, “오늘”, “설치 예정”이라는 단서가 있으므로 설치 브리핑 도구를 골라야 한다고 판단합니다.</span>
+        </div>
+        <div class="example-line">
+          <strong>3. 서버 실행</strong>
+          <span>서버 함수가 한국 시간 기준 오늘 범위를 계산하고, 고객과 계약과 제품 정보를 DB에서 조회합니다.</span>
+        </div>
+        <div class="example-line">
+          <strong>4. JSON 반환</strong>
+          <span>서버는 전체 건수, 고객별 정보, 주의사항, 체크 항목처럼 정리된 결과를 모델에게 돌려줍니다.</span>
+        </div>
+        <div class="example-line">
+          <strong>5. 최종 답변</strong>
+          <span>모델은 JSON을 읽고 사람이 바로 쓸 수 있는 한국어 브리핑, 주의사항, 다음 액션으로 정리합니다.</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="section shell" aria-labelledby="misconception-title">
+      <div class="section-head">
+        <h2 id="misconception-title">헷갈리기 쉬운 오해</h2>
+        <p class="lead">이 경계를 놓치면 “AI가 DB를 직접 봤다”거나 “함수만 만들면 자동으로 된다”처럼 잘못 이해하기 쉽습니다.</p>
+      </div>
+      <div class="grid-2">
+        <div class="info-card">
+          <h3>맞는 이해</h3>
+          <p>서버가 허용한 설치일정 도구를 메뉴에 등록하고, 운영 지침에 사용 기준을 적어 두면 모델이 설치일정 질문에서 그 도구를 요청할 수 있습니다.</p>
+        </div>
+        <div class="info-card">
+          <h3>틀린 이해</h3>
+          <p>서버에 함수가 있다는 이유만으로 모델이 자동으로 찾아 쓰지는 않습니다. 도구 메뉴에 등록하고 설명까지 제공해야 모델이 선택할 수 있습니다.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section shell" aria-labelledby="new-tool-title">
+      <div class="section-head">
+        <h2 id="new-tool-title">새 AI Chat 툴을 만드는 절차</h2>
+        <p class="lead">개발자가 새 기능을 AI Chat에 붙일 때는 “함수 하나 만들기”보다 “모델이 언제 고르고, 서버가 어디까지 실행하고, 실패하면 무엇을 돌려줄지”를 먼저 정해야 합니다.</p>
+      </div>
+      <div class="grid-3">
+        <div class="info-card">
+          <h3>1. 질문을 먼저 모은다</h3>
+          <p>“어떤 사용자가 어떤 말로 물을까?”를 3개 이상 적습니다. 같은 데이터와 같은 결과 형식으로 답할 수 있으면 하나의 도구 후보입니다.</p>
+        </div>
+        <div class="info-card">
+          <h3>2. 읽기와 쓰기를 나눈다</h3>
+          <p>조회만 하는 도구인지, DB를 바꾸는 도구인지 먼저 분류합니다. 쓰기 도구라면 입력값, 권한, 되돌림, 감사 로그를 더 엄격하게 봅니다.</p>
+        </div>
+        <div class="info-card">
+          <h3>3. 결과 모양을 정한다</h3>
+          <p>모델이 답변에 쓸 수 있게 <code>ok</code>, <code>total</code>, <code>items</code>, <code>error</code>, <code>truncated</code> 같은 공통 필드를 정합니다.</p>
+        </div>
+      </div>
+
+      <div class="snippet-stack" style="margin-top:16px">
+        <article class="snippet-card">
+          <div class="snippet-head">
+            <strong>새 조회 도구 스켈레톤</strong>
+            <span>아래 모양은 원써치 도구 패턴을 줄인 예시입니다. 주석을 읽으며 어떤 약속이 필요한지 확인하세요.</span>
+          </div>
+          <pre><code>@function_tool
+async def get_installation_risk_report(
+    ctx: RunContextWrapper[Any],
+    *,
+    date_range: str = "today",
+    limit: int = 100,
+) -&gt; dict[str, Any]:
+    """
+    설치 위험 리포트를 조회합니다.
+    "오늘 설치 중 위험한 건", "내일 주의해야 할 설치" 같은 질문에 사용합니다.
+
+    Args:
+        date_range: "today" / "tomorrow" / "week" / "YYYY-MM-DD"
+        limit: 최대 반환 건수. 너무 큰 결과를 막기 위해 서버에서 다시 제한합니다.
+    """
+    # 1) 입력값을 서버에서 다시 제한합니다.
+    limit = max(1, min(int(limit or 100), 200))
+    start, end, label = resolve_kst_date_range(date_range)
+
+    # 2) 업무 목적에 맞는 읽기 쿼리만 실행합니다.
+    result = await _execute_readonly_query(
+        """
+        SELECT contract_id, customer_name, status, installation_precautions
+        FROM ...
+        WHERE installation_schedule_date &gt;= :start
+          AND installation_schedule_date &lt; :end
+        LIMIT :limit
+        """,
+        {"start": start, "end": end, "limit": limit},
+    )
+    if not result["ok"]:
+        return result
+
+    # 3) 모델이 바로 요약할 수 있는 형태로 바꿔 반환합니다.
+    items = [format_risk_item(row) for row in result["rows"]]
+    return {
+        "ok": True,
+        "label": label,
+        "total": len(items),
+        "items": items,
+        "truncated": len(items) &gt;= limit,
+    }</code></pre>
+          <ul class="read-notes">
+            <li><strong>함수명:</strong> 모델이 목적을 추측하기 쉬운 이름이어야 합니다. <code>process_data</code>보다 <code>get_installation_risk_report</code>가 낫습니다.</li>
+            <li><strong>docstring:</strong> 모델에게 보이는 사용 설명서입니다. 어떤 질문에 쓰는지와 입력값 의미를 적습니다.</li>
+            <li><strong>입력 제한:</strong> 프론트나 모델이 보낸 값은 서버에서 다시 제한합니다. 특히 <code>limit</code>, 날짜, 상태값은 보수적으로 둡니다.</li>
+          </ul>
+        </article>
+
+        <article class="snippet-card">
+          <div class="snippet-head">
+            <strong>Agent에 등록하는 부분</strong>
+            <span>도구 함수가 완성되어도 Agent의 도구 목록에 넣지 않으면 모델은 사용할 수 없습니다.</span>
+          </div>
+          <pre><code>from db.chatkit.db_assistant_tools import (
+    get_daily_install_briefing,
+    get_installation_risk_report,  # 새로 만든 도구를 import합니다.
+)
+
+def _build_agent_uncached(...):
+    tools = [
+        get_daily_install_briefing,
+        get_installation_risk_report,  # 모델에게 보여 줄 메뉴에 추가합니다.
+    ]
+
+    return Agent(
+        name="OneSearch DB Assistant",
+        model=model,
+        instructions=instructions,
+        tools=tools,
+    )</code></pre>
+          <ul class="read-notes">
+            <li><strong>등록 위치:</strong> import와 <code>tools</code> 배열 두 곳을 같이 봅니다. 둘 중 하나가 빠지면 동작하지 않습니다.</li>
+            <li><strong>도구 순서:</strong> 같은 의도를 처리하는 전용 도구가 있다면 범용 SQL보다 먼저 생각하게 instructions에 적어야 합니다.</li>
+            <li><strong>환경 제어:</strong> 위험도가 큰 도구는 SQL 도구처럼 환경변수나 권한 조건으로 켜고 끄는 구조를 검토합니다.</li>
+          </ul>
+        </article>
+
+        <article class="snippet-card">
+          <div class="snippet-head">
+            <strong>Prompt Studio 지침까지 같이 바꿔야 한다</strong>
+            <span>모델은 함수 코드를 읽지 않습니다. 도구 이름, 설명, 입력 형식, 운영 지침을 보고 선택합니다.</span>
+          </div>
+          <pre><code>도구 선택 기준에 추가할 문장 예시:
+
+- "설치 위험", "주의해야 할 설치", "오늘 위험 건" →
+  get_installation_risk_report 사용
+- 단순 설치 목록만 필요하면 get_installation_schedule 사용
+- 고객별 상세 브리핑이 필요하면 get_daily_install_briefing 사용
+
+응답 기준:
+- 위험 사유를 먼저 요약한다.
+- 고객명, 계약 ID, 설치일, 주의사항, 다음 액션을 함께 보여 준다.
+- 데이터가 없으면 "위험 건 없음"과 조회 기준 날짜를 같이 말한다.</code></pre>
+          <ul class="read-notes">
+            <li><strong>왜 필요한가:</strong> 비슷한 도구가 많으면 모델은 무엇을 우선해야 하는지 운영 지침에 의존합니다.</li>
+            <li><strong>좋은 지침:</strong> 사용자 표현, 사용할 도구, 쓰지 말아야 할 도구, 출력 기준을 같이 적습니다.</li>
+            <li><strong>운영 반영:</strong> 원써치에서는 Prompt Studio에서 활성 지침을 읽고, 실패하면 기본 지침으로 돌아갑니다.</li>
+          </ul>
+        </article>
+      </div>
+
+      <div class="table-wrap" style="margin-top:16px">
+        <table>
+          <thead>
+            <tr>
+              <th>검사 항목</th>
+              <th>확인 질문</th>
+              <th>부족하면 생기는 문제</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>도구 이름</td>
+              <td>이름만 보고 업무 목적이 보이는가?</td>
+              <td>모델이 비슷한 도구와 헷갈립니다.</td>
+            </tr>
+            <tr>
+              <td>입력값</td>
+              <td>날짜, ID, 상태값, limit의 기본값과 허용 범위가 정해졌는가?</td>
+              <td>잘못된 날짜나 너무 큰 조회가 발생합니다.</td>
+            </tr>
+            <tr>
+              <td>반환값</td>
+              <td>성공, 실패, 빈 결과, 잘림 결과를 모델이 구분할 수 있는가?</td>
+              <td>모델이 실패를 성공처럼 설명하거나 중요한 경고를 빼먹습니다.</td>
+            </tr>
+            <tr>
+              <td>쓰기 안전</td>
+              <td>DB 변경 범위가 좁고, 기존 값을 덮어쓰지 않는가?</td>
+              <td>AI Chat 한 번으로 운영 데이터가 크게 손상될 수 있습니다.</td>
+            </tr>
+            <tr>
+              <td>운영 지침</td>
+              <td>어떤 사용자 표현에서 이 도구를 써야 하는지 적었는가?</td>
+              <td>도구는 등록됐지만 실제 대화에서 잘 선택되지 않습니다.</td>
+            </tr>
+            <tr>
+              <td>테스트</td>
+              <td>정상, 빈 결과, 잘못된 입력, 권한, timeout, 모델 allowlist를 확인했는가?</td>
+              <td>운영 중에만 실패 케이스가 드러납니다.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section shell" id="quiz" aria-labelledby="quiz-title">
+      <div class="section-head">
+        <h2 id="quiz-title">확인 퀴즈</h2>
+        <p class="lead">정의 확인에서 시작해 실제 운영 상황 판단과 설계 문제까지 객관식으로 점검합니다.</p>
+        <div class="pill-links">
+          <a class="pill-link" href="#quiz-easy">쉬운 문제</a>
+          <a class="pill-link" href="#quiz-mid">중간 문제</a>
+          <a class="pill-link" href="#quiz-hard">상위 문제</a>
+          <a class="pill-link" href="#quiz-code">코드 읽기</a>
+          <a class="pill-link" href="#glossary-quiz">용어집 퀴즈</a>
+        </div>
+      </div>
+
+      <h3 id="quiz-easy">쉬운 난이도</h3>
+      <div class="quiz-stack">
+        <details class="quiz-card" open>
+          <summary>1. 원써치 AI Chat에서 “툴”의 가장 정확한 의미는? <span>보기를 선택하세요</span></summary>
+          <div class="quiz-body">
+            <ol class="choices" type="A">
+              <li>모델 안에 숨어 있는 특수 능력</li>
+              <li>백엔드에 등록된 실행 가능 업무 함수</li>
+              <li>프론트 화면의 버튼 이름</li>
+              <li>DB에 직접 들어가는 비밀번호</li>
+            </ol>
+            <div class="answer"><span class="answer-mark">B</span><div><strong>정답: B</strong><br>툴은 모델이 “이 업무 함수를 실행해 주세요”라고 요청할 수 있게 등록한 서버 기능입니다. 실제 DB 조회와 처리는 백엔드가 맡습니다.</div></div>
+          </div>
+        </details>
+        <details class="quiz-card" open>
+          <summary>2. 서버 함수를 “도구로 등록한다”는 말의 뜻으로 맞는 것은? <span>보기를 선택하세요</span></summary>
+          <div class="quiz-body">
+            <ol class="choices" type="A">
+              <li>AI가 볼 수 있는 업무 메뉴에 서버 함수를 올린다.</li>
+              <li>DB 테이블을 자동으로 새로 만든다.</li>
+              <li>프론트 화면 색상을 바꾼다.</li>
+              <li>AI에게 모든 SQL 실행 권한을 준다.</li>
+            </ol>
+            <div class="answer"><span class="answer-mark">A</span><div><strong>정답: A</strong><br>도구 등록은 서버 함수를 모델이 고를 수 있는 메뉴에 올리는 일입니다. 권한을 무제한으로 여는 것이 아니라, 허용한 업무 함수만 보이게 하는 구조입니다.</div></div>
+          </div>
+        </details>
+        <details class="quiz-card" open>
+          <summary>3. 서버에 함수만 만들고 도구 목록에 넣지 않으면 어떻게 될까? <span>보기를 선택하세요</span></summary>
+          <div class="quiz-body">
+            <ol class="choices" type="A">
+              <li>모델이 알아서 찾아 쓴다.</li>
+              <li>프론트가 자동으로 대신 등록한다.</li>
+              <li>모델이 그 함수를 호출할 수 없다.</li>
+              <li>SQL 도구가 항상 대신 실행한다.</li>
+            </ol>
+            <div class="answer"><span class="answer-mark">C</span><div><strong>정답: C</strong><br>모델에게 보여 주는 도구 목록에 들어가야 호출 후보가 됩니다. 서버 안에 함수가 존재하는 것과 AI가 선택할 수 있는 것은 다른 문제입니다.</div></div>
+          </div>
+        </details>
+        <details class="quiz-card" open>
+          <summary>4. 모델이 도구를 고를 때 가장 직접적으로 참고하는 것은? <span>보기를 선택하세요</span></summary>
+          <div class="quiz-body">
+            <ol class="choices" type="A">
+              <li>함수 파일의 줄 수</li>
+              <li>운영 지침과 도구 설명</li>
+              <li>README의 배포 설명</li>
+              <li>브라우저 창 크기</li>
+            </ol>
+            <div class="answer"><span class="answer-mark">B</span><div><strong>정답: B</strong><br>모델은 “이런 질문에는 이 도구를 쓰라”는 운영 지침과 각 도구의 설명을 보고 판단합니다. 그래서 설명 문구가 실제 동작 품질에 영향을 줍니다.</div></div>
+          </div>
+        </details>
+        <details class="quiz-card" open>
+          <summary>5. 도구 실행 문맥은 누가 채워 주는 값인가? <span>보기를 선택하세요</span></summary>
+          <div class="quiz-body">
+            <ol class="choices" type="A">
+              <li>사용자가 채팅창에 직접 입력한다.</li>
+              <li>실행 엔진이 서버 문맥으로 넘겨 준다.</li>
+              <li>브라우저 저장소가 자동으로 만든다.</li>
+              <li>SQL 조회 결과가 대신 채운다.</li>
+            </ol>
+            <div class="answer"><span class="answer-mark">B</span><div><strong>정답: B</strong><br>실행 문맥은 사용자가 입력하는 업무 값이 아닙니다. 서버가 도구를 실행할 때 필요한 내부 정보에 접근할 수 있도록 실행 엔진이 넘겨 주는 값입니다.</div></div>
+          </div>
+        </details>
+      </div>
+
+      <h3 id="quiz-mid" style="margin-top:24px">중간 난이도</h3>
+      <div class="quiz-stack">
+        <details class="quiz-card" open>
+          <summary>6. 사용자가 “이번 주 렌탈사별 설치 몇 건?”이라고 물었다. 우선 어울리는 도구는? <span>보기를 선택하세요</span></summary>
+          <div class="quiz-body">
+            <ol class="choices" type="A">
+              <li>설치 통계를 집계하는 도구</li>
+              <li>체크 항목 상태를 바꾸는 도구</li>
+              <li>사용 가능한 모델 목록을 보여 주는 기능</li>
+              <li>운영 지침을 불러오는 내부 기능</li>
+            </ol>
+            <div class="answer"><span class="answer-mark">A</span><div><strong>정답: A</strong><br>“렌탈사별”, “몇 건”은 집계 질문입니다. 개별 체크 항목을 수정하는 도구가 아니라 설치 통계를 모으는 도구가 맞습니다.</div></div>
+          </div>
+        </details>
+        <details class="quiz-card" open>
+          <summary>7. 사용자가 “오늘 체크리스트 생성해줘”라고 했다. 읽기 도구와 쓰기 도구 중 무엇인가? <span>보기를 선택하세요</span></summary>
+          <div class="quiz-body">
+            <ol class="choices" type="A">
+              <li>읽기 도구</li>
+              <li>쓰기 도구</li>
+              <li>프론트 전용 표시 기능</li>
+              <li>모델 선택 기능</li>
+            </ol>
+            <div class="answer"><span class="answer-mark">B</span><div><strong>정답: B</strong><br>체크리스트를 “생성”하면 DB에 새 항목이 생깁니다. 그래서 단순 조회보다 더 좁은 권한, 명확한 실패 처리, 검증이 필요합니다.</div></div>
+          </div>
+        </details>
+        <details class="quiz-card" open>
+          <summary>8. Prompt Studio DB가 일시적으로 안 열리면 AI Chat은 반드시 중단될까? <span>보기를 선택하세요</span></summary>
+          <div class="quiz-body">
+            <ol class="choices" type="A">
+              <li>그렇다. 운영 지침 DB가 안 열리면 무조건 중단된다.</li>
+              <li>아니다. 기본 지침으로 돌아갈 수 있다.</li>
+              <li>프론트 화면만 중단된다.</li>
+              <li>SQL 도구만 항상 중단된다.</li>
+            </ol>
+            <div class="answer"><span class="answer-mark">B</span><div><strong>정답: B</strong><br>원써치는 운영 지침을 DB에서 읽되, 실패하면 코드에 있는 기본 지침을 사용합니다. 지침 관리 장애가 곧바로 채팅 전체 장애가 되지 않게 한 구조입니다.</div></div>
+          </div>
+        </details>
+        <details class="quiz-card" open>
+          <summary>9. 사용자가 허용 목록 밖의 모델을 프론트에서 억지로 보냈다면? <span>보기를 선택하세요</span></summary>
+          <div class="quiz-body">
+            <ol class="choices" type="A">
+              <li>그대로 실행된다.</li>
+              <li>백엔드가 허용 목록을 확인하고 기본 모델로 돌린다.</li>
+              <li>모든 도구가 영구 비활성화된다.</li>
+              <li>Prompt Studio가 새 모델을 자동 생성한다.</li>
+            </ol>
+            <div class="answer"><span class="answer-mark">B</span><div><strong>정답: B</strong><br>모델 선택은 프론트 입력만 믿지 않습니다. 백엔드가 허용 목록을 다시 확인하고, 목록 밖이면 안전한 기본 흐름으로 돌립니다.</div></div>
+          </div>
+        </details>
+        <details class="quiz-card" open>
+          <summary>10. “접수처 카톡 내용과 장부를 대조해줘”에 가장 가까운 도구는? <span>보기를 선택하세요</span></summary>
+          <div class="quiz-body">
+            <ol class="choices" type="A">
+              <li>접수 누락 대조 도구</li>
+              <li>DB 테이블 구조 설명 도구</li>
+              <li>Analytics 지표 실행 도구</li>
+              <li>화면 단계 현황 도구</li>
+            </ol>
+            <div class="answer"><span class="answer-mark">A</span><div><strong>정답: A</strong><br>이 질문은 외부 접수 메시지와 장부 데이터를 비교하는 업무입니다. 테이블 설명이나 일반 지표 실행보다 접수 누락 대조 도구가 맞습니다.</div></div>
+          </div>
+        </details>
+      </div>
+
+      <h3 id="quiz-hard" style="margin-top:24px">상위 난이도</h3>
+      <div class="quiz-stack">
+        <details class="quiz-card" open>
+          <summary>11. 새 도구 `delete_customer_contract`를 바로 열자는 제안이 있다. 가장 큰 설계 문제는? <span>보기를 선택하세요</span></summary>
+          <div class="quiz-body">
+            <ol class="choices" type="A">
+              <li>도구 이름이 너무 짧다는 점</li>
+              <li>쓰기 영향이 커서 권한, 확인, 실패 복구, 감사 로그가 먼저 필요하다는 점</li>
+              <li>설명 문구만 쓰면 충분하다는 점</li>
+              <li>모델 허용 목록과 완전히 무관하다는 점</li>
+            </ol>
+            <div class="answer"><span class="answer-mark">B</span><div><strong>정답: B</strong><br>삭제는 되돌리기 어려운 고위험 작업입니다. 원써치 방식은 통제된 함수만 여는 구조이므로, 위험한 쓰기 도구는 권한과 복구 절차까지 같이 설계해야 합니다.</div></div>
+          </div>
+        </details>
+        <details class="quiz-card" open>
+          <summary>12. 도구가 자꾸 틀린 날짜 범위를 조회한다. 가장 먼저 확인할 것은? <span>보기를 선택하세요</span></summary>
+          <div class="quiz-body">
+            <ol class="choices" type="A">
+              <li>CSS 색상표</li>
+              <li>KST 기준 계산, 날짜 입력 설명, 운영 지침의 날짜 기준</li>
+              <li>README 제목</li>
+              <li>퀴즈 문항 수</li>
+            </ol>
+            <div class="answer"><span class="answer-mark">B</span><div><strong>정답: B</strong><br>“오늘”, “이번 주” 같은 말은 기준 시간이 중요합니다. 도구 입력값, 기본값, 운영 지침이 모두 한국 시간 기준으로 맞아야 합니다.</div></div>
+          </div>
+        </details>
+        <details class="quiz-card" open>
+          <summary>13. 도구 결과가 너무 커서 모델이 핵심을 놓친다. 좋은 개선 방향은? <span>보기를 선택하세요</span></summary>
+          <div class="quiz-body">
+            <ol class="choices" type="A">
+              <li>조회 제한을 모두 없앤다.</li>
+              <li>요약값, 전체 건수, 잘림 표시, 전용 집계 도구를 추가한다.</li>
+              <li>모델 사용을 전부 막는다.</li>
+              <li>도구 이름만 길게 바꾼다.</li>
+            </ol>
+            <div class="answer"><span class="answer-mark">B</span><div><strong>정답: B</strong><br>너무 큰 결과는 모델이 핵심을 놓치게 만듭니다. 서버가 먼저 요약하고, 필요한 범위만 넘기고, 잘린 결과인지 알려 주는 편이 안정적입니다.</div></div>
+          </div>
+        </details>
+        <details class="quiz-card" open>
+          <summary>14. Analytics에서 metric 근거 없이 그럴듯한 요약만 나왔다. 어떤 장치가 이를 막아야 하나? <span>보기를 선택하세요</span></summary>
+          <div class="quiz-body">
+            <ol class="choices" type="A">
+              <li>근거가 빠진 분석 답변을 막는 출력 가드레일</li>
+              <li>브라우저 새로고침 방지 코드</li>
+              <li>ChatKit 스크립트 주소 설정</li>
+              <li>URL 끝의 슬래시를 정리하는 함수</li>
+            </ol>
+            <div class="answer"><span class="answer-mark">A</span><div><strong>정답: A</strong><br>분석 답변은 근거가 핵심입니다. Analytics는 지표 코드나 fallback 근거 없이 그럴듯한 말만 하는 답변을 막는 출력 가드레일을 둡니다.</div></div>
+          </div>
+        </details>
+        <details class="quiz-card" open>
+          <summary>15. `run_readonly_sql`이 있는데도 전용 업무 도구를 계속 만드는 이유는? <span>보기를 선택하세요</span></summary>
+          <div class="quiz-body">
+            <ol class="choices" type="A">
+              <li>SQL을 절대 쓰지 않기 위해서</li>
+              <li>모델이 직접 DB를 학습하게 하려고</li>
+              <li>업무 규칙, 조회 제한, 결과 형식, 안전 기준을 서버 함수 안에 고정하기 위해서</li>
+              <li>프론트 코드를 줄이기 위해서</li>
+            </ol>
+            <div class="answer"><span class="answer-mark">C</span><div><strong>정답: C</strong><br>전용 업무 도구는 “설치 브리핑”처럼 업무 의미를 담습니다. 단순 조회보다 고객, 계약, 주의사항, 체크리스트를 안정적인 구조로 돌려줄 수 있습니다.</div></div>
+          </div>
+        </details>
+      </div>
+
+      <h3 id="quiz-code" style="margin-top:24px">코드 읽기 문제</h3>
+      <div class="quiz-stack">
+        <details class="quiz-card" open>
+          <summary>16. <code>useChatKit({ api: { url } })</code>에서 <code>url</code>의 역할은? <span>보기를 선택하세요</span></summary>
+          <div class="quiz-body">
+            <ol class="choices" type="A">
+              <li>사용자 메시지를 보낼 백엔드 ChatKit 접수창을 지정한다.</li>
+              <li>DB 테이블 이름을 자동으로 고른다.</li>
+              <li>모델이 사용할 SQL을 미리 저장한다.</li>
+              <li>Prompt Studio의 화면 색상을 정한다.</li>
+            </ol>
+            <div class="answer"><span class="answer-mark">A</span><div><strong>정답: A</strong><br>프론트는 직접 DB를 보지 않고 ChatKit 요청을 백엔드 API로 보냅니다. 이 URL이 잘못되면 모델이나 도구까지 요청이 도달하지 않습니다.</div></div>
+          </div>
+        </details>
+        <details class="quiz-card" open>
+          <summary>17. <code>RequestContext(app=request.app, ...)</code>를 만드는 이유로 가장 가까운 것은? <span>보기를 선택하세요</span></summary>
+          <div class="quiz-body">
+            <ol class="choices" type="A">
+              <li>도구 실행 중 FastAPI app 같은 서버 문맥에 접근할 수 있게 하려고</li>
+              <li>사용자에게 DB 비밀번호를 보여 주려고</li>
+              <li>브라우저의 localStorage를 삭제하려고</li>
+              <li>모델 목록을 프론트에서 하드코딩하려고</li>
+            </ol>
+            <div class="answer"><span class="answer-mark">A</span><div><strong>정답: A</strong><br>RequestContext는 도구 함수의 실행 문맥으로 이어집니다. 예를 들어 백엔드 GET endpoint 탐색 도구는 FastAPI app에서 등록된 route를 읽습니다.</div></div>
+          </div>
+        </details>
+        <details class="quiz-card" open>
+          <summary>18. 새 도구 함수를 만들었지만 Agent의 <code>tools</code> 목록에 넣지 않았다. 어떤 일이 생기는가? <span>보기를 선택하세요</span></summary>
+          <div class="quiz-body">
+            <ol class="choices" type="A">
+              <li>모델이 자동으로 파일을 검색해 찾아낸다.</li>
+              <li>도구 설명 없이도 항상 호출된다.</li>
+              <li>서버에는 함수가 있어도 모델의 선택지에는 나타나지 않는다.</li>
+              <li>프론트 모델 선택 UI가 대신 실행한다.</li>
+            </ol>
+            <div class="answer"><span class="answer-mark">C</span><div><strong>정답: C</strong><br>도구는 함수 작성, 도구 표시, Agent 등록이 모두 필요합니다. 특히 <code>tools</code> 목록은 모델에게 보여 주는 메뉴판 역할을 합니다.</div></div>
+          </div>
+        </details>
+        <details class="quiz-card" open>
+          <summary>19. <code>_validate_readonly_sql</code>이 세미콜론, UPDATE, DROP 등을 막는 이유는? <span>보기를 선택하세요</span></summary>
+          <div class="quiz-body">
+            <ol class="choices" type="A">
+              <li>SQL 결과를 더 예쁘게 정렬하려고</li>
+              <li>읽기 전용 도구가 실제로도 조회만 하도록 강제하려고</li>
+              <li>모델이 한국어를 못 쓰게 하려고</li>
+              <li>첨부파일 업로드 속도를 높이려고</li>
+            </ol>
+            <div class="answer"><span class="answer-mark">B</span><div><strong>정답: B</strong><br>도구 이름이 읽기 전용이어도 모델이 만든 문자열은 서버가 검증해야 합니다. 여러 문장과 쓰기 키워드를 막아야 DB 변경 위험이 줄어듭니다.</div></div>
+          </div>
+        </details>
+        <details class="quiz-card" open>
+          <summary>20. 체크리스트 생성 코드의 <code>ON CONFLICT ... DO NOTHING</code>은 무엇을 지키는 장치인가? <span>보기를 선택하세요</span></summary>
+          <div class="quiz-body">
+            <ol class="choices" type="A">
+              <li>이미 만들어진 체크 항목의 상태와 메모를 덮어쓰지 않게 한다.</li>
+              <li>모든 체크 항목을 매번 삭제하고 다시 만든다.</li>
+              <li>모델 allowlist를 자동으로 갱신한다.</li>
+              <li>Prompt Studio 지침을 비운다.</li>
+            </ol>
+            <div class="answer"><span class="answer-mark">A</span><div><strong>정답: A</strong><br>체크리스트 생성은 쓰기 도구입니다. 기존 작업자가 바꾼 상태와 메모를 보존해야 하므로 이미 있는 항목은 건너뛰는 방식이 안전합니다.</div></div>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <section class="section shell" id="glossary-quiz" aria-labelledby="glossary-title">
+      <div class="section-head">
+        <h2 id="glossary-title">용어집 퀴즈</h2>
+        <p class="lead">이 구조를 설명할 때 자주 섞이는 용어를 객관식으로 다시 확인합니다.</p>
+      </div>
+      <div class="quiz-stack">
+        <details class="quiz-card" open>
+          <summary>1. Agent <span>보기를 선택하세요</span></summary>
+          <div class="quiz-body">
+            <ol class="choices" type="A">
+              <li>모델, 운영 지침, 설정, 도구 목록을 묶은 실행 단위</li>
+              <li>프론트 화면의 버튼 스타일</li>
+              <li>DB 테이블을 자동 생성하는 기능</li>
+              <li>사용자가 업로드한 첨부파일 이름</li>
+            </ol>
+            <div class="answer"><span class="answer-mark">A</span><div><strong>정답: A</strong><br>Agent는 “어떤 모델이, 어떤 지침을 보고, 어떤 도구를 사용할 수 있는가”를 묶는 단위입니다. 원써치 DB Chat도 이 단위로 실행됩니다.</div></div>
+          </div>
+        </details>
+        <details class="quiz-card" open>
+          <summary>2. Runner <span>보기를 선택하세요</span></summary>
+          <div class="quiz-body">
+            <ol class="choices" type="A">
+              <li>모델 호출, 도구 실행, 결과 재입력, 최종 답변 생성을 진행하는 실행 엔진</li>
+              <li>HTML을 예쁘게 접어 주는 CSS 기능</li>
+              <li>DB에서 테이블 이름만 읽는 조회 함수</li>
+              <li>사용자 브라우저의 스크롤 관리자</li>
+            </ol>
+            <div class="answer"><span class="answer-mark">A</span><div><strong>정답: A</strong><br>Runner는 단순 텍스트 스트리밍만 하지 않습니다. 모델이 도구를 고르면 서버 함수를 실행하고, 그 결과를 다시 모델에게 넣어 최종 답변까지 이어 줍니다.</div></div>
+          </div>
+        </details>
+        <details class="quiz-card" open>
+          <summary>3. Function tool <span>보기를 선택하세요</span></summary>
+          <div class="quiz-body">
+            <ol class="choices" type="A">
+              <li>모델이 호출할 수 있도록 이름, 설명, 입력 형식이 공개된 서버 함수</li>
+              <li>사용자가 직접 브라우저에서 누르는 일반 버튼</li>
+              <li>모든 DB 권한을 자동으로 열어 주는 관리자 계정</li>
+              <li>프론트 화면만 바꾸는 디자인 파일</li>
+            </ol>
+            <div class="answer"><span class="answer-mark">A</span><div><strong>정답: A</strong><br>Function tool은 일반 서버 함수를 모델이 요청할 수 있는 형태로 공개한 것입니다. 공개하지 않은 함수는 서버에 있어도 모델의 선택지가 아닙니다.</div></div>
+          </div>
+        </details>
+        <details class="quiz-card" open>
+          <summary>4. Tool schema <span>보기를 선택하세요</span></summary>
+          <div class="quiz-body">
+            <ol class="choices" type="A">
+              <li>도구를 부를 때 어떤 입력값이 필요한지 알려 주는 약속</li>
+              <li>브라우저에서 글꼴 크기만 정하는 규칙</li>
+              <li>DB 비밀번호를 보관하는 파일</li>
+              <li>추천 참고 글을 고르는 기준표</li>
+            </ol>
+            <div class="answer"><span class="answer-mark">A</span><div><strong>정답: A</strong><br>Tool schema가 명확해야 모델이 날짜, 고객명, 범위 같은 입력값을 맞게 채울 수 있습니다. 입력 약속이 흐리면 잘못된 호출이 늘어납니다.</div></div>
+          </div>
+        </details>
+        <details class="quiz-card" open>
+          <summary>5. Prompt Studio <span>보기를 선택하세요</span></summary>
+          <div class="quiz-body">
+            <ol class="choices" type="A">
+              <li>모델에게 어떤 기준으로 답하고 도구를 쓸지 알려 주는 운영 지침을 관리하는 곳</li>
+              <li>실제 업무 함수를 전부 저장하는 코드 폴더</li>
+              <li>고객 계약서를 직접 수정하는 화면</li>
+              <li>모델 허용 목록을 자동으로 구매하는 서비스</li>
+            </ol>
+            <div class="answer"><span class="answer-mark">A</span><div><strong>정답: A</strong><br>도구 함수는 코드에 있고, Prompt Studio는 운영 지침을 관리합니다. “언제 어떤 도구를 써야 하는가”를 모델에게 알려 주는 역할입니다.</div></div>
+          </div>
+        </details>
+        <details class="quiz-card" open>
+          <summary>6. Allowlist <span>보기를 선택하세요</span></summary>
+          <div class="quiz-body">
+            <ol class="choices" type="A">
+              <li>허용된 모델만 선택되게 하여 임의 모델 실행을 줄이는 장치</li>
+              <li>모든 사용자에게 관리자 권한을 주는 장치</li>
+              <li>SQL 결과를 무제한으로 늘리는 설정</li>
+              <li>프론트 색상을 자동으로 고르는 기능</li>
+            </ol>
+            <div class="answer"><span class="answer-mark">A</span><div><strong>정답: A</strong><br>Allowlist는 허용된 목록 안에서만 모델을 고르게 합니다. 프론트가 보낸 값을 백엔드가 다시 확인하기 때문에 임의 입력 위험이 줄어듭니다.</div></div>
+          </div>
+        </details>
+        <details class="quiz-card" open>
+          <summary>7. Read-only SQL <span>보기를 선택하세요</span></summary>
+          <div class="quiz-body">
+            <ol class="choices" type="A">
+              <li>읽기만 허용하겠다는 의도가 실제 실행에서도 지켜지게 하려고</li>
+              <li>SQL을 더 빠르게 외우게 하려고</li>
+              <li>프론트 화면을 자동으로 다시 그리려고</li>
+              <li>모델 허용 목록을 없애려고</li>
+            </ol>
+            <div class="answer"><span class="answer-mark">A</span><div><strong>정답: A</strong><br>읽기 전용이라고 이름 붙였더라도 실제 실행 전에 위험한 문장과 키워드를 막아야 합니다. 그래야 “조회만 한다”는 약속이 실행 단계에서도 유지됩니다.</div></div>
+          </div>
+        </details>
+        <details class="quiz-card" open>
+          <summary>8. Agent-as-tool <span>보기를 선택하세요</span></summary>
+          <div class="quiz-body">
+            <ol class="choices" type="A">
+              <li>작은 전문 Agent를 큰 Agent가 부를 수 있는 도구처럼 붙인 구조</li>
+              <li>프론트 버튼을 자동으로 번역하는 구조</li>
+              <li>DB 테이블을 삭제하는 전용 명령</li>
+              <li>첨부파일을 이미지로만 바꾸는 기능</li>
+            </ol>
+            <div class="answer"><span class="answer-mark">A</span><div><strong>정답: A</strong><br>Analytics는 한 함수가 모든 일을 하지 않습니다. 개념 파악, 지표 선택, 실행, 근거 정리를 맡는 작은 전문 Agent들을 도구처럼 연결합니다.</div></div>
+          </div>
+        </details>
+        <details class="quiz-card" open>
+          <summary>9. Guardrail <span>보기를 선택하세요</span></summary>
+          <div class="quiz-body">
+            <ol class="choices" type="A">
+              <li>입력이나 출력이 위험하거나 근거가 부족할 때 막는 안전장치</li>
+              <li>답변 글자를 더 예쁘게 꾸미는 장식</li>
+              <li>모델을 더 비싸게 고르는 결제 옵션</li>
+              <li>브라우저 뒤로가기를 막는 기능</li>
+            </ol>
+            <div class="answer"><span class="answer-mark">A</span><div><strong>정답: A</strong><br>Guardrail은 장식이 아닙니다. 쓰기 의도, 민감정보, 근거 없는 분석처럼 위험한 입력이나 출력을 잡아내는 안전장치입니다.</div></div>
+          </div>
+        </details>
+        <details class="quiz-card" open>
+          <summary>10. 성공 여부 반환값 <span>보기를 선택하세요</span></summary>
+          <div class="quiz-body">
+            <ol class="choices" type="A">
+              <li>모델이 도구 실행 성공과 실패를 쉽게 구분할 수 있다.</li>
+              <li>DB 비밀번호가 자동으로 바뀐다.</li>
+              <li>프론트 디자인이 자동으로 새로워진다.</li>
+              <li>모든 오류가 사용자에게 숨겨진다.</li>
+            </ol>
+            <div class="answer"><span class="answer-mark">A</span><div><strong>정답: A</strong><br>도구 결과에 성공 여부와 오류 이유가 있으면 모델이 사용자에게 정확히 안내할 수 있습니다. 실패를 숨기는 것보다 회복 가능한 정보로 돌려주는 것이 좋습니다.</div></div>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <section class="section shell" aria-labelledby="apply-title">
+      <div class="section-head">
+        <h2 id="apply-title">적용 과제</h2>
+        <p class="lead">새 도구를 하나 설계한다고 생각하고 아래 항목을 직접 채워 보세요.</p>
+      </div>
+      <div class="task-card">
+        <ol>
+          <li>사용자 질문 3개를 적고, 이 질문들이 같은 도구로 처리되어야 하는지 판단합니다.</li>
+          <li>도구 이름을 업무가 바로 보이게 정합니다. 예: 설치 위험 리포트 조회.</li>
+          <li>필수 인자, 선택 인자, 기본값, 날짜 기준을 정합니다.</li>
+          <li>성공했을 때와 실패했을 때 어떤 정보를 돌려줄지 각각 씁니다.</li>
+          <li>일반 조회 도구, 전용 업무 도구, 여러 단계 분석 흐름 중 어느 방식이 맞는지 결정합니다.</li>
+          <li>운영 지침에 들어갈 “언제 이 도구를 쓰는가” 문장을 2문장 이내로 씁니다.</li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="section shell" aria-labelledby="summary-title">
+      <div class="summary-band">
+        <h2 id="summary-title">핵심 요약</h2>
+        <p>
+          원써치 AI Chat의 툴은 모델에게 무제한 권한을 주는 장치가 아닙니다. 모델은 운영 지침과 도구 설명을 보고 “이 업무 도구를 실행해 달라”고 요청하고, 서버는 우리가 허용한 함수만 실행합니다. 그래서 새 기능은 이름, 입력값, 결과 형식, 실패 안내, 권한, 안전장치, 운영 지침까지 함께 설계할 때 안정적으로 동작합니다.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer shell">
+    <p>핵심은 AI가 직접 DB를 여는 것이 아니라, 원써치 서버가 허용한 업무 도구만 실행한다는 점입니다.</p>
+  </footer>
+  <script>
+    document.querySelectorAll(".quiz-card").forEach((card) => {
+      card.open = true;
+
+      const summary = card.querySelector("summary");
+      const summaryState = summary?.querySelector("span");
+      const choices = Array.from(card.querySelectorAll(".choices li"));
+      const answerMark = card.querySelector(".answer-mark");
+      const answer = String(answerMark?.textContent || "").trim().toUpperCase();
+      const answerBox = card.querySelector(".answer");
+
+      summary?.addEventListener("click", (event) => {
+        event.preventDefault();
+        card.open = true;
+      });
+
+      let result = card.querySelector(".choice-result");
+      if (!result) {
+        result = document.createElement("div");
+        result.className = "choice-result";
+        result.setAttribute("aria-live", "polite");
+        card.querySelector(".choices")?.after(result);
+      }
+
+      choices.forEach((choice, index) => {
+        const letter = String.fromCharCode(65 + index);
+        choice.dataset.choice = letter;
+        choice.setAttribute("role", "button");
+        choice.setAttribute("tabindex", "0");
+        choice.setAttribute("aria-label", `${letter}번 보기 선택`);
+
+        const selectChoice = () => {
+          const isCorrect = letter === answer;
+
+          card.classList.add("answered");
+          choices.forEach((item) => {
+            item.classList.remove("is-correct", "is-wrong", "is-selected");
+            item.removeAttribute("aria-pressed");
+          });
+
+          choice.classList.add("is-selected");
+          choice.setAttribute("aria-pressed", "true");
+
+          choices.forEach((item) => {
+            if (item.dataset.choice === answer) {
+              item.classList.add("is-correct");
+            }
+          });
+
+          if (!isCorrect) {
+            choice.classList.add("is-wrong");
+          }
+
+          result.className = `choice-result ${isCorrect ? "correct" : "wrong"}`;
+          result.textContent = isCorrect
+            ? `정답입니다. ${answer}번이 맞습니다.`
+            : `오답입니다. 정답은 ${answer}번입니다.`;
+
+          if (summaryState) {
+            summaryState.textContent = isCorrect ? "정답" : "오답";
+          }
+
+          answerBox?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+        };
+
+        choice.addEventListener("click", selectChoice);
+        choice.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            selectChoice();
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>

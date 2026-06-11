@@ -1,0 +1,1539 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Claude Fable 5와 Claude Code 학습 가이드</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%232f6f85'/%3E%3Cpath d='M18 22h28M18 32h18M18 42h28' stroke='white' stroke-width='5' stroke-linecap='round'/%3E%3Cpath d='M44 30l6 6-6 6' stroke='white' stroke-width='5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <style>
+    :root {
+      --ink: #17201f;
+      --muted: #5f6c6c;
+      --paper: #f5f7f3;
+      --white: #ffffff;
+      --line: #d8dfd6;
+      --dark: #1f2b2b;
+      --teal: #2f6f85;
+      --green: #20765a;
+      --blue: #2b62c9;
+      --amber: #b87418;
+      --coral: #bf5549;
+      --violet: #6258c9;
+      --soft-teal: #e3f2f4;
+      --soft-green: #e4f4eb;
+      --soft-blue: #e7efff;
+      --soft-amber: #fff1d4;
+      --soft-coral: #ffe8e4;
+      --soft-violet: #eeebff;
+      --shadow: 0 16px 42px rgba(23, 32, 31, 0.11);
+      color-scheme: light;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 76px;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        linear-gradient(180deg, rgba(47, 111, 133, 0.1), rgba(245, 247, 243, 0) 340px),
+        var(--paper);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.62;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    code {
+      padding: 2px 5px;
+      border-radius: 5px;
+      background: rgba(31, 43, 43, 0.08);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      font-size: 0.94em;
+    }
+
+    .shell {
+      width: min(1160px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      border-bottom: 1px solid rgba(23, 32, 31, 0.1);
+      background: rgba(245, 247, 243, 0.92);
+      backdrop-filter: blur(14px);
+    }
+
+    .topbar-inner {
+      min-height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .brand,
+    .mini-link,
+    .source-card,
+    .quiz-jump,
+    .pill-link {
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .brand {
+      justify-content: flex-start;
+      text-decoration: none;
+      font-weight: 900;
+    }
+
+    .brand-mark,
+    .tier-mark,
+    .flow-mark,
+    .answer-mark,
+    .route-mark {
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+    }
+
+    .brand-mark {
+      width: 36px;
+      height: 36px;
+      color: #fff;
+      background: var(--dark);
+    }
+
+    .mini-link {
+      padding: 0 12px;
+      border: 1px solid rgba(23, 32, 31, 0.13);
+      border-radius: 8px;
+      background: var(--white);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .mini-link:hover,
+    .mini-link:focus-visible,
+    .source-card:hover,
+    .source-card:focus-visible,
+    .quiz-jump:hover,
+    .quiz-jump:focus-visible,
+    .pill-link:hover,
+    .pill-link:focus-visible,
+    summary:focus-visible {
+      outline: 3px solid rgba(47, 111, 133, 0.24);
+      outline-offset: 2px;
+    }
+
+    .icon {
+      width: 18px;
+      height: 18px;
+      flex: 0 0 18px;
+      stroke: currentColor;
+      stroke-width: 2.1;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin-top: 0;
+    }
+
+    h1,
+    h2,
+    h3 {
+      letter-spacing: 0;
+    }
+
+    h1 {
+      max-width: 920px;
+      margin-bottom: 16px;
+      font-size: 46px;
+      line-height: 1.08;
+    }
+
+    h2 {
+      margin-bottom: 12px;
+      font-size: 34px;
+      line-height: 1.14;
+    }
+
+    h3 {
+      margin-bottom: 8px;
+      font-size: 20px;
+      line-height: 1.28;
+    }
+
+    p,
+    li {
+      word-break: keep-all;
+      overflow-wrap: break-word;
+    }
+
+    .eyebrow {
+      width: fit-content;
+      margin-bottom: 12px;
+      padding: 6px 10px;
+      border: 1px solid rgba(23, 32, 31, 0.14);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.82);
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .lead {
+      max-width: 850px;
+      margin-bottom: 20px;
+      color: var(--muted);
+      font-size: 18px;
+    }
+
+    .hero {
+      padding: 34px 0 22px;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 0.94fr) minmax(420px, 1.06fr);
+      gap: 30px;
+      align-items: center;
+    }
+
+    .hero-copy {
+      padding: 12px 0;
+    }
+
+    .hero-points {
+      display: grid;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .hero-point {
+      display: grid;
+      grid-template-columns: 112px minmax(0, 1fr);
+      gap: 12px;
+      align-items: start;
+      padding: 14px;
+      border: 1px solid rgba(23, 32, 31, 0.12);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.82);
+    }
+
+    .hero-point strong {
+      color: var(--teal);
+      font-size: 14px;
+    }
+
+    .hero-point p {
+      margin-bottom: 0;
+    }
+
+    .control-panel {
+      padding: 18px;
+      border: 1px solid rgba(23, 32, 31, 0.13);
+      border-radius: 8px;
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(255, 255, 255, 0.7)),
+        repeating-linear-gradient(0deg, rgba(23, 32, 31, 0.055), rgba(23, 32, 31, 0.055) 1px, transparent 1px, transparent 24px),
+        repeating-linear-gradient(90deg, rgba(23, 32, 31, 0.045), rgba(23, 32, 31, 0.045) 1px, transparent 1px, transparent 24px);
+      box-shadow: var(--shadow);
+    }
+
+    .panel-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .model-stack {
+      display: grid;
+      gap: 10px;
+    }
+
+    .model-row {
+      display: grid;
+      grid-template-columns: 86px minmax(0, 1fr) 96px;
+      gap: 10px;
+      align-items: center;
+      padding: 12px;
+      border: 1px solid rgba(23, 32, 31, 0.12);
+      border-radius: 8px;
+      background: var(--row-bg);
+    }
+
+    .model-row strong {
+      font-size: 17px;
+      line-height: 1.2;
+    }
+
+    .model-row span {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .model-row em {
+      justify-self: end;
+      font-style: normal;
+      font-size: 12px;
+      font-weight: 900;
+      color: var(--row-fg);
+    }
+
+    .sources {
+      padding: 14px 0 22px;
+    }
+
+    .sources-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 12px;
+    }
+
+    .sources-title {
+      margin: 0;
+      font-size: 22px;
+      line-height: 1.25;
+    }
+
+    .sources-note {
+      max-width: 420px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .source-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .source-card {
+      min-height: 170px;
+      align-items: stretch;
+      justify-content: flex-start;
+      padding: 16px;
+      border: 1px solid rgba(23, 32, 31, 0.12);
+      border-radius: 8px;
+      background: var(--white);
+      box-shadow: var(--shadow);
+      text-decoration: none;
+      transition: transform 160ms ease, border-color 160ms ease;
+    }
+
+    .source-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(47, 111, 133, 0.4);
+    }
+
+    .source-content {
+      display: grid;
+      grid-template-rows: auto auto 1fr;
+      gap: 9px;
+    }
+
+    .tag {
+      width: fit-content;
+      padding: 5px 9px;
+      border-radius: 999px;
+      background: var(--tag-bg);
+      color: var(--tag-fg);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .source-card strong {
+      font-size: 18px;
+      line-height: 1.25;
+    }
+
+    .source-card span:last-child {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .section {
+      padding: 42px 0;
+      scroll-margin-top: 76px;
+    }
+
+    .section + .section {
+      border-top: 1px solid rgba(23, 32, 31, 0.1);
+    }
+
+    .section-head {
+      max-width: 850px;
+      margin-bottom: 20px;
+    }
+
+    .card-grid-3,
+    .card-grid-2 {
+      display: grid;
+      gap: 14px;
+    }
+
+    .card-grid-3 {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .card-grid-2 {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .learn-card,
+    .case-card,
+    .summary-card,
+    .quiz-box,
+    .term-card,
+    .flow-card,
+    .route-card,
+    .note-card {
+      border: 1px solid rgba(23, 32, 31, 0.12);
+      border-radius: 8px;
+      background: var(--white);
+      box-shadow: 0 12px 32px rgba(23, 32, 31, 0.08);
+    }
+
+    .learn-card,
+    .case-card,
+    .summary-card,
+    .term-card,
+    .flow-card,
+    .route-card,
+    .note-card {
+      padding: 18px;
+    }
+
+    .learn-card,
+    .term-card,
+    .route-card,
+    .note-card {
+      display: grid;
+      gap: 10px;
+      align-content: start;
+    }
+
+    .card-label {
+      width: fit-content;
+      padding: 5px 9px;
+      border-radius: 999px;
+      background: var(--label-bg);
+      color: var(--label-fg);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .learn-card p,
+    .case-card p,
+    .summary-card p,
+    .term-card p,
+    .flow-card p,
+    .route-card p,
+    .note-card p {
+      margin-bottom: 0;
+      color: var(--muted);
+    }
+
+    .definition-box {
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    .definition-card {
+      padding: 18px;
+      border: 1px solid rgba(23, 32, 31, 0.12);
+      border-radius: 8px;
+      background: var(--white);
+    }
+
+    .definition-card strong {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--card-fg);
+      font-size: 15px;
+    }
+
+    .definition-card p {
+      margin-bottom: 0;
+      color: var(--muted);
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .flow-card {
+      position: relative;
+      min-height: 150px;
+      display: grid;
+      gap: 8px;
+      align-content: start;
+      padding: 16px;
+    }
+
+    .flow-card::after {
+      content: "";
+      position: absolute;
+      right: -10px;
+      top: 42px;
+      width: 10px;
+      height: 2px;
+      background: rgba(23, 32, 31, 0.24);
+    }
+
+    .flow-card:last-child::after {
+      display: none;
+    }
+
+    .flow-mark {
+      width: 36px;
+      height: 36px;
+      color: #fff;
+      background: var(--node);
+      font-weight: 900;
+    }
+
+    .flow-card p {
+      font-size: 14px;
+    }
+
+    .route-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .route-mark {
+      width: 40px;
+      height: 40px;
+      color: #fff;
+      background: var(--route-fg);
+      font-weight: 900;
+    }
+
+    .comparison {
+      overflow-x: auto;
+      border: 1px solid rgba(23, 32, 31, 0.12);
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 12px 32px rgba(23, 32, 31, 0.08);
+    }
+
+    table {
+      width: 100%;
+      min-width: 760px;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(23, 32, 31, 0.1);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: rgba(47, 111, 133, 0.08);
+      font-size: 13px;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    td:first-child {
+      width: 150px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .case-card {
+      display: grid;
+      gap: 14px;
+    }
+
+    .case-stack {
+      display: grid;
+      gap: 8px;
+    }
+
+    .case-step {
+      display: grid;
+      grid-template-columns: 38px minmax(0, 1fr);
+      gap: 10px;
+      align-items: start;
+      padding: 10px;
+      border-radius: 8px;
+      background: var(--step-bg);
+    }
+
+    .tier-mark,
+    .answer-mark {
+      width: 34px;
+      height: 34px;
+      color: #fff;
+      background: var(--step-fg);
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .case-step strong {
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .case-step span {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .prompt-box {
+      padding: 14px;
+      border-radius: 8px;
+      background: #182625;
+      color: #f3fbf9;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      font-size: 14px;
+      line-height: 1.58;
+      white-space: pre-wrap;
+    }
+
+    .quiz-jump-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: -4px 0 20px;
+    }
+
+    .quiz-jump {
+      padding: 0 12px;
+      border: 1px solid rgba(23, 32, 31, 0.13);
+      border-radius: 8px;
+      background: var(--white);
+      color: var(--ink);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .quiz-level {
+      margin-top: 22px;
+      scroll-margin-top: 76px;
+    }
+
+    .quiz-level + .quiz-level {
+      margin-top: 28px;
+    }
+
+    .quiz-level-head {
+      max-width: 850px;
+      margin-bottom: 14px;
+    }
+
+    .level-badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 0 10px;
+      border-radius: 999px;
+      background: var(--level-bg, var(--soft-green));
+      color: var(--level-fg, var(--green));
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .quiz-level-head h3 {
+      margin: 10px 0 6px;
+      font-size: 24px;
+    }
+
+    .quiz-level-head p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .quiz-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+
+    .quiz-box {
+      display: grid;
+      gap: 12px;
+      padding: 16px;
+      align-content: start;
+    }
+
+    .quiz-box p {
+      margin-bottom: 0;
+    }
+
+    .quiz-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .quiz-number {
+      display: inline-grid;
+      place-items: center;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: rgba(23, 32, 31, 0.08);
+      color: var(--ink);
+    }
+
+    .choice-list {
+      display: grid;
+      gap: 7px;
+      margin: 0;
+      padding-left: 20px;
+      color: var(--muted);
+    }
+
+    details {
+      border-radius: 8px;
+      background: rgba(23, 32, 31, 0.055);
+    }
+
+    summary {
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 900;
+    }
+
+    .answer {
+      display: grid;
+      grid-template-columns: 34px minmax(0, 1fr);
+      gap: 10px;
+      align-items: start;
+      padding: 0 12px 12px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .answer strong {
+      color: var(--ink);
+    }
+
+    .terms {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .term-card {
+      min-height: 146px;
+      padding: 15px;
+    }
+
+    .summary-band {
+      display: grid;
+      grid-template-columns: 0.96fr 1.04fr;
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .summary-card {
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.76)),
+        var(--summary-bg);
+    }
+
+    .pill-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .pill-link {
+      padding: 8px 11px;
+      border: 1px solid rgba(23, 32, 31, 0.12);
+      border-radius: 999px;
+      background: #fff;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .footer {
+      padding: 26px 0 38px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+
+      *,
+      *::before,
+      *::after {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+      }
+    }
+
+    @media (max-width: 1080px) {
+      .hero-grid,
+      .definition-box,
+      .summary-band {
+        grid-template-columns: 1fr;
+      }
+
+      .source-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .card-grid-3,
+      .route-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .terms {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .flow {
+        grid-template-columns: 1fr;
+      }
+
+      .flow-card {
+        min-height: 0;
+      }
+
+      .flow-card::after {
+        left: 31px;
+        right: auto;
+        top: auto;
+        bottom: -10px;
+        width: 2px;
+        height: 10px;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .shell {
+        width: min(100% - 22px, 1160px);
+      }
+
+      .topbar-inner {
+        min-height: 58px;
+      }
+
+      .brand span:last-child {
+        display: none;
+      }
+
+      .mini-link {
+        padding: 0 10px;
+        font-size: 13px;
+      }
+
+      h1 {
+        font-size: 34px;
+      }
+
+      h2 {
+        font-size: 27px;
+      }
+
+      .lead {
+        font-size: 16px;
+      }
+
+      .hero {
+        padding-top: 22px;
+      }
+
+      .hero-grid {
+        gap: 16px;
+      }
+
+      .hero-point,
+      .model-row {
+        grid-template-columns: 1fr;
+      }
+
+      .model-row em {
+        justify-self: start;
+      }
+
+      .sources-head {
+        display: grid;
+      }
+
+      .source-grid,
+      .card-grid-2,
+      .quiz-grid,
+      .terms {
+        grid-template-columns: 1fr;
+      }
+
+      .source-card {
+        min-height: 0;
+      }
+
+      .section {
+        padding: 32px 0;
+      }
+
+      .control-panel {
+        padding: 12px;
+      }
+
+      .panel-title {
+        display: grid;
+      }
+
+      table {
+        min-width: 680px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="shell topbar-inner">
+      <a class="brand" href="./index.html" aria-label="개발 이해 가이드 홈으로 이동">
+        <span class="brand-mark" aria-hidden="true">
+          <svg class="icon" viewBox="0 0 24 24"><path d="m8 9-4 3 4 3"></path><path d="m16 9 4 3-4 3"></path><path d="m14 5-4 14"></path></svg>
+        </span>
+        <span>개발 이해 가이드</span>
+      </a>
+      <a class="mini-link" href="#quiz">
+        퀴즈로 이동
+        <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14"></path><path d="m19 12-7 7-7-7"></path></svg>
+      </a>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero shell">
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <div class="eyebrow">2026년 6월 기준 Claude Code 모델 읽기</div>
+          <h1>Claude Fable 5는 왜 Claude Code의 “긴 작업용 모델”인가</h1>
+          <p class="lead">Fable 5와 Mythos 5의 차이, Claude Code에서의 사용 방식, 안전장치와 폴백, 그리고 개발자가 조심해서 읽어야 할 신뢰 이슈를 한 흐름으로 공부합니다.</p>
+          <div class="hero-points" aria-label="학습 목표">
+            <div class="hero-point">
+              <strong>목표 1</strong>
+              <p>Fable 5가 Opus의 단순 후속이 아니라 Mythos급 모델이라는 점을 설명할 수 있습니다.</p>
+            </div>
+            <div class="hero-point">
+              <strong>목표 2</strong>
+              <p>Claude Code에서 Fable 5를 언제 쓰고, 언제 Sonnet이나 Opus로 충분한지 판단할 수 있습니다.</p>
+            </div>
+            <div class="hero-point">
+              <strong>목표 3</strong>
+              <p>안전장치, 자동 폴백, 보이지 않는 성능 제한이 실무 신뢰에 주는 영향을 구분할 수 있습니다.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="control-panel" aria-label="Claude 모델 계층 시각자료">
+          <div class="panel-title">
+            <span>Claude 모델 계층</span>
+            <span>작업 규모가 커질수록 오른쪽 설명이 중요해집니다</span>
+          </div>
+          <div class="model-stack">
+            <div class="model-row" style="--row-bg:var(--soft-green);--row-fg:var(--green)">
+              <strong>Haiku</strong>
+              <span>빠른 응답과 비용 효율이 필요한 작은 작업</span>
+              <em>속도</em>
+            </div>
+            <div class="model-row" style="--row-bg:var(--soft-blue);--row-fg:var(--blue)">
+              <strong>Sonnet</strong>
+              <span>일상 코딩, 문서 정리, 반복 개발 작업의 기본 선택지</span>
+              <em>균형</em>
+            </div>
+            <div class="model-row" style="--row-bg:var(--soft-amber);--row-fg:var(--amber)">
+              <strong>Opus</strong>
+              <span>복잡한 추론, 까다로운 디버깅, 설계 판단에 강한 고성능 모델</span>
+              <em>깊이</em>
+            </div>
+            <div class="model-row" style="--row-bg:var(--soft-teal);--row-fg:var(--teal)">
+              <strong>Fable 5</strong>
+              <span>일반 공개된 Mythos급 모델. 긴 Claude Code 세션과 자율 작업에 초점</span>
+              <em>장기 작업</em>
+            </div>
+            <div class="model-row" style="--row-bg:var(--soft-violet);--row-fg:var(--violet)">
+              <strong>Mythos 5</strong>
+              <span>Fable 5와 같은 기반 모델에서 일부 안전장치를 푼 제한 제공 모델</span>
+              <em>승인 접근</em>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="sources shell" aria-labelledby="sources-title">
+      <div class="sources-head">
+        <h2 class="sources-title" id="sources-title">먼저 읽으면 좋은 글</h2>
+        <p class="sources-note">공식 발표, Claude Code 사용법, 개발자 커뮤니티의 우려를 함께 보면 모델의 장점과 위험을 균형 있게 잡을 수 있습니다.</p>
+      </div>
+      <div class="source-grid">
+        <a class="source-card" href="https://www.anthropic.com/news/claude-fable-5-mythos-5" target="_blank" rel="noreferrer" style="--tag-bg:var(--soft-teal);--tag-fg:var(--teal)">
+          <span class="source-content">
+            <span class="tag">공식 발표</span>
+            <strong>Claude Fable 5 and Claude Mythos 5</strong>
+            <span>Fable 5와 Mythos 5의 출시 배경, 성능 주장, 안전장치, 가격과 제공 범위를 확인합니다.</span>
+          </span>
+        </a>
+        <a class="source-card" href="https://code.claude.com/docs/en/model-config" target="_blank" rel="noreferrer" style="--tag-bg:var(--soft-blue);--tag-fg:var(--blue)">
+          <span class="source-content">
+            <span class="tag">Claude Code</span>
+            <strong>Model configuration</strong>
+            <span>Claude Code에서 Fable 5를 선택하는 방법, 기본 모델 여부, 자동 폴백 동작을 확인합니다.</span>
+          </span>
+        </a>
+        <a class="source-card" href="https://news.hada.io/topic?id=30328" target="_blank" rel="noreferrer" style="--tag-bg:var(--soft-green);--tag-fg:var(--green)">
+          <span class="source-content">
+            <span class="tag">GeekNews</span>
+            <strong>Claude Fable 5/Mythos 5 공개</strong>
+            <span>출시 핵심, 벤치마크, 과학 성과, 안전장치를 한국어로 빠르게 잡습니다.</span>
+          </span>
+        </a>
+        <a class="source-card" href="https://news.hada.io/topic?id=30345" target="_blank" rel="noreferrer" style="--tag-bg:var(--soft-coral);--tag-fg:var(--coral)">
+          <span class="source-content">
+            <span class="tag">신뢰 이슈</span>
+            <strong>Fable이 도움을 멈춰도 사용자는 알 수 없다</strong>
+            <span>프런티어 LLM 개발 제한이 개발 도구 신뢰에 어떤 질문을 던지는지 살펴봅니다.</span>
+          </span>
+        </a>
+      </div>
+    </section>
+
+    <section class="section shell" id="big-picture">
+      <div class="section-head">
+        <div class="eyebrow">큰 그림</div>
+        <h2>이번 변화는 모델 교체보다 “작업 단위”의 변화입니다</h2>
+        <p class="lead">Fable 5는 더 좋은 자동완성 모델이라기보다, Claude Code가 긴 목표를 붙잡고 조사, 계획, 수정, 검증을 이어가도록 만든 고성능 실행 모델에 가깝습니다.</p>
+      </div>
+      <div class="definition-box">
+        <div class="definition-card" style="--card-fg:var(--green)">
+          <strong>쉬운 정의</strong>
+          <p>Claude Fable 5는 일반 사용자가 쓸 수 있게 안전장치를 단 Mythos급 Claude 모델입니다. Claude Code에서는 오래 걸리고 애매한 개발 작업을 맡길 때 가치가 커집니다.</p>
+        </div>
+        <div class="definition-card" style="--card-fg:var(--teal)">
+          <strong>정확한 정의</strong>
+          <p>Claude Fable 5는 Anthropic이 2026년 6월 9일 공개한 일반 제공 Mythos급 모델입니다. Claude Mythos 5와 기반 능력을 공유하지만, 사이버보안, 생명과학/화학, 모델 증류 등 특정 영역에서 안전 분류기와 폴백 정책이 적용됩니다.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section shell" id="prerequisites">
+      <div class="section-head">
+        <div class="eyebrow">먼저 알아야 할 것</div>
+        <h2>네 단어만 잡으면 전체 흐름이 쉬워집니다</h2>
+      </div>
+      <div class="card-grid-2">
+        <article class="learn-card" style="--label-bg:var(--soft-blue);--label-fg:var(--blue)">
+          <span class="card-label">모델 티어</span>
+          <h3>Haiku, Sonnet, Opus, Fable, Mythos</h3>
+          <p>모델 이름은 대체로 속도, 비용, 추론 깊이, 공개 범위를 나타냅니다. Fable은 Opus보다 위의 Mythos급 능력을 일반 사용자가 쓰도록 만든 이름입니다.</p>
+        </article>
+        <article class="learn-card" style="--label-bg:var(--soft-green);--label-fg:var(--green)">
+          <span class="card-label">에이전트</span>
+          <h3>답만 쓰는 모델이 아니라 일을 진행하는 모델</h3>
+          <p>Claude Code의 모델은 파일을 읽고, 명령을 실행하고, 테스트를 확인하고, 다음 행동을 고릅니다. 그래서 모델 성능은 답변 품질뿐 아니라 작업 지속력과 도구 사용력으로 평가됩니다.</p>
+        </article>
+        <article class="learn-card" style="--label-bg:var(--soft-amber);--label-fg:var(--amber)">
+          <span class="card-label">폴백</span>
+          <h3>Fable이 답하지 않고 Opus로 넘기는 상황</h3>
+          <p>안전 분류기가 특정 요청을 위험하다고 판단하면 Fable 5가 직접 처리하지 않고 Opus 4.8 같은 모델로 넘어갈 수 있습니다. Claude Code에서는 이 전환이 세션의 비용과 속도에도 영향을 줍니다.</p>
+        </article>
+        <article class="learn-card" style="--label-bg:var(--soft-coral);--label-fg:var(--coral)">
+          <span class="card-label">신뢰 경계</span>
+          <h3>모델이 못 한 것과 안 한 것을 구분하기</h3>
+          <p>Fable 5에는 보이는 안전 폴백과 보이지 않는 효과 제한이 함께 언급됩니다. 개발자는 나쁜 답의 원인이 실수인지, 맥락 부족인지, 정책 제한인지 판단하기 어려워질 수 있습니다.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section shell" id="how-it-works">
+      <div class="section-head">
+        <div class="eyebrow">작동 흐름</div>
+        <h2>Claude Code에서 Fable 5 요청은 이렇게 흘러갑니다</h2>
+        <p class="lead">가장 중요한 차이는 모델의 답변 능력보다, 요청이 처리되는 길이 여러 갈래로 나뉜다는 점입니다.</p>
+      </div>
+      <div class="flow" aria-label="Fable 5 요청 처리 흐름">
+        <article class="flow-card" style="--node:var(--blue)">
+          <span class="flow-mark">1</span>
+          <h3>목표 입력</h3>
+          <p>사용자가 Claude Code에 작업 결과와 성공 조건을 줍니다. 예: 결제 실패 원인 조사와 테스트 추가.</p>
+        </article>
+        <article class="flow-card" style="--node:var(--teal)">
+          <span class="flow-mark">2</span>
+          <h3>Fable 5 실행</h3>
+          <p>Fable은 긴 세션에서 조사하고, 계획하고, 도구를 사용하며, 스스로 검증하려고 합니다.</p>
+        </article>
+        <article class="flow-card" style="--node:var(--amber)">
+          <span class="flow-mark">3</span>
+          <h3>분류기 확인</h3>
+          <p>사이버보안, 생명과학/화학, 증류, 내부 추론 추출 같은 위험 영역인지 검사됩니다.</p>
+        </article>
+        <article class="flow-card" style="--node:var(--green)">
+          <span class="flow-mark">4</span>
+          <h3>정상 응답</h3>
+          <p>대부분의 일반 개발 작업은 Fable이 그대로 처리합니다. 긴 작업일수록 장점이 커진다는 설명이 붙습니다.</p>
+        </article>
+        <article class="flow-card" style="--node:var(--coral)">
+          <span class="flow-mark">5</span>
+          <h3>폴백 또는 제한</h3>
+          <p>일부 요청은 Opus로 넘어가거나 거절됩니다. 프런티어 LLM 개발 관련 효과 제한은 사용자에게 보이지 않을 수 있습니다.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section shell" id="code-meaning">
+      <div class="section-head">
+        <div class="eyebrow">Claude Code 관점</div>
+        <h2>Fable 5를 쓰면 프롬프트 습관도 달라집니다</h2>
+      </div>
+      <div class="route-grid">
+        <article class="route-card" style="--route-fg:var(--teal);--label-bg:var(--soft-teal);--label-fg:var(--teal)">
+          <span class="route-mark">A</span>
+          <span class="card-label">결과 중심</span>
+          <h3>단계보다 성공 조건을 줍니다</h3>
+          <p>Fable 5는 조사와 검증을 더 잘 수행하도록 설계되어 있으므로, “이 순서대로 해”보다 “무엇이 완료 상태인지”가 더 중요합니다.</p>
+        </article>
+        <article class="route-card" style="--route-fg:var(--blue);--label-bg:var(--soft-blue);--label-fg:var(--blue)">
+          <span class="route-mark">B</span>
+          <span class="card-label">큰 덩어리</span>
+          <h3>작게 쪼개기 전에 한 번 맡겨봅니다</h3>
+          <p>대규모 리팩터링, 장애 원인 조사, 명세 기반 구현처럼 원래 여러 조각으로 나누던 일을 한 목표로 줄 수 있습니다.</p>
+        </article>
+        <article class="route-card" style="--route-fg:var(--amber);--label-bg:var(--soft-amber);--label-fg:var(--amber)">
+          <span class="route-mark">C</span>
+          <span class="card-label">검증 비용</span>
+          <h3>느리고 비쌀 수 있음을 전제로 합니다</h3>
+          <p>항상 켜진 adaptive thinking과 높은 가격 때문에 단순 작업에는 과할 수 있습니다. 모델 전환과 effort 변경은 캐시에도 영향을 줍니다.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section shell" id="examples">
+      <div class="section-head">
+        <div class="eyebrow">예시와 비예시</div>
+        <h2>Fable 5가 어울리는 일과 아까운 일을 구분합니다</h2>
+      </div>
+      <div class="comparison">
+        <table>
+          <thead>
+            <tr>
+              <th>상황</th>
+              <th>Fable 5가 잘 맞는 경우</th>
+              <th>다른 모델로 충분한 경우</th>
+              <th>판단 이유</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>버그 수정</td>
+              <td>재현이 어렵고, 로그·DB·여러 서비스가 얽힌 결제 장애</td>
+              <td>한 파일의 null 체크 누락이나 간단한 타입 오류</td>
+              <td>Fable 5의 장점은 긴 조사와 근거 검증에서 나옵니다.</td>
+            </tr>
+            <tr>
+              <td>리팩터링</td>
+              <td>레거시 모듈을 테스트와 함께 단계적으로 현대화</td>
+              <td>함수 이름 변경, 작은 중복 제거</td>
+              <td>큰 변경일수록 계획 유지와 회귀 방지 능력이 중요합니다.</td>
+            </tr>
+            <tr>
+              <td>프론트엔드</td>
+              <td>스크린샷과 명세를 보고 UI를 구현하고 차이를 줄이는 작업</td>
+              <td>버튼 색 하나 바꾸기</td>
+              <td>비전과 코드 작업을 함께 써야 할 때 이득이 큽니다.</td>
+            </tr>
+            <tr>
+              <td>AI 기능 개발</td>
+              <td>앱 내부 검색 품질 개선, 평가 하네스 설계, 프롬프트 테스트</td>
+              <td>프런티어 LLM 학습 인프라나 경쟁 모델 개발 지원</td>
+              <td>후자는 보이지 않는 효과 제한 논란이 있는 영역입니다.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section shell" id="worked-example">
+      <div class="section-head">
+        <div class="eyebrow">풀이 예시</div>
+        <h2>좋은 요청은 “긴 작업을 맡길 수 있는 형태”로 씁니다</h2>
+      </div>
+      <div class="card-grid-2">
+        <article class="case-card">
+          <h3>나쁜 요청</h3>
+          <div class="prompt-box">결제 버그 고쳐줘.</div>
+          <p>문제 범위, 완료 조건, 검증 기준이 없습니다. 모델이 빠르게 추측해서 수정할 가능성이 커지고, 사용자는 무엇을 믿어야 할지 알기 어렵습니다.</p>
+        </article>
+        <article class="case-card">
+          <h3>좋은 요청</h3>
+          <div class="prompt-box">최근 구독 결제 실패가 늘어난 원인을 코드베이스와 테스트에서 조사해줘.
+재현 가능한 실패 조건을 찾고, 최소 수정안을 만들고, 회귀 테스트를 추가해줘.
+마지막에는 실행한 검증 명령, 수정한 파일, 남은 위험을 정리해줘.</div>
+          <p>Fable 5가 긴 조사, 구현, 검증, 보고를 한 흐름으로 진행하기 좋습니다. “완료”의 기준도 분명합니다.</p>
+        </article>
+      </div>
+      <div class="case-card" style="margin-top:14px">
+        <h3>Fable 5가 이 요청을 처리할 때 기대할 흐름</h3>
+        <div class="case-stack">
+          <div class="case-step" style="--step-bg:var(--soft-blue);--step-fg:var(--blue)"><span class="tier-mark">1</span><div><strong>맥락 수집</strong><span>결제 관련 경로, 최근 변경, 테스트, 로그 키워드를 먼저 읽습니다.</span></div></div>
+          <div class="case-step" style="--step-bg:var(--soft-teal);--step-fg:var(--teal)"><span class="tier-mark">2</span><div><strong>가설 세우기</strong><span>실패 조건을 좁히고 어떤 입력에서 문제가 나는지 확인합니다.</span></div></div>
+          <div class="case-step" style="--step-bg:var(--soft-green);--step-fg:var(--green)"><span class="tier-mark">3</span><div><strong>최소 수정</strong><span>관련 없는 리팩터링을 피하고 실패를 막는 가장 작은 변경을 적용합니다.</span></div></div>
+          <div class="case-step" style="--step-bg:var(--soft-amber);--step-fg:var(--amber)"><span class="tier-mark">4</span><div><strong>검증</strong><span>테스트를 실행하고, 실패하면 다시 원인을 좁힙니다.</span></div></div>
+          <div class="case-step" style="--step-bg:var(--soft-coral);--step-fg:var(--coral)"><span class="tier-mark">5</span><div><strong>보고</strong><span>무엇을 확인했고, 무엇이 아직 위험한지 사용자가 판단할 수 있게 남깁니다.</span></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section shell" id="risk">
+      <div class="section-head">
+        <div class="eyebrow">주의할 점</div>
+        <h2>강력한 모델일수록 운영 조건도 같이 읽어야 합니다</h2>
+      </div>
+      <div class="card-grid-3">
+        <article class="note-card" style="--label-bg:var(--soft-amber);--label-fg:var(--amber)">
+          <span class="card-label">가격</span>
+          <h3>비싸고 긴 턴이 생길 수 있습니다</h3>
+          <p>Fable 5는 입력 100만 토큰당 10달러, 출력 100만 토큰당 50달러로 안내됩니다. 단순 작업까지 항상 Fable로 돌리면 비용 효율이 낮아질 수 있습니다.</p>
+        </article>
+        <article class="note-card" style="--label-bg:var(--soft-coral);--label-fg:var(--coral)">
+          <span class="card-label">데이터 보존</span>
+          <h3>ZDR 조직에서는 사용할 수 없습니다</h3>
+          <p>Fable 5는 안전 모니터링을 위해 데이터 보존이 필요한 모델군입니다. Zero Data Retention이 필요한 조직에서는 모델 선택지에서 빠지거나 비활성화될 수 있습니다.</p>
+        </article>
+        <article class="note-card" style="--label-bg:var(--soft-violet);--label-fg:var(--violet)">
+          <span class="card-label">신뢰</span>
+          <h3>나쁜 답의 원인을 분리해야 합니다</h3>
+          <p>결과가 이상할 때 모델 실수, 맥락 부족, 안전 폴백, 보이지 않는 효과 제한을 구분해야 합니다. 특히 AI 모델 학습·튜닝 작업에서는 더 조심해야 합니다.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section shell" id="terms">
+      <div class="section-head">
+        <div class="eyebrow">용어 풀이</div>
+        <h2>헷갈리기 쉬운 용어를 짧게 정리합니다</h2>
+      </div>
+      <div class="terms">
+        <article class="term-card"><h3>Mythos급</h3><p>Opus보다 위에 놓인 Claude의 새 고성능 모델 티어입니다.</p></article>
+        <article class="term-card"><h3>Fable 5</h3><p>일반 공개용 Mythos급 모델입니다. 안전장치가 적용됩니다.</p></article>
+        <article class="term-card"><h3>Mythos 5</h3><p>같은 기반 모델에서 일부 안전장치를 푼 제한 제공 모델입니다.</p></article>
+        <article class="term-card"><h3>Adaptive thinking</h3><p>모델이 요청 난이도에 따라 사고량을 조절하는 방식입니다.</p></article>
+        <article class="term-card"><h3>Effort</h3><p>사고 깊이와 비용·지연시간의 균형을 조절하는 설정입니다.</p></article>
+        <article class="term-card"><h3>폴백</h3><p>Fable이 직접 처리하지 않고 다른 모델로 넘기는 동작입니다.</p></article>
+        <article class="term-card"><h3>분류기</h3><p>요청이 위험 영역에 해당하는지 판정하는 안전 장치입니다.</p></article>
+        <article class="term-card"><h3>증류</h3><p>강한 모델의 출력을 이용해 다른 모델의 능력을 끌어올리는 방법입니다.</p></article>
+        <article class="term-card"><h3>ZDR</h3><p>Zero Data Retention. 요청과 응답을 저장하지 않는 계약/정책입니다.</p></article>
+        <article class="term-card"><h3>하네스</h3><p>모델이 도구를 쓰고 평가받고 작업을 반복하게 만드는 실행 환경입니다.</p></article>
+      </div>
+    </section>
+
+    <section class="section shell" id="quiz">
+      <div class="section-head">
+        <div class="eyebrow">확인 퀴즈</div>
+        <h2>정의에서 실무 판단까지 점점 난이도를 올려봅니다</h2>
+        <p class="lead">문제를 먼저 풀고, 각 카드의 정답과 해설을 열어 확인하세요.</p>
+      </div>
+      <nav class="quiz-jump-list" aria-label="퀴즈 바로가기">
+        <a class="quiz-jump" href="#quiz-easy">쉬운 난이도</a>
+        <a class="quiz-jump" href="#quiz-medium">중간 난이도</a>
+        <a class="quiz-jump" href="#quiz-hard">상위 난이도</a>
+        <a class="quiz-jump" href="#term-quiz">용어집 퀴즈</a>
+      </nav>
+
+      <section class="quiz-level" id="quiz-easy">
+        <div class="quiz-level-head">
+          <span class="level-badge" style="--level-bg:var(--soft-green);--level-fg:var(--green)">쉬운 난이도</span>
+          <h3>개념을 정확히 구분하기</h3>
+          <p>정의, 구성요소, 비슷한 모델 이름을 확인합니다.</p>
+        </div>
+        <div class="quiz-grid">
+          <article class="quiz-box">
+            <div class="quiz-meta"><span class="quiz-number">1</span>정의</div>
+            <p>Claude Fable 5를 가장 정확히 설명한 것은 무엇인가요?</p>
+            <ol class="choice-list">
+              <li>Haiku보다 빠른 저비용 모델</li>
+              <li>일반 공개용 Mythos급 모델</li>
+              <li>Claude Code 전용 파일 편집기</li>
+              <li>오프라인에서만 동작하는 로컬 모델</li>
+            </ol>
+            <details><summary>정답과 해설</summary><div class="answer"><span class="answer-mark" style="--step-fg:var(--green)">정</span><p><strong>정답: 2.</strong> Fable 5는 Mythos급 기반 능력을 일반 사용자가 쓸 수 있게 만든 모델입니다. Haiku는 빠른 소형 모델이고, Fable은 장기 작업과 고성능 추론 쪽에 가깝습니다.</p></div></details>
+          </article>
+          <article class="quiz-box">
+            <div class="quiz-meta"><span class="quiz-number">2</span>구분</div>
+            <p>Fable 5와 Mythos 5를 가르는 핵심 차이는 무엇인가요?</p>
+            <ol class="choice-list">
+              <li>프로그래밍 언어 지원 여부</li>
+              <li>브라우저 사용 가능 여부</li>
+              <li>안전장치와 접근 제한</li>
+              <li>토큰이라는 개념 사용 여부</li>
+            </ol>
+            <details><summary>정답과 해설</summary><div class="answer"><span class="answer-mark" style="--step-fg:var(--green)">정</span><p><strong>정답: 3.</strong> 두 모델은 같은 기반 능력을 공유하지만 Fable은 일반 공개용 안전장치가 있고, Mythos는 승인된 파트너에게 제한적으로 제공됩니다.</p></div></details>
+          </article>
+          <article class="quiz-box">
+            <div class="quiz-meta"><span class="quiz-number">3</span>Claude Code</div>
+            <p>Claude Code에서 Fable 5가 특히 잘 맞는 작업은 무엇인가요?</p>
+            <ol class="choice-list">
+              <li>한 줄짜리 오타 수정</li>
+              <li>긴 원인 조사와 검증이 필요한 작업</li>
+              <li>항상 가장 저렴해야 하는 반복 작업</li>
+              <li>인터넷 연결이 전혀 없는 작업</li>
+            </ol>
+            <details><summary>정답과 해설</summary><div class="answer"><span class="answer-mark" style="--step-fg:var(--green)">정</span><p><strong>정답: 2.</strong> Fable 5의 강점은 긴 세션을 유지하며 조사, 계획, 구현, 검증을 이어가는 데 있습니다. 작은 수정에는 비용 대비 과할 수 있습니다.</p></div></details>
+          </article>
+          <article class="quiz-box">
+            <div class="quiz-meta"><span class="quiz-number">4</span>폴백</div>
+            <p>Fable 5의 안전 분류기가 요청을 위험하다고 보면 어떤 일이 생길 수 있나요?</p>
+            <ol class="choice-list">
+              <li>항상 더 강한 Mythos 5로 전환된다</li>
+              <li>Opus 같은 다른 모델로 넘어가거나 거절될 수 있다</li>
+              <li>사용자의 컴퓨터가 자동으로 재부팅된다</li>
+              <li>토큰 제한이 사라진다</li>
+            </ol>
+            <details><summary>정답과 해설</summary><div class="answer"><span class="answer-mark" style="--step-fg:var(--green)">정</span><p><strong>정답: 2.</strong> 사이버보안, 생명과학/화학 등 특정 영역에서는 Fable이 직접 처리하지 않고 Opus 4.8로 폴백하거나 API에서 거절 신호가 날 수 있습니다.</p></div></details>
+          </article>
+          <article class="quiz-box">
+            <div class="quiz-meta"><span class="quiz-number">5</span>사고 방식</div>
+            <p>Fable 5에서 항상 켜져 있는 사고 방식은 무엇인가요?</p>
+            <ol class="choice-list">
+              <li>Adaptive thinking</li>
+              <li>Manual-only thinking</li>
+              <li>Offline thinking</li>
+              <li>No thinking mode</li>
+            </ol>
+            <details><summary>정답과 해설</summary><div class="answer"><span class="answer-mark" style="--step-fg:var(--green)">정</span><p><strong>정답: 1.</strong> Fable 5와 Mythos 5는 adaptive thinking이 항상 켜져 있고 끌 수 없습니다. 사용자는 effort로 사고 깊이를 조절합니다.</p></div></details>
+          </article>
+        </div>
+      </section>
+
+      <section class="quiz-level" id="quiz-medium">
+        <div class="quiz-level-head">
+          <span class="level-badge" style="--level-bg:var(--soft-blue);--level-fg:var(--blue)">중간 난이도</span>
+          <h3>짧은 실무 상황 판단하기</h3>
+          <p>어떤 모델과 운영 방식을 고를지 판단합니다.</p>
+        </div>
+        <div class="quiz-grid">
+          <article class="quiz-box">
+            <div class="quiz-meta"><span class="quiz-number">6</span>모델 선택</div>
+            <p>작은 README 문장 몇 개를 다듬는 작업입니다. 가장 합리적인 판단은?</p>
+            <ol class="choice-list">
+              <li>항상 Fable 5를 쓴다</li>
+              <li>Sonnet이나 Opus로 충분할 가능성이 높다</li>
+              <li>반드시 Mythos 5가 필요하다</li>
+              <li>Claude Code를 쓰면 안 된다</li>
+            </ol>
+            <details><summary>정답과 해설</summary><div class="answer"><span class="answer-mark" style="--step-fg:var(--blue)">정</span><p><strong>정답: 2.</strong> 짧고 단순한 문서 수정은 Fable의 장기 작업 능력을 거의 쓰지 않습니다. 비용과 속도까지 생각하면 더 가벼운 모델이 맞습니다.</p></div></details>
+          </article>
+          <article class="quiz-box">
+            <div class="quiz-meta"><span class="quiz-number">7</span>프롬프트</div>
+            <p>레거시 인증 시스템을 바꾸려 합니다. Fable 5에 가장 적합한 요청은?</p>
+            <ol class="choice-list">
+              <li>코드 예쁘게 고쳐줘</li>
+              <li>모든 파일을 최신 스타일로 바꿔줘</li>
+              <li>인증 흐름을 조사하고, 위험 경로를 정리하고, 최소 변경과 테스트로 교체해줘</li>
+              <li>생각 과정을 전부 출력해줘</li>
+            </ol>
+            <details><summary>정답과 해설</summary><div class="answer"><span class="answer-mark" style="--step-fg:var(--blue)">정</span><p><strong>정답: 3.</strong> 목표, 범위, 검증 기준이 분명합니다. 4번처럼 내부 추론을 그대로 요구하는 방식은 Fable 5의 제한 영역을 건드릴 수 있습니다.</p></div></details>
+          </article>
+          <article class="quiz-box">
+            <div class="quiz-meta"><span class="quiz-number">8</span>비용</div>
+            <p>Fable 5 사용 중 안전 폴백으로 Opus로 전환되었습니다. 개발자가 예상해야 할 일은?</p>
+            <ol class="choice-list">
+              <li>모델 전환으로 캐시가 새로 잡히며 다음 턴이 느리거나 비싸질 수 있다</li>
+              <li>항상 무료가 된다</li>
+              <li>모든 이전 대화가 삭제된다</li>
+              <li>Fable보다 더 강한 제한 없는 모델이 된다</li>
+            </ol>
+            <details><summary>정답과 해설</summary><div class="answer"><span class="answer-mark" style="--step-fg:var(--blue)">정</span><p><strong>정답: 1.</strong> Claude Code 문서는 모델 전환이 프롬프트 캐시를 다시 읽게 만든다고 설명합니다. 폴백도 모델 전환입니다.</p></div></details>
+          </article>
+          <article class="quiz-box">
+            <div class="quiz-meta"><span class="quiz-number">9</span>신뢰</div>
+            <p>AI 검색용 임베딩 모델을 튜닝하는 중 Claude가 이상한 조언을 했습니다. 가장 좋은 대응은?</p>
+            <ol class="choice-list">
+              <li>곧바로 모델이 사보타주했다고 단정한다</li>
+              <li>모델 실수, 맥락 부족, 제한 작동 가능성을 분리해 재현 가능한 검증을 한다</li>
+              <li>모든 AI 개발을 중단한다</li>
+              <li>같은 질문을 더 화난 말투로 반복한다</li>
+            </ol>
+            <details><summary>정답과 해설</summary><div class="answer"><span class="answer-mark" style="--step-fg:var(--blue)">정</span><p><strong>정답: 2.</strong> GeekNews의 신뢰 이슈는 바로 이 구분의 어려움을 지적합니다. 단정이 아니라 실험과 로그로 원인을 좁혀야 합니다.</p></div></details>
+          </article>
+          <article class="quiz-box">
+            <div class="quiz-meta"><span class="quiz-number">10</span>보안 정책</div>
+            <p>조직이 Zero Data Retention을 필수로 요구합니다. Fable 5 사용 계획은 어떻게 봐야 하나요?</p>
+            <ol class="choice-list">
+              <li>Fable 5는 ZDR에서도 항상 사용 가능하다</li>
+              <li>ZDR 조직에서는 Fable 5가 빠지거나 비활성화될 수 있다</li>
+              <li>ZDR이면 Mythos 5가 자동 제공된다</li>
+              <li>데이터 보존 정책은 모델 선택과 무관하다</li>
+            </ol>
+            <details><summary>정답과 해설</summary><div class="answer"><span class="answer-mark" style="--step-fg:var(--blue)">정</span><p><strong>정답: 2.</strong> Fable 5는 안전 모니터링을 위한 데이터 보존이 필요한 모델군으로 안내됩니다. ZDR이 핵심 요구라면 다른 모델을 계획해야 합니다.</p></div></details>
+          </article>
+        </div>
+      </section>
+
+      <section class="quiz-level" id="quiz-hard">
+        <div class="quiz-level-head">
+          <span class="level-badge" style="--level-bg:var(--soft-violet);--level-fg:var(--violet)">상위 난이도</span>
+          <h3>여러 제약을 함께 보고 설계하기</h3>
+          <p>비용, 신뢰, 안전, 작업 난이도를 동시에 고려합니다.</p>
+        </div>
+        <div class="quiz-grid">
+          <article class="quiz-box">
+            <div class="quiz-meta"><span class="quiz-number">11</span>작업 설계</div>
+            <p>3일짜리 마이그레이션을 Claude Code에 맡기려 합니다. 좋은 운영 방식은?</p>
+            <ol class="choice-list">
+              <li>Fable 5에 목표와 완료 조건을 주고 중간 검증 지점을 명확히 둔다</li>
+              <li>한 턴에 “알아서 다 해”만 입력한다</li>
+              <li>테스트 실행을 금지해 속도를 높인다</li>
+              <li>모든 결과를 리뷰 없이 병합한다</li>
+            </ol>
+            <details><summary>정답과 해설</summary><div class="answer"><span class="answer-mark" style="--step-fg:var(--violet)">정</span><p><strong>정답: 1.</strong> Fable 5는 긴 작업에 강하지만 검증 기준은 여전히 필요합니다. 목표, 테스트, 리스크 보고가 있어야 사람이 결과를 신뢰할 수 있습니다.</p></div></details>
+          </article>
+          <article class="quiz-box">
+            <div class="quiz-meta"><span class="quiz-number">12</span>모델 라우팅</div>
+            <p>팀에서 비용을 줄이면서 품질도 유지하려 합니다. 적절한 모델 전략은?</p>
+            <ol class="choice-list">
+              <li>모든 작업을 Fable 5로 고정한다</li>
+              <li>짧은 작업은 Sonnet, 복잡한 판단은 Opus, 긴 목표 작업은 Fable로 나눈다</li>
+              <li>Fable을 금지하고 항상 Haiku만 쓴다</li>
+              <li>모델 선택을 매 턴 바꿔 캐시를 자주 초기화한다</li>
+            </ol>
+            <details><summary>정답과 해설</summary><div class="answer"><span class="answer-mark" style="--step-fg:var(--violet)">정</span><p><strong>정답: 2.</strong> 모델마다 장점이 다릅니다. Fable은 가장 어려운 장기 작업에 아껴 쓰고, 모델 전환은 캐시 비용까지 고려해 자연스러운 경계에서 하는 편이 좋습니다.</p></div></details>
+          </article>
+          <article class="quiz-box">
+            <div class="quiz-meta"><span class="quiz-number">13</span>정책 비판</div>
+            <p>보이지 않는 효과 제한이 개발 도구 신뢰에 문제가 되는 가장 큰 이유는?</p>
+            <ol class="choice-list">
+              <li>모든 모델이 항상 완벽해야 하기 때문</li>
+              <li>나쁜 결과의 원인을 사용자가 분리하기 어려워지기 때문</li>
+              <li>모델 이름이 길기 때문</li>
+              <li>프론트엔드 작업만 막기 때문</li>
+            </ol>
+            <details><summary>정답과 해설</summary><div class="answer"><span class="answer-mark" style="--step-fg:var(--violet)">정</span><p><strong>정답: 2.</strong> 개발 도구는 실패 원인을 추적할 수 있어야 합니다. 제한이 보이지 않으면 모델 실수, 사용자 실수, 정책 개입이 섞여 디버깅이 어려워집니다.</p></div></details>
+          </article>
+          <article class="quiz-box">
+            <div class="quiz-meta"><span class="quiz-number">14</span>AI 제품 개발</div>
+            <p>스타트업이 자체 리랭커와 임베딩 모델을 개선하고 있습니다. Fable 5를 쓸 때 가장 균형 잡힌 태도는?</p>
+            <ol class="choice-list">
+              <li>일반 제품 개선과 프런티어 모델 개발의 경계가 흐릴 수 있음을 알고 검증 루프를 둔다</li>
+              <li>무조건 Anthropic의 모든 제한이 악의적이라고 결론낸다</li>
+              <li>검증 없이 모델 조언을 그대로 따른다</li>
+              <li>AI 기능이 들어가면 모든 작업을 중단한다</li>
+            </ol>
+            <details><summary>정답과 해설</summary><div class="answer"><span class="answer-mark" style="--step-fg:var(--violet)">정</span><p><strong>정답: 1.</strong> GeekNews의 비판은 경계가 흐려지는 현실을 지적합니다. 실무자는 도구의 가능성과 한계를 함께 보고, 독립 검증을 설계해야 합니다.</p></div></details>
+          </article>
+          <article class="quiz-box">
+            <div class="quiz-meta"><span class="quiz-number">15</span>최종 판단</div>
+            <p>Fable 5를 팀 표준으로 도입하기 전에 반드시 정해야 할 것이 아닌 것은?</p>
+            <ol class="choice-list">
+              <li>어떤 작업에서 Fable을 쓸지</li>
+              <li>폴백과 거절을 어떻게 기록할지</li>
+              <li>비용과 데이터 보존 조건을 누가 승인할지</li>
+              <li>모든 코드 리뷰를 영구히 없앨지</li>
+            </ol>
+            <details><summary>정답과 해설</summary><div class="answer"><span class="answer-mark" style="--step-fg:var(--violet)">정</span><p><strong>정답: 4.</strong> Fable 5가 강력해도 코드 리뷰가 사라지는 것은 아닙니다. 오히려 긴 자율 작업일수록 결과 검토와 책임 경계가 더 중요합니다.</p></div></details>
+          </article>
+        </div>
+      </section>
+    </section>
+
+    <section class="section shell" id="term-quiz">
+      <div class="section-head">
+        <div class="eyebrow">용어집 퀴즈</div>
+        <h2>핵심 용어를 다시 꺼내 설명해봅니다</h2>
+      </div>
+      <div class="quiz-grid">
+        <article class="quiz-box"><div class="quiz-meta"><span class="quiz-number">T1</span>Mythos급</div><p>Mythos급은 Claude 모델 계층에서 무엇을 뜻하나요?</p><details><summary>정답과 해설</summary><div class="answer"><span class="answer-mark" style="--step-fg:var(--teal)">정</span><p><strong>정답:</strong> Opus보다 위에 놓인 고성능 모델 티어입니다. Fable 5는 이 Mythos급 능력을 일반 사용자용 안전장치와 함께 제공하는 모델입니다.</p></div></details></article>
+        <article class="quiz-box"><div class="quiz-meta"><span class="quiz-number">T2</span>Fable 5</div><p>Fable 5를 “일반 공개용 Mythos”라고 부를 수 있는 이유는?</p><details><summary>정답과 해설</summary><div class="answer"><span class="answer-mark" style="--step-fg:var(--teal)">정</span><p><strong>정답:</strong> Mythos 5와 기반 능력을 공유하지만 일반 사용을 위해 안전 분류기와 폴백 정책이 붙어 있기 때문입니다.</p></div></details></article>
+        <article class="quiz-box"><div class="quiz-meta"><span class="quiz-number">T3</span>Adaptive thinking</div><p>Adaptive thinking은 수동 thinking budget과 어떻게 다른가요?</p><details><summary>정답과 해설</summary><div class="answer"><span class="answer-mark" style="--step-fg:var(--teal)">정</span><p><strong>정답:</strong> 모델이 요청의 복잡도에 따라 사고량을 조절합니다. Fable 5에서는 항상 켜져 있고 끌 수 없으며, effort로 깊이를 조절합니다.</p></div></details></article>
+        <article class="quiz-box"><div class="quiz-meta"><span class="quiz-number">T4</span>Effort</div><p>Effort를 높이면 무엇을 얻고 무엇을 잃을 수 있나요?</p><details><summary>정답과 해설</summary><div class="answer"><span class="answer-mark" style="--step-fg:var(--teal)">정</span><p><strong>정답:</strong> 더 깊은 추론과 더 나은 결과 가능성을 얻지만, 지연시간과 토큰 비용이 늘 수 있습니다. 쉬운 작업에는 낮은 effort가 더 적절할 수 있습니다.</p></div></details></article>
+        <article class="quiz-box"><div class="quiz-meta"><span class="quiz-number">T5</span>폴백</div><p>Claude Code에서 Fable 5 자동 폴백이 생기면 왜 캐시를 신경 써야 하나요?</p><details><summary>정답과 해설</summary><div class="answer"><span class="answer-mark" style="--step-fg:var(--teal)">정</span><p><strong>정답:</strong> 폴백은 모델 전환입니다. 모델이 바뀌면 이전 대화 prefix를 새 모델 기준으로 다시 읽어야 해서 다음 턴이 느리거나 비싸질 수 있습니다.</p></div></details></article>
+        <article class="quiz-box"><div class="quiz-meta"><span class="quiz-number">T6</span>분류기</div><p>Fable 5의 안전 분류기는 무엇을 하려고 하나요?</p><details><summary>정답과 해설</summary><div class="answer"><span class="answer-mark" style="--step-fg:var(--teal)">정</span><p><strong>정답:</strong> 사이버보안, 생명과학/화학, 모델 증류, 내부 추론 추출처럼 위험하거나 제한된 요청을 감지해 직접 응답을 막거나 다른 모델로 넘깁니다.</p></div></details></article>
+        <article class="quiz-box"><div class="quiz-meta"><span class="quiz-number">T7</span>증류</div><p>모델 증류가 왜 제한 대상이 될 수 있나요?</p><details><summary>정답과 해설</summary><div class="answer"><span class="answer-mark" style="--step-fg:var(--teal)">정</span><p><strong>정답:</strong> 강한 모델의 출력을 이용해 다른 모델의 능력을 끌어올릴 수 있기 때문입니다. Anthropic은 경쟁 모델 개발이나 능력 추출을 제한하려고 합니다.</p></div></details></article>
+        <article class="quiz-box"><div class="quiz-meta"><span class="quiz-number">T8</span>ZDR</div><p>ZDR이 중요한 조직에서 Fable 5가 문제가 되는 이유는?</p><details><summary>정답과 해설</summary><div class="answer"><span class="answer-mark" style="--step-fg:var(--teal)">정</span><p><strong>정답:</strong> Fable 5는 안전 모니터링 목적의 데이터 보존이 필요한 모델군으로 안내됩니다. 데이터 저장 금지가 필수인 조직에서는 사용할 수 없을 수 있습니다.</p></div></details></article>
+        <article class="quiz-box"><div class="quiz-meta"><span class="quiz-number">T9</span>하네스</div><p>Claude Code를 하네스 관점에서 보면 무엇인가요?</p><details><summary>정답과 해설</summary><div class="answer"><span class="answer-mark" style="--step-fg:var(--teal)">정</span><p><strong>정답:</strong> 모델이 파일을 읽고, 명령을 실행하고, 도구를 쓰고, 검증하며 작업을 반복하게 만드는 실행 환경입니다. 모델만으로는 이 경험이 완성되지 않습니다.</p></div></details></article>
+        <article class="quiz-box"><div class="quiz-meta"><span class="quiz-number">T10</span>신뢰 경계</div><p>“모델이 못 한 것”과 “모델이 안 한 것”을 구분해야 하는 이유는?</p><details><summary>정답과 해설</summary><div class="answer"><span class="answer-mark" style="--step-fg:var(--teal)">정</span><p><strong>정답:</strong> 실패 원인을 알아야 도구를 믿고 개선할 수 있습니다. 보이지 않는 제한이 있으면 단순한 모델 실수처럼 보여도 실제 원인이 다를 수 있습니다.</p></div></details></article>
+      </div>
+    </section>
+
+    <section class="section shell" id="apply">
+      <div class="section-head">
+        <div class="eyebrow">적용해보기</div>
+        <h2>내 작업에 적용할 때는 두 가지 질문으로 판단합니다</h2>
+      </div>
+      <div class="summary-band">
+        <article class="summary-card" style="--summary-bg:var(--soft-teal)">
+          <h3>Fable 5를 쓸 만한가</h3>
+          <p>작업이 길고, 애매하고, 여러 파일과 검증이 얽혀 있으면 후보입니다. 단순 수정이라면 더 가벼운 모델부터 생각합니다.</p>
+        </article>
+        <article class="summary-card" style="--summary-bg:var(--soft-amber)">
+          <h3>제약을 감당할 수 있는가</h3>
+          <p>비용, 데이터 보존, 폴백, 안전 분류기, 숨은 효과 제한 가능성을 팀의 운영 기준에 맞춰 확인합니다.</p>
+        </article>
+      </div>
+      <div class="pill-list" aria-label="복습 질문">
+        <a class="pill-link" href="#big-picture">정의 다시 보기</a>
+        <a class="pill-link" href="#how-it-works">흐름 다시 보기</a>
+        <a class="pill-link" href="#risk">주의점 다시 보기</a>
+        <a class="pill-link" href="#quiz">퀴즈 다시 풀기</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer shell">
+    <p>나중에 다시 볼 질문: Fable 5가 필요한 작업의 기준은 무엇인가요? 안전 폴백과 보이지 않는 제한은 어떻게 다르나요? 팀에서 Fable 5를 도입한다면 어떤 로그와 검증 절차가 필요할까요?</p>
+  </footer>
+</body>
+</html>
