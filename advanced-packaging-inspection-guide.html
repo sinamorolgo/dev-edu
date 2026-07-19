@@ -1,0 +1,1885 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="ECTC 2023–2026과 주요 로드맵·리뷰·표준을 바탕으로 정리한 2.xD·HBM 첨단 패키징 단위공정 검사·계측 우선순위 가이드">
+  <title>2.xD·HBM 첨단 패키징 검사·계측 우선순위</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%2307131f'/%3E%3Cpath d='m12 20 20-9 20 9-20 9-20-9Zm0 12 20 9 20-9M12 44l20 9 20-9' fill='none' stroke='%23c86c34' stroke-width='5' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <style>
+    :root {
+      --navy-950: #07131f;
+      --navy-900: #0c1d2d;
+      --navy-800: #14324a;
+      --navy-700: #1c4966;
+      --paper: #f4f7f8;
+      --panel: #ffffff;
+      --panel-blue: #eaf4f7;
+      --line: #cbd7dd;
+      --line-strong: #92a8b3;
+      --ink: #102431;
+      --muted: #526874;
+      --copper: #c86c34;
+      --copper-dark: #8c3f1f;
+      --cyan: #007d91;
+      --cyan-soft: #dff4f6;
+      --green: #157451;
+      --green-soft: #e1f4eb;
+      --amber: #9d6500;
+      --amber-soft: #fff2cf;
+      --red: #a8323a;
+      --red-soft: #ffe8e7;
+      --violet: #6051a5;
+      --violet-soft: #eeebff;
+      --radius: 12px;
+      --shadow: 0 18px 42px rgba(7, 19, 31, 0.09);
+      color-scheme: light;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 16px;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background-color: var(--paper);
+      background-image:
+        linear-gradient(rgba(12, 29, 45, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(12, 29, 45, 0.035) 1px, transparent 1px);
+      background-size: 28px 28px;
+      font-family: Pretendard, "Apple SD Gothic Neo", "Noto Sans KR", ui-sans-serif, system-ui, sans-serif;
+      line-height: 1.68;
+      word-break: keep-all;
+    }
+
+    a {
+      color: var(--cyan);
+      text-underline-offset: 3px;
+      text-decoration-thickness: 1px;
+    }
+
+    a:hover {
+      text-decoration-thickness: 2px;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    :focus-visible {
+      outline: 3px solid var(--cyan);
+      outline-offset: 3px;
+    }
+
+    .skip-link {
+      position: absolute;
+      left: 12px;
+      top: -80px;
+      z-index: 10;
+      padding: 10px 14px;
+      color: #fff;
+      background: var(--navy-950);
+      border-radius: 6px;
+    }
+
+    .skip-link:focus {
+      top: 12px;
+    }
+
+    .shell {
+      width: min(1160px, calc(100% - 40px));
+      margin-inline: auto;
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      color: #fff;
+      background: var(--navy-950);
+      border-bottom: 8px solid var(--copper);
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: -72px;
+      bottom: -126px;
+      width: 420px;
+      height: 420px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 50%;
+      box-shadow:
+        0 0 0 42px rgba(255, 255, 255, 0.035),
+        0 0 0 92px rgba(255, 255, 255, 0.025);
+      pointer-events: none;
+    }
+
+    .hero-inner {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(290px, 0.75fr);
+      gap: 48px;
+      align-items: end;
+      padding: 62px 0 56px;
+    }
+
+    .eyebrow,
+    .kicker {
+      margin: 0 0 12px;
+      color: #64d0df;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    p {
+      margin-top: 0;
+    }
+
+    h1 {
+      max-width: 800px;
+      margin-bottom: 20px;
+      font-size: clamp(38px, 6vw, 72px);
+      line-height: 1.04;
+      letter-spacing: -0.055em;
+    }
+
+    .hero-copy {
+      max-width: 780px;
+      margin-bottom: 0;
+      color: #c9d8df;
+      font-size: clamp(17px, 2vw, 21px);
+      line-height: 1.58;
+    }
+
+    .scope-box {
+      padding: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-top: 4px solid var(--copper);
+      background: rgba(255, 255, 255, 0.055);
+      backdrop-filter: blur(10px);
+    }
+
+    .scope-box strong {
+      display: block;
+      margin-bottom: 8px;
+      color: #fff;
+      font-size: 16px;
+    }
+
+    .scope-box p {
+      margin-bottom: 12px;
+      color: #bdd0d8;
+      font-size: 14px;
+    }
+
+    .scope-box p:last-child {
+      margin-bottom: 0;
+    }
+
+    main {
+      padding-bottom: 80px;
+    }
+
+    .section {
+      padding: 70px 0;
+    }
+
+    .section.compact {
+      padding-top: 42px;
+      padding-bottom: 42px;
+    }
+
+    .section.dark {
+      color: #f5fbfd;
+      background: var(--navy-900);
+    }
+
+    .section.tint {
+      background: rgba(223, 244, 246, 0.72);
+      border-block: 1px solid #bddce1;
+    }
+
+    .section-head {
+      display: grid;
+      grid-template-columns: 0.42fr 1fr;
+      gap: 34px;
+      align-items: start;
+      margin-bottom: 34px;
+    }
+
+    .section-head h2 {
+      margin-bottom: 0;
+      font-size: clamp(28px, 4vw, 46px);
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+    }
+
+    .section-head p {
+      max-width: 720px;
+      margin: 3px 0 0;
+      color: var(--muted);
+      font-size: 17px;
+    }
+
+    .dark .section-head p {
+      color: #bbccd4;
+    }
+
+    .reference-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .reference-card {
+      min-height: 174px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 20px;
+      color: inherit;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-left: 5px solid var(--cyan);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      text-decoration: none;
+    }
+
+    .reference-card.ko {
+      border-left-color: var(--copper);
+    }
+
+    .reference-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--line-strong);
+    }
+
+    .reference-card small {
+      color: var(--muted);
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-weight: 800;
+    }
+
+    .reference-card h3 {
+      margin: 18px 0 8px;
+      font-size: 21px;
+      line-height: 1.3;
+    }
+
+    .reference-card p {
+      margin-bottom: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .quick-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      padding: 18px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+    }
+
+    .quick-nav strong {
+      width: 100%;
+      margin-bottom: 3px;
+    }
+
+    .quick-nav a {
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      padding: 9px 12px;
+      color: var(--navy-800);
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    .quick-nav a:hover {
+      border-color: var(--cyan);
+      background: var(--cyan-soft);
+    }
+
+    .answer-first {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(300px, 0.65fr);
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .thesis {
+      padding: clamp(24px, 4vw, 42px);
+      color: #fff;
+      background: var(--navy-800);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .thesis .number {
+      display: block;
+      margin-bottom: 20px;
+      color: #66d1de;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .thesis h2 {
+      margin-bottom: 18px;
+      font-size: clamp(27px, 4vw, 44px);
+      line-height: 1.18;
+      letter-spacing: -0.035em;
+    }
+
+    .thesis p {
+      margin-bottom: 0;
+      color: #d3e2e8;
+      font-size: 17px;
+    }
+
+    .four-meanings {
+      display: grid;
+      gap: 10px;
+    }
+
+    .meaning {
+      display: grid;
+      grid-template-columns: 40px 1fr;
+      gap: 12px;
+      align-items: center;
+      padding: 14px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 9px;
+    }
+
+    .meaning b:first-child {
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      background: var(--copper);
+      border-radius: 50%;
+      font-family: "SFMono-Regular", Consolas, monospace;
+    }
+
+    .meaning span {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .evidence-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      margin-top: 18px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+    }
+
+    .evidence-stat {
+      padding: 18px;
+      border-right: 1px solid var(--line);
+    }
+
+    .evidence-stat:last-child {
+      border-right: 0;
+    }
+
+    .evidence-stat strong {
+      display: block;
+      color: var(--navy-900);
+      font-size: 28px;
+      line-height: 1.1;
+    }
+
+    .evidence-stat span {
+      display: block;
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .caveat {
+      margin-top: 14px;
+      padding: 14px 16px;
+      color: #5a4311;
+      background: var(--amber-soft);
+      border-left: 5px solid #d69a24;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    .term-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .term-card {
+      padding: 20px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+    }
+
+    .term-card h3 {
+      margin-bottom: 9px;
+      font-size: 19px;
+    }
+
+    .term-card p {
+      margin-bottom: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .package-figure {
+      overflow-x: auto;
+      padding: 4px 0 12px;
+    }
+
+    .package-figure svg {
+      min-width: 900px;
+      width: 100%;
+      height: auto;
+      display: block;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+    }
+
+    .figure-caption {
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .gate-chain {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 0;
+      counter-reset: gate;
+    }
+
+    .gate {
+      position: relative;
+      min-height: 220px;
+      padding: 19px 16px 16px;
+      color: #fff;
+      background: var(--navy-800);
+      border-right: 1px solid rgba(255,255,255,.17);
+      counter-increment: gate;
+    }
+
+    .gate:first-child {
+      border-radius: var(--radius) 0 0 var(--radius);
+    }
+
+    .gate:last-child {
+      border-right: 0;
+      border-radius: 0 var(--radius) var(--radius) 0;
+    }
+
+    .gate::before {
+      content: "G" counter(gate);
+      display: block;
+      margin-bottom: 26px;
+      color: #65cedc;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .gate::after {
+      content: "";
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      top: 54px;
+      height: 3px;
+      background: var(--copper);
+    }
+
+    .gate h3 {
+      margin-bottom: 9px;
+      font-size: 17px;
+    }
+
+    .gate p {
+      margin-bottom: 0;
+      color: #c8d8df;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .rubric {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .priority-key {
+      padding: 16px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-top: 5px solid var(--line-strong);
+      border-radius: 9px;
+    }
+
+    .priority-key.p0 { border-top-color: var(--red); }
+    .priority-key.p0a { border-top-color: var(--copper); }
+    .priority-key.p1 { border-top-color: var(--amber); }
+    .priority-key.p2 { border-top-color: var(--cyan); }
+
+    .priority-key strong {
+      display: block;
+      margin-bottom: 7px;
+      font-family: "SFMono-Regular", Consolas, monospace;
+    }
+
+    .priority-key p {
+      margin-bottom: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      color: var(--ink);
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 920px;
+      font-size: 14px;
+    }
+
+    th,
+    td {
+      padding: 14px;
+      text-align: left;
+      vertical-align: top;
+      border-bottom: 1px solid var(--line);
+    }
+
+    th {
+      color: #fff;
+      background: var(--navy-800);
+      font-size: 12px;
+      letter-spacing: 0.03em;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: 0;
+    }
+
+    tbody tr:hover {
+      background: #f0f7f8;
+    }
+
+    td.rank {
+      width: 54px;
+      color: var(--copper-dark);
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 17px;
+      font-weight: 900;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 11px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .pill.p0 { color: #7f1521; background: var(--red-soft); }
+    .pill.p0a { color: #7a3218; background: #ffeadc; }
+    .pill.p1 { color: #6a4800; background: var(--amber-soft); }
+    .pill.p2 { color: #075d6d; background: var(--cyan-soft); }
+    .pill.e { color: #2e2674; background: var(--violet-soft); }
+    .pill.r { color: #0e6545; background: var(--green-soft); }
+
+    .small-note {
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .architecture-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .architecture-card {
+      overflow: hidden;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .architecture-card header {
+      min-height: 122px;
+      padding: 20px;
+      color: #fff;
+      background: var(--navy-800);
+      border-bottom: 5px solid var(--copper);
+    }
+
+    .architecture-card header small {
+      color: #69d1de;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-weight: 900;
+    }
+
+    .architecture-card h3 {
+      margin: 10px 0 0;
+      font-size: 21px;
+    }
+
+    .architecture-card ol {
+      margin: 0;
+      padding: 18px 18px 18px 42px;
+    }
+
+    .architecture-card li {
+      margin-bottom: 9px;
+      padding-left: 4px;
+      font-size: 14px;
+    }
+
+    .architecture-card li:last-child {
+      margin-bottom: 0;
+    }
+
+    .xray-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .xray-card {
+      min-height: 224px;
+      padding: 20px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+    }
+
+    .xray-card.good { border-top: 6px solid var(--green); }
+    .xray-card.limit { border-top: 6px solid var(--amber); }
+    .xray-card.pair { border-top: 6px solid var(--cyan); }
+
+    .xray-card h3 {
+      margin-bottom: 12px;
+      font-size: 20px;
+    }
+
+    .xray-card ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    .xray-card li {
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    .verdict {
+      margin-top: 16px;
+      padding: 22px;
+      color: #fff;
+      background: var(--navy-950);
+      border-left: 8px solid var(--copper);
+      border-radius: var(--radius);
+      font-size: clamp(17px, 2vw, 21px);
+    }
+
+    .verdict strong {
+      color: #6bd5e2;
+    }
+
+    .method-table td:nth-child(1) {
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .timeline {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      border-top: 3px solid var(--copper);
+    }
+
+    .year {
+      position: relative;
+      padding: 26px 18px 18px;
+      border-right: 1px solid var(--line);
+    }
+
+    .year:last-child {
+      border-right: 0;
+    }
+
+    .year::before {
+      content: "";
+      position: absolute;
+      top: -8px;
+      left: 18px;
+      width: 13px;
+      height: 13px;
+      background: var(--copper);
+      border: 3px solid var(--paper);
+      border-radius: 50%;
+    }
+
+    .year h3 {
+      color: var(--navy-900);
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 24px;
+    }
+
+    .year p {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .year a {
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .worked-example {
+      display: grid;
+      grid-template-columns: 0.7fr 1.3fr;
+      gap: 18px;
+    }
+
+    .example-context,
+    .example-plan {
+      padding: 24px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+    }
+
+    .example-context {
+      color: #fff;
+      background: var(--navy-800);
+      border-color: var(--navy-800);
+    }
+
+    .example-context h3,
+    .example-plan h3 {
+      font-size: 22px;
+    }
+
+    .example-context p,
+    .example-context li {
+      color: #d2e1e7;
+    }
+
+    .example-context ul,
+    .example-plan ol {
+      margin: 0;
+      padding-left: 21px;
+    }
+
+    .example-plan li {
+      margin-bottom: 11px;
+      padding-left: 5px;
+    }
+
+    .quiz-jump {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 22px;
+    }
+
+    .quiz-jump a {
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      padding: 9px 14px;
+      color: #fff;
+      background: var(--navy-800);
+      border-radius: 8px;
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    .quiz-summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding: 14px 16px;
+      background: var(--panel-blue);
+      border: 1px solid #bbd9df;
+      border-radius: 9px;
+    }
+
+    .quiz-summary strong {
+      font-family: "SFMono-Regular", Consolas, monospace;
+    }
+
+    .reset-button {
+      min-height: 44px;
+      padding: 9px 13px;
+      color: var(--navy-900);
+      background: #fff;
+      border: 1px solid var(--line-strong);
+      border-radius: 7px;
+      cursor: pointer;
+      font-weight: 800;
+    }
+
+    .quiz-list {
+      display: grid;
+      gap: 16px;
+    }
+
+    .question-card {
+      padding: 20px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: 0 10px 24px rgba(7, 19, 31, 0.06);
+    }
+
+    .question-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-bottom: 10px;
+    }
+
+    .question-card h3 {
+      margin-bottom: 15px;
+      font-size: 17px;
+      line-height: 1.55;
+    }
+
+    .options {
+      display: grid;
+      gap: 8px;
+    }
+
+    .option {
+      min-height: 48px;
+      width: 100%;
+      display: grid;
+      grid-template-columns: 28px 1fr;
+      gap: 9px;
+      align-items: center;
+      padding: 10px 12px;
+      color: var(--ink);
+      background: #f9fbfc;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .option:hover:not(:disabled) {
+      border-color: var(--cyan);
+      background: var(--cyan-soft);
+    }
+
+    .option:disabled {
+      cursor: default;
+      opacity: 1;
+    }
+
+    .option.correct {
+      color: #0c593d;
+      background: var(--green-soft);
+      border-color: var(--green);
+    }
+
+    .option.wrong {
+      color: #7e1f2a;
+      background: var(--red-soft);
+      border-color: var(--red);
+    }
+
+    .letter {
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      border: 1px solid currentColor;
+      border-radius: 50%;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .feedback {
+      display: none;
+      margin-top: 13px;
+      padding: 13px 15px;
+      border-radius: 7px;
+      font-size: 14px;
+    }
+
+    .feedback.show {
+      display: block;
+    }
+
+    .feedback.correct {
+      color: #0c593d;
+      background: var(--green-soft);
+      border-left: 4px solid var(--green);
+    }
+
+    .feedback.wrong {
+      color: #652229;
+      background: var(--red-soft);
+      border-left: 4px solid var(--red);
+    }
+
+    .feedback strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .feedback p {
+      margin: 0;
+    }
+
+    .source-list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .source-group {
+      padding: 20px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+    }
+
+    .source-group h3 {
+      margin-bottom: 14px;
+      font-size: 19px;
+    }
+
+    .source-group ol,
+    .source-group ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    .source-group li {
+      margin-bottom: 10px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .source-group li:last-child {
+      margin-bottom: 0;
+    }
+
+    .source-group a {
+      font-weight: 800;
+    }
+
+    .method-note {
+      margin-top: 16px;
+      padding: 18px;
+      background: #fff;
+      border: 1px dashed var(--line-strong);
+      border-radius: var(--radius);
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    footer {
+      padding: 34px 0;
+      color: #b9cbd3;
+      background: var(--navy-950);
+      border-top: 5px solid var(--copper);
+    }
+
+    footer p {
+      margin-bottom: 6px;
+    }
+
+    footer a {
+      color: #76d8e4;
+    }
+
+    @media (max-width: 900px) {
+      .hero-inner,
+      .answer-first,
+      .section-head,
+      .worked-example {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-inner {
+        gap: 28px;
+        padding: 50px 0 44px;
+      }
+
+      .scope-box {
+        max-width: 620px;
+      }
+
+      .gate-chain,
+      .timeline {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .gate {
+        border-bottom: 1px solid rgba(255,255,255,.17);
+      }
+
+      .gate:first-child,
+      .gate:last-child {
+        border-radius: 0;
+      }
+
+      .architecture-grid,
+      .xray-grid,
+      .term-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 680px) {
+      .shell {
+        width: min(100% - 22px, 1160px);
+      }
+
+      body {
+        word-break: normal;
+        overflow-wrap: anywhere;
+      }
+
+      h1 {
+        font-size: 40px;
+      }
+
+      .hero::after {
+        display: none;
+      }
+
+      .section {
+        padding: 52px 0;
+      }
+
+      .section-head {
+        gap: 12px;
+        margin-bottom: 24px;
+      }
+
+      .reference-grid,
+      .source-list,
+      .rubric,
+      .evidence-strip,
+      .gate-chain,
+      .timeline {
+        grid-template-columns: 1fr;
+      }
+
+      .evidence-stat,
+      .year,
+      .gate {
+        border-right: 0;
+      }
+
+      .evidence-stat {
+        border-bottom: 1px solid var(--line);
+      }
+
+      .evidence-stat:last-child {
+        border-bottom: 0;
+      }
+
+      .timeline {
+        border-top: 0;
+        border-left: 3px solid var(--copper);
+      }
+
+      .year {
+        padding: 8px 12px 26px 24px;
+      }
+
+      .year::before {
+        top: 7px;
+        left: -8px;
+      }
+
+      .quiz-summary {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .reset-button {
+        width: 100%;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { transition: none !important; }
+    }
+
+    @media print {
+      body { background: #fff; }
+      .hero { color: #000; background: #fff; border-bottom: 2px solid #000; }
+      .hero-copy, .scope-box p { color: #222; }
+      .scope-box { border: 1px solid #777; }
+      .quick-nav, .quiz-jump, .reset-button { display: none; }
+      .section { break-inside: avoid; }
+      a { color: #000; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">본문으로 건너뛰기</a>
+
+  <header class="hero">
+    <div class="shell hero-inner">
+      <div>
+        <p class="eyebrow">ECTC 2023—2026 · Survey &amp; Control Plan</p>
+        <h1>2.xD·HBM<br>검사·계측 우선순위</h1>
+        <p class="hero-copy">패드와 범프가 “붙어 보이는가”를 넘어, 어떤 공정에서 무엇을 측정해야 고가의 칩렛과 HBM 스택을 지킬 수 있는지 정리한 실무형 서베이입니다.</p>
+      </div>
+      <aside class="scope-box" aria-label="자료 범위">
+        <strong>근거 범위</strong>
+        <p>근거는 ECTC 2023–2026 공식 프로그램 1,591건 중 계측·검사와 인접 특성평가로 분류한 247건의 공개 초록·서지정보입니다.</p>
+        <p>여기에 IRDS·MAPT·HIR·SEMI 가이드, 비ECTC 리뷰와 실험 논문을 더했습니다. 2026 결과는 최신 동향이므로 성숙한 양산 표준으로 일반화하지 않습니다.</p>
+      </aside>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="section compact" id="recommended">
+      <div class="shell">
+        <div class="section-head">
+          <div>
+            <p class="kicker">Start here</p>
+            <h2>먼저 읽으면 좋은 글</h2>
+          </div>
+          <p>공정 구조를 먼저 잡고, 그다음 계측의 해상도·처리량·검출 범위 사이의 절충을 읽으면 아래 우선순위가 더 잘 보입니다.</p>
+        </div>
+        <div class="reference-grid">
+          <a class="reference-card" href="https://www.imec-int.com/en/articles/wafer-wafer-hybrid-bonding-pushing-boundaries-400nm-interconnect-pitch" target="_blank" rel="noreferrer">
+            <small>EN · imec</small>
+            <div>
+              <h3>Wafer-to-wafer hybrid bonding at 400 nm pitch</h3>
+              <p>표면 평탄도·청정도·Cu recess·overlay가 왜 한 세트인지 공정 흐름으로 설명합니다.</p>
+            </div>
+          </a>
+          <a class="reference-card" href="https://semiengineering.com/inspection-metrology-issues-in-advanced-packages/" target="_blank" rel="noreferrer">
+            <small>EN · Semiconductor Engineering</small>
+            <div>
+              <h3>Inspection, Metrology Issues in Advanced Packages</h3>
+              <p>광학·X-ray·음향·전기 검사의 coverage, resolution, throughput trade-off를 폭넓게 짚습니다.</p>
+            </div>
+          </a>
+          <a class="reference-card ko" href="https://news.skhynix.co.kr/interconnection-for-advanced-packaging/" target="_blank" rel="noreferrer">
+            <small>KO · SK하이닉스</small>
+            <div>
+              <h3>어드밴스드 패키징을 견인하는 인터커넥션 기술</h3>
+              <p>플립칩·TSV·하이브리드 본딩과 HBM의 관계를 한국어로 빠르게 잡기 좋습니다.</p>
+            </div>
+          </a>
+          <a class="reference-card ko" href="https://semiconductor.samsung.com/kr/news-events/tech-blog/advanced-packaging-and-the-shift-to-system-level-semiconductor-innovation/" target="_blank" rel="noreferrer">
+            <small>KO · 삼성전자</small>
+            <div>
+              <h3>첨단 패키징과 시스템 수준 반도체 혁신</h3>
+              <p>2.3D·2.5D·3D 구조가 어떤 통합 문제를 풀려는지 아키텍처 관점에서 설명합니다.</p>
+            </div>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <div class="section compact">
+      <nav class="shell quick-nav" aria-label="페이지 바로가기">
+        <strong>바로가기</strong>
+        <a href="#answer">핵심 답</a>
+        <a href="#scope">범위와 용어</a>
+        <a href="#process-map">공정 게이트</a>
+        <a href="#priority">중요도 순위</a>
+        <a href="#architecture">아키텍처별 차이</a>
+        <a href="#xray">X-ray 사례</a>
+        <a href="#methods">검사법 비교</a>
+        <a href="#timeline">ECTC 흐름</a>
+        <a href="#quiz">확인 퀴즈</a>
+        <a href="#sources">근거 문헌</a>
+      </nav>
+    </div>
+
+    <section class="section" id="answer">
+      <div class="shell">
+        <div class="answer-first">
+          <article class="thesis">
+            <span class="number">ANSWER / 01</span>
+            <h2>“잘 붙었다”는 한 장비가 아니라 네 가지 판정의 교집합입니다.</h2>
+            <p>가장 중요한 것은 장비 순위가 아니라 <strong>결함이 생기는 순간에, 다음 고가 공정으로 넘기기 전에, 서로 다른 물리량을 교차 확인하는 것</strong>입니다. X-ray는 매몰 형상에 강하지만 전기 접촉과 나노 계면까지 혼자 증명하지 못합니다.</p>
+          </article>
+          <div class="four-meanings" aria-label="접합 판정의 네 가지 의미">
+            <div class="meaning"><b>1</b><div><strong>기하</strong><span>x-y-θ 정렬, pad overlap, 높이와 coplanarity</span></div></div>
+            <div class="meaning"><b>2</b><div><strong>구조</strong><span>void, non-wet, bridge, crack, delamination</span></div></div>
+            <div class="meaning"><b>3</b><div><strong>전기</strong><span>open/short, continuity, contact resistance, leakage</span></div></div>
+            <div class="meaning"><b>4</b><div><strong>수명</strong><span>bond strength, stress, thermal path, EM·열사이클</span></div></div>
+          </div>
+        </div>
+
+        <div class="evidence-strip" aria-label="조사 범위 통계">
+          <div class="evidence-stat"><strong>1,591</strong><span>ECTC 2023–2026 공식 프로그램 발표</span></div>
+          <div class="evidence-stat"><strong>247</strong><span>MI 핵심·인접 근거군으로 분류한 발표</span></div>
+          <div class="evidence-stat"><strong>239</strong><span>ECTC 논문 자체의 공개 초록으로 확인한 항목</span></div>
+          <div class="evidence-stat"><strong>4년</strong><span>inline·in-situ·전수 coverage 지향이 강화</span></div>
+        </div>
+        <p class="caveat"><strong>읽는 법:</strong> ECTC에는 공식 MI 논문 태그가 없습니다. 여기의 247건은 metrology·inspection·characterization·failure analysis를 포함한 근거군이며, 공개 초록 수준의 확인은 논문 원문 전체 검토와 구분해 읽어야 합니다.</p>
+      </div>
+    </section>
+
+    <section class="section tint" id="scope">
+      <div class="shell">
+        <div class="section-head">
+          <div>
+            <p class="kicker">Scope</p>
+            <h2>무엇을 같은 지도에 놓았나</h2>
+          </div>
+          <p>2.1D·2.3D·2.5D의 세부 명칭은 회사와 문헌마다 조금씩 다릅니다. 여기서는 수평 방향의 다중 die를 RDL·bridge·interposer로 연결하는 2.xD와, TSV 및 microbump(또는 hybrid bond)로 수직 적층하는 HBM을 함께 봅니다.</p>
+        </div>
+        <div class="term-grid">
+          <article class="term-card">
+            <h3>검사 Inspection</h3>
+            <p>결함의 유무와 위치를 찾는 일입니다. AOI, X-ray, CT/XRM, SAM, IR 등이 대표적입니다.</p>
+          </article>
+          <article class="term-card">
+            <h3>계측 Metrology</h3>
+            <p>CD, overlay, recess, roughness, TTV, warpage처럼 공정 변수를 수치와 불확도로 재는 일입니다.</p>
+          </article>
+          <article class="term-card">
+            <h3>시험·FA Test / FA</h3>
+            <p>전기 기능과 신뢰성을 확인하고, 불량을 LIT·TDR·FIB·TEM 등으로 국소화해 원인을 닫는 일입니다.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="package-title">
+      <div class="shell">
+        <div class="section-head">
+          <div>
+            <p class="kicker">Package anatomy</p>
+            <h2 id="package-title">결함은 층마다 다른 얼굴을 갖습니다</h2>
+          </div>
+          <p>광학으로 보이는 표면 결함, 금속 대비가 필요한 매몰 결함, 음향 임피던스 차이로 보이는 계면 결함, 전기 자극을 줘야 드러나는 기능 결함을 구분해야 합니다.</p>
+        </div>
+        <div class="package-figure" tabindex="0" aria-label="2.5D HBM 패키지 단면과 주요 검사 지점. 작은 화면에서는 가로로 스크롤할 수 있습니다.">
+          <svg viewBox="0 0 1080 480" role="img" aria-labelledby="svg-title svg-desc">
+            <title id="svg-title">2.5D HBM 패키지 단면과 검사 포인트</title>
+            <desc id="svg-desc">왼쪽의 HBM 적층과 오른쪽 로직 die가 실리콘 또는 RDL 인터포저 위에 놓이고, 하부 기판으로 연결되는 구조. 표면, 범프, RDL, 언더필, 워페이지, 열 경로와 구조에 따라 쓰는 TSV 또는 TGV 검사 지점을 표시한다.</desc>
+            <rect x="0" y="0" width="1080" height="480" fill="#ffffff"/>
+            <text x="48" y="40" fill="#526874" font-size="14" font-family="system-ui">CROSS-SECTION · NOT TO SCALE</text>
+            <path d="M48 408 Q540 372 1032 408" fill="none" stroke="#c86c34" stroke-width="4" stroke-dasharray="10 8"/>
+            <text x="816" y="444" fill="#8c3f1f" font-size="14" font-weight="700" font-family="system-ui">warpage / coplanarity</text>
+
+            <rect x="110" y="340" width="860" height="68" rx="5" fill="#14324a"/>
+            <text x="480" y="381" fill="#ffffff" font-size="18" font-weight="700" font-family="system-ui">Package substrate · via · routing</text>
+            <g fill="#c86c34">
+              <circle cx="180" cy="329" r="8"/><circle cx="230" cy="329" r="8"/><circle cx="280" cy="329" r="8"/>
+              <circle cx="330" cy="329" r="8"/><circle cx="380" cy="329" r="8"/><circle cx="430" cy="329" r="8"/>
+              <circle cx="480" cy="329" r="8"/><circle cx="530" cy="329" r="8"/><circle cx="580" cy="329" r="8"/>
+              <circle cx="630" cy="329" r="8"/><circle cx="680" cy="329" r="8"/><circle cx="730" cy="329" r="8"/>
+              <circle cx="780" cy="329" r="8"/><circle cx="830" cy="329" r="8"/><circle cx="880" cy="329" r="8"/>
+            </g>
+            <rect x="155" y="258" width="730" height="62" rx="4" fill="#8dbac4" stroke="#14324a" stroke-width="2"/>
+            <text x="420" y="295" fill="#102431" font-size="18" font-weight="700" font-family="system-ui">Si / RDL interposer · fine RDL</text>
+            <g stroke="#c86c34" stroke-width="5"><line x1="250" y1="266" x2="250" y2="314"/><line x1="420" y1="266" x2="420" y2="314"/><line x1="610" y1="266" x2="610" y2="314"/><line x1="800" y1="266" x2="800" y2="314"/></g>
+
+            <g fill="#c86c34">
+              <circle cx="220" cy="246" r="7"/><circle cx="250" cy="246" r="7"/><circle cx="280" cy="246" r="7"/><circle cx="310" cy="246" r="7"/><circle cx="340" cy="246" r="7"/><circle cx="370" cy="246" r="7"/>
+              <circle cx="580" cy="246" r="7"/><circle cx="610" cy="246" r="7"/><circle cx="640" cy="246" r="7"/><circle cx="670" cy="246" r="7"/><circle cx="700" cy="246" r="7"/><circle cx="730" cy="246" r="7"/><circle cx="760" cy="246" r="7"/>
+            </g>
+            <rect x="195" y="80" width="205" height="154" rx="5" fill="#e8eef1" stroke="#14324a" stroke-width="2"/>
+            <g fill="#14324a"><rect x="220" y="98" width="155" height="24"/><rect x="220" y="130" width="155" height="24"/><rect x="220" y="162" width="155" height="24"/><rect x="220" y="194" width="155" height="24"/></g>
+            <g fill="#c86c34"><circle cx="245" cy="126" r="4"/><circle cx="295" cy="126" r="4"/><circle cx="345" cy="126" r="4"/><circle cx="245" cy="158" r="4"/><circle cx="295" cy="158" r="4"/><circle cx="345" cy="158" r="4"/><circle cx="245" cy="190" r="4"/><circle cx="295" cy="190" r="4"/><circle cx="345" cy="190" r="4"/></g>
+            <text x="267" y="70" fill="#102431" font-size="19" font-weight="800" font-family="system-ui">HBM stack</text>
+
+            <rect x="555" y="126" width="230" height="108" rx="5" fill="#14324a"/>
+            <text x="630" y="186" fill="#ffffff" font-size="22" font-weight="800" font-family="system-ui">Logic die</text>
+            <path d="M415 222 H535" stroke="#007d91" stroke-width="3" stroke-dasharray="7 5"/>
+            <text x="418" y="213" fill="#007d91" font-size="12" font-weight="700" font-family="system-ui">fine RDL links</text>
+
+            <g font-family="system-ui" font-size="13" font-weight="700">
+              <path d="M195 110 H78 V86" fill="none" stroke="#a8323a" stroke-width="2"/><circle cx="195" cy="110" r="4" fill="#a8323a"/><text x="45" y="74" fill="#a8323a">KGD·TSV·stack test</text>
+              <path d="M340 244 H440 V116" fill="none" stroke="#a8323a" stroke-width="2"/><circle cx="340" cy="244" r="4" fill="#a8323a"/><text x="415" y="102" fill="#a8323a">bump geometry·X-ray·electrical</text>
+              <path d="M610 257 V82 H800" fill="none" stroke="#007d91" stroke-width="2"/><circle cx="610" cy="257" r="4" fill="#007d91"/><text x="810" y="87" fill="#007d91">RDL CD·overlay·open/short</text>
+              <path d="M800 294 H950 V214" fill="none" stroke="#007d91" stroke-width="2"/><circle cx="800" cy="294" r="4" fill="#007d91"/><text x="842" y="199" fill="#007d91">TSV/TGV (해당 시)</text>
+              <path d="M785 152 H960 V132" fill="none" stroke="#9d6500" stroke-width="2"/><circle cx="785" cy="152" r="4" fill="#9d6500"/><text x="850" y="119" fill="#9d6500">TIM·hotspot·Rth</text>
+              <path d="M690 240 H908 V258" fill="none" stroke="#6051a5" stroke-width="2"/><circle cx="690" cy="240" r="4" fill="#6051a5"/><text x="898" y="279" fill="#6051a5">underfill void·cure</text>
+            </g>
+          </svg>
+        </div>
+        <p class="figure-caption">그림의 화살표는 “추천 장비 하나”가 아니라 품질 특성(CTQ)을 가리킵니다. 실제 장비 조합은 재료, pitch, 적층 수, X-ray 투과 경로와 takt time에 따라 바뀝니다.</p>
+      </div>
+    </section>
+
+    <section class="section dark" id="process-map">
+      <div class="shell">
+        <div class="section-head">
+          <div>
+            <p class="kicker">Control loop</p>
+            <h2>가치가 쌓이기 전에 막는 5개 게이트</h2>
+          </div>
+          <p>최종 검사에서 모든 결함을 찾으려 하면 원인 추적도 어렵고 이미 투입된 die의 가치도 잃습니다. 공정 변수와 숨은 결함을 각각 가장 싸게 볼 수 있는 지점에 게이트를 둡니다.</p>
+        </div>
+        <div class="gate-chain">
+          <article class="gate"><h3>적층 전</h3><p>KGD, wafer sort, BIST/repair, TSV·RDL continuity, die thickness와 warpage</p></article>
+          <article class="gate"><h3>접합 직전</h3><p>bump 높이·산화, hybrid surface particle·recess·roughness, die placement readiness</p></article>
+          <article class="gate"><h3>접합 직후</h3><p>overlay, void/non-bond, open/short, Kelvin resistance, bond-front 이상</p></article>
+          <article class="gate"><h3>봉지·열처리 후</h3><p>underfill/MUF void·cure, delamination, warpage, Cu pumping, thermal path</p></article>
+          <article class="gate"><h3>출하·수율 학습</h3><p>final test, burn-in/reliability monitor, LIT/TDR/X-ray/FIB 상관 FA와 SPC feedback</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="priority">
+      <div class="shell">
+        <div class="section-head">
+          <div>
+            <p class="kicker">Priority matrix</p>
+            <h2>중요도 높은 검사·계측 항목</h2>
+          </div>
+          <p>아래는 논문이 공식 부여한 순위가 아닙니다. 결함의 시스템 영향, 다음 공정에서의 은폐 가능성, 이미 투입된 die 가치, 공정 피드백 효과와 제조 coverage를 합친 엔지니어링 우선순위입니다.</p>
+        </div>
+
+        <div class="rubric" aria-label="우선순위 등급 정의">
+          <article class="priority-key p0"><strong>P0</strong><p>아키텍처와 무관하게 수율·출하 판정을 지키는 필수 게이트</p></article>
+          <article class="priority-key p0a"><strong>P0*</strong><p>해당 구조를 쓰면 P0가 되는 아키텍처 조건부 필수 항목</p></article>
+          <article class="priority-key p1"><strong>P1</strong><p>높은 sampling, 공정 램프 또는 qualification에서 핵심</p></article>
+          <article class="priority-key p2"><strong>P2</strong><p>excursion·FA·물리 모델·수명 예측에 쓰는 심층 분석</p></article>
+        </div>
+
+        <div class="table-wrap" tabindex="0" aria-label="검사 계측 우선순위 표. 작은 화면에서는 가로로 스크롤할 수 있습니다.">
+          <table>
+            <thead>
+              <tr><th>순위</th><th>공정 게이트 / CTQ</th><th>주요 결함·변수</th><th>대표 수단</th><th>왜 중요한가</th><th>등급·근거</th></tr>
+            </thead>
+            <tbody>
+              <tr><td class="rank">01</td><td><strong>KGD·적층 전/후 전기 검사</strong></td><td>불량 die, open/short, leakage, contact-R, repair 상태</td><td>wafer sort, BIST, daisy chain, Kelvin, boundary scan</td><td>불량 die 하나가 정상 die와 이미 완료된 스택 전체의 가치를 폐기시킨다. 영상만으로 기능을 증명할 수 없다.</td><td><span class="pill p0">P0</span> <span class="pill r">HIR·IEEE</span></td></tr>
+              <tr><td class="rank">02</td><td><strong>Bond overlay·die placement</strong></td><td>x-y-θ, scaling, die shift·rotation, local distortion, tilt</td><td>IR/optical alignment, overlay target, moiré, grid map</td><td>pitch가 줄수록 작은 오차가 pad overlap 감소, high-R, open/short로 직결된다. 평균 sampling은 국부 왜곡을 놓칠 수 있다.</td><td><span class="pill p0">P0</span> <span class="pill e">ECTC 23–26</span></td></tr>
+              <tr><td class="rank">03</td><td><strong>접합 후 매몰 interface</strong></td><td>missing/non-wet bump, bridge, void, nanogap, delamination</td><td>2D X-ray, CT/XRM, laminography, SAM, IR + electrical</td><td>적층 뒤에는 광학 접근이 막히며 단일 interconnect 결함도 시스템 불량이 된다. 구조와 전기를 교차 확인해야 한다.</td><td><span class="pill p0a">P0*</span> <span class="pill e">ECTC 23–26</span></td></tr>
+              <tr><td class="rank">04</td><td><strong>Warpage·TTV·coplanarity</strong></td><td>bow/warp, thermal warpage, bonded-stack TTV, local height</td><td>shadow moiré, interferometry, OCT, DIC, optical height map</td><td>lithography focus, die pickup·placement, 범프 접촉, underfill flow를 동시에 흔드는 상위 원인이다.</td><td><span class="pill p0">P0</span> <span class="pill r">SEMI 3D4·12</span></td></tr>
+              <tr><td class="rank">05</td><td><strong>RDL·interposer 배선</strong></td><td>CD/line-space, overlay, via residue, necking, bridge, open/short</td><td>AOI, CD metrology, 3D profilometry, e-test, LIT, X-ray/FIB</td><td>fine-line RDL은 chiplet 간 통신의 실제 도로다. 나노 결함 하나가 긴 net을 끊고, 일반 외관에서는 위치를 찾기 어렵다.</td><td><span class="pill p0a">P0*</span> <span class="pill e">ECTC 25–26</span></td></tr>
+              <tr><td class="rank">06</td><td><strong>TSV·TGV 건전성</strong></td><td>CD/depth/taper, liner·seed, Cu fill seam/void, resistance, KOZ stress</td><td>optical/XRM/CT, resistance·leakage, Raman, EBSD, cross-section</td><td>전력·신호·열 경로를 수직으로 연결한다. 형상, 금속 충진, 전기, Si 응력은 서로 다른 측정 대상이다.</td><td><span class="pill p0a">P0*</span> <span class="pill r">SEMI 3D5</span></td></tr>
+              <tr><td class="rank">07</td><td><strong>Hybrid-bond pre-bond surface</strong></td><td>particle, organic/oxide, roughness, Cu recess/protrusion, dishing/erosion</td><td>AOI, AFM, interferometry, scatterometry, ellipsometry, surface analysis</td><td>solder가 갭을 흡수하지 않는다. 접합 전 수 nm 높이차와 입자가 넓은 non-bond와 접촉저항으로 증폭된다.</td><td><span class="pill p0a">P0*</span> <span class="pill e">ECTC 23–26</span></td></tr>
+              <tr><td class="rank">08</td><td><strong>Microbump geometry·surface</strong></td><td>height, diameter, volume, coplanarity, oxide, missing/shifted bump</td><td>3D AOI/profilometry, X-ray, surface inspection, resistance</td><td>TCB/reflow 접촉 압력과 젖음 공정창을 결정한다. 평균 높이가 맞아도 tail bump가 open을 만든다.</td><td><span class="pill p0a">P0*</span> <span class="pill r">SEMI 3D6</span></td></tr>
+              <tr><td class="rank">09</td><td><strong>Underfill·NCF·MUF·EMC</strong></td><td>fill front, void, filler 분포, BLT, cure/shrinkage, delamination, moisture</td><td>in-situ optical/X-ray, SAM, DSC/DMA, warpage, section</td><td>숨은 void·미경화·흡습이 열경로와 응력장을 바꾸고 열사이클·reflow 때 crack과 박리로 성장한다.</td><td><span class="pill p0a">P0*</span> <span class="pill e">ECTC 23·26</span></td></tr>
+              <tr><td class="rank">10</td><td><strong>Thinning·singulation 손상</strong></td><td>die thickness/TTV, backside roughness, subsurface crack, edge chip, die strength</td><td>thickness map, IR/optical AOI, profilometry, 3-point bend, acoustic</td><td>얇은 HBM die는 작은 edge flaw도 pickup·bond·mold 열하중에서 파단으로 이어지며, carrier가 실제 형상을 가릴 수 있다.</td><td><span class="pill p1">P1→P0*</span> <span class="pill e">ECTC 23–25</span></td></tr>
+              <tr><td class="rank">11</td><td><strong>열 경로·TIM·hotspot</strong></td><td>TIM BLT/void, junction temperature, layer Rth, thermal crosstalk</td><td>IR thermography, transient thermal, sensors, thermal test vehicle, X-ray/SAM</td><td>전기적으로 정상인 HBM도 열저항이 높으면 throttling과 가속 열화를 일으킨다. 패키지 수준 열경로로 검증해야 한다.</td><td><span class="pill p1">P1 / QUAL P0</span> <span class="pill r">HIR Thermal</span></td></tr>
+              <tr><td class="rank">12</td><td><strong>Bond strength·stress·reliability</strong></td><td>fracture energy, residual stress, Cu grain/IMC, EM, fatigue</td><td>DCB/4PB, nanoindentation, Raman/EBSD/XRD, in-situ R, TC/HAST/HTOL</td><td>초기 외관·전기 pass 뒤 나타나는 latent crack, delamination, resistance drift를 공정 램프와 qualification에서 걸러낸다.</td><td><span class="pill p1">P1</span> <span class="pill p2">P2 FA</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="small-note"><span class="pill e">ECTC</span>는 2023–2026 공개 초록에서 직접 반복 관찰된 주제, <span class="pill r">Roadmap·표준</span>은 업계 로드맵·표준·리뷰가 지지하는 항목입니다. 실제 fab의 sampling rate와 spec은 product FMEA, MSA, 공정능력, 장비 takt time으로 다시 정해야 합니다.</p>
+      </div>
+    </section>
+
+    <section class="section tint" id="architecture">
+      <div class="shell">
+        <div class="section-head">
+          <div>
+            <p class="kicker">Architecture split</p>
+            <h2>구조가 바뀌면 1순위도 바뀝니다</h2>
+          </div>
+          <p>같은 HBM이라도 microbump+TCB/MR-MUF와 bumpless hybrid bonding은 주요 failure physics가 다릅니다. 2.xD interposer·bridge는 RDL, 대면적 warpage와 구조에 따라 TSV/TGV가 중요해집니다.</p>
+        </div>
+        <div class="architecture-grid">
+          <article class="architecture-card">
+            <header><small>FLOW / A</small><h3>Microbump 기반 HBM</h3></header>
+            <ol><li>bump 높이·coplanarity·oxide</li><li>placement·reflow/TCB 접합</li><li>3D X-ray/CT + SAM</li><li>TSV·daisy-chain 전기검사</li><li>MUF/NCF void·cure·warpage</li></ol>
+          </article>
+          <article class="architecture-card">
+            <header><small>FLOW / B</small><h3>Hybrid-bond HBM</h3></header>
+            <ol><li>particle·surface chemistry</li><li>roughness·Cu recess·CMP map</li><li>full-die overlay·distortion</li><li>SAM/IR/nano-X-ray + Kelvin</li><li>bond strength·thermal stress</li></ol>
+          </article>
+          <article class="architecture-card">
+            <header><small>FLOW / C</small><h3>2.xD interposer·bridge</h3></header>
+            <ol><li>KGD·interposer e-test</li><li>fine RDL CD·overlay·residue</li><li>해당 시 TSV/TGV fill·resistance·stress</li><li>HBM/logic microbump 접합</li><li>대면적 warpage·TIM·hotspot</li></ol>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="xray">
+      <div class="shell">
+        <div class="section-head">
+          <div>
+            <p class="kicker">Deep dive</p>
+            <h2>예시: X-ray로 범프가 잘 붙었는가?</h2>
+          </div>
+          <p>마이크로범프 HBM의 매몰 접합을 선별하는 핵심 수단 중 하나입니다. 그러나 “보이는 형상”과 “전기가 통하고 오래 버티는 접합”을 같은 뜻으로 쓰지 않아야 합니다.</p>
+        </div>
+        <div class="xray-grid">
+          <article class="xray-card good">
+            <h3>잘 보는 것</h3>
+            <ul><li>missing·shifted bump와 gross misalignment</li><li>bridge, solder extrusion, non-wet 형상</li><li>solder/Cu의 큰 void·seam</li><li>CT/XRM에서 층별 3D 위치와 부피</li></ul>
+          </article>
+          <article class="xray-card limit">
+            <h3>놓치기 쉬운 것</h3>
+            <ul><li>2D 투영에서 겹치는 다층 구조</li><li>FOV–해상도–scan time의 상충</li><li>나노 dielectric gap·유기 오염</li><li>void가 없어도 생기는 high-R Cu contact</li></ul>
+          </article>
+          <article class="xray-card pair">
+            <h3>그래서 같이 보는 것</h3>
+            <ul><li>overlay·3D optical: 위치와 높이</li><li>SAM/IR: non-bond와 delamination</li><li>Kelvin/daisy-chain: continuity·저항</li><li>FIB/단면: root-cause 확인</li></ul>
+          </article>
+        </div>
+        <div class="verdict"><strong>판정:</strong> X-ray/CT로 매몰 형상과 void를 선별하고, SAM/IR로 계면을 보고, Kelvin·daisy chain으로 전기 연결을 증명합니다. 하이브리드 본딩이면 이보다 앞에 pre-bond surface와 pitch·spec에 맞춘 고정밀 overlay 계측이 더 높은 게이트가 됩니다.</div>
+      </div>
+    </section>
+
+    <section class="section dark" id="methods">
+      <div class="shell">
+        <div class="section-head">
+          <div>
+            <p class="kicker">Modality map</p>
+            <h2>검사법별 강점과 사각지대</h2>
+          </div>
+          <p>분해능 숫자 하나로 장비를 고르면 실패합니다. penetration, contrast mechanism, FOV, throughput, destructive 여부와 검출하려는 결함을 함께 봐야 합니다.</p>
+        </div>
+        <div class="table-wrap" tabindex="0" aria-label="검사 방법 비교 표. 작은 화면에서는 가로로 스크롤할 수 있습니다.">
+          <table class="method-table">
+            <thead><tr><th>방법</th><th>가장 잘 보는 것</th><th>대표 공정</th><th>주요 사각지대·절충</th><th>주 역할</th></tr></thead>
+            <tbody>
+              <tr><td>2D/3D AOI</td><td>particle, scratch, crack, pattern, bump height·coplanarity</td><td>wafer/RDL/bump/pre-bond</td><td>매몰 계면과 내부 금속은 못 봄</td><td>고속 inline·전수</td></tr>
+              <tr><td>AFM·profilometry·interferometry</td><td>roughness, recess/protrusion, dishing, topography</td><td>CMP·hybrid surface</td><td>AFM은 느리고 작은 FOV, 광학법은 재료 보정 필요</td><td>CTQ 계측·SPC</td></tr>
+              <tr><td>Overlay metrology</td><td>x-y-θ, local distortion, die/wafer grid</td><td>D2W/W2W bond</td><td>target가 실제 pad를 대표하는지와 100% coverage 문제</td><td>필수 공정 게이트</td></tr>
+              <tr><td>Shadow moiré·DIC·OCT</td><td>warpage, in/out-of-plane deformation, thermal shape</td><td>thinning·bond·mold·reflow</td><td>표면·지지조건·온도 프로파일 의존</td><td>inline/sample·모델 보정</td></tr>
+              <tr><td>2D X-ray</td><td>missing/bridge, gross void, metal geometry</td><td>bump·TSV·mold</td><td>층 중첩, depth 정보 없음</td><td>빠른 screening</td></tr>
+              <tr><td>CT·XRM·nano-CT·laminography</td><td>층별 3D void·crack·metal 형상</td><td>HBM·2.5D·hybrid bond</td><td>해상도–FOV–시편–scan time trade-off와 artifact</td><td>sample·고해상도 검사·FA</td></tr>
+              <tr><td>SAM / C-SAM</td><td>delamination, non-bond, void, 계면 변화</td><td>bond·underfill·mold</td><td>재료/두께/표면 상태, acoustic shadow와 해석 의존</td><td>비파괴 interface 검사</td></tr>
+              <tr><td>Si 투과 IR</td><td>bond front, void, alignment mark</td><td>Si 기반 D2W/W2W</td><td>금속·재료 stack과 해상도 제한</td><td>빠른 bond 확인</td></tr>
+              <tr><td>Kelvin·daisy·BIST·e-test</td><td>continuity, contact-R, leakage, open/short</td><td>모든 전기 게이트</td><td>구조 원인과 정확한 위치를 혼자 찾기 어려움</td><td>기능 판정</td></tr>
+              <tr><td>LIT·thermography·TDR</td><td>leak/short/open의 열·반사 위치</td><td>RDL·power plane·package FA</td><td>reference/model, 자극 조건, 공간 분해능 의존</td><td>fault isolation</td></tr>
+              <tr><td>Raman·EBSD·XRD</td><td>Si stress/strain, Cu grain, phase·texture</td><td>TSV·Cu·reliability</td><td>void 자체보다 응력·미세조직을 보는 도구</td><td>공정 램프·물리 모델</td></tr>
+              <tr><td>SEM·FIB·TEM·EDS</td><td>나노 계면·균열·조성·root cause</td><td>최종 FA·공정 개발</td><td>파괴적, 느림, 작은 표본과 preparation artifact</td><td>원인 확증</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="timeline">
+      <div class="shell">
+        <div class="section-head">
+          <div>
+            <p class="kicker">ECTC signal</p>
+            <h2>2023→2026: 더 잘 보는 것에서 더 빨리 닫는 것으로</h2>
+          </div>
+          <p>공개 초록에서 보이는 큰 흐름은 고해상도 단일 측정에서 inline/in-situ, 적은 라벨의 AI, multimodal correlation과 전수 coverage를 지향하는 방향으로의 이동입니다.</p>
+        </div>
+        <div class="timeline">
+          <article class="year"><h3>2023</h3><p>pad recess와 overlay를 scalable하게 재고, thermal warpage와 HBM 3D 결함을 정량화하는 기반이 선명해졌습니다.</p><a href="https://doi.org/10.1109/ectc51909.2023.00240">CD scatterometry</a> · <a href="https://doi.org/10.1109/ectc51909.2023.00161">HBM 3D AI</a></article>
+          <article class="year"><h3>2024</h3><p>고처리량 nanoscale topography, embedded stress sensor, XRM continual learning 등 inline·in-situ 방향이 강해졌습니다.</p><a href="https://doi.org/10.1109/ectc51529.2024.00157">optical interferometry</a> · <a href="https://doi.org/10.1109/ectc51529.2024.00314">3D XRM</a></article>
+          <article class="year"><h3>2025</h3><p>HBM bump/XRM AI, physics-informed SAM, TSV stress, thermal과 correlative RDL FA가 하나의 수율 학습 흐름으로 묶입니다.</p><a href="https://doi.org/10.1109/ectc51687.2025.00161">HBM bump AI</a> · <a href="https://doi.org/10.1109/ectc51687.2025.00368">SAM enhancement</a></article>
+          <article class="year"><h3>2026</h3><p>time-resolved/nano/computational X-ray, high-speed 100% overlay와 wafer-scale sub-nm surface metrology가 전면에 나옵니다.</p><a href="https://doi.org/10.1109/ectc51846.2026.00239">photon-counting nano-CT</a> · <a href="https://doi.org/10.1109/ectc51846.2026.00354">100% overlay</a></article>
+        </div>
+        <p class="caveat"><strong>2026 해석 주의:</strong> 이 절에서 인용한 2026 대표 논문의 DOI와 proceedings 서지를 확인했지만 매우 최근 결과입니다. 특정 논문에서 보인 해상도·속도·수율 수치를 모든 재료·제품·장비의 양산 성능으로 외삽하지 않습니다.</p>
+      </div>
+    </section>
+
+    <section class="section tint" id="example">
+      <div class="shell">
+        <div class="section-head">
+          <div>
+            <p class="kicker">Worked example</p>
+            <h2>검사 계획을 만드는 예</h2>
+          </div>
+          <p>“HBM bump를 X-ray로 검사한다”를 실제 control plan으로 바꾸려면 결함, 검출 시점, 보조 측정과 반응 계획까지 연결해야 합니다.</p>
+        </div>
+        <div class="worked-example">
+          <article class="example-context">
+            <h3>상황</h3>
+            <p>2.5D interposer 위에 microbump HBM과 logic die를 실장한다.</p>
+            <ul><li>고가 KGD를 이미 투입</li><li>다층 bump가 X-ray에서 중첩</li><li>mold 후 재작업이 매우 어려움</li></ul>
+          </article>
+          <article class="example-plan">
+            <h3>권장 gate sequence</h3>
+            <ol>
+              <li><strong>Before bond:</strong> HBM·logic KGD, interposer RDL/TSV e-test, bump height/coplanarity와 package warpage를 확인합니다.</li>
+              <li><strong>After placement:</strong> x-y-θ/shift와 edge/corner까지 local overlay를 확인합니다.</li>
+              <li><strong>After bond:</strong> 빠른 2D X-ray로 missing/bridge/gross void를 선별하고, 위험 lot은 CT/XRM로 깊이를 분리합니다.</li>
+              <li><strong>Interface + function:</strong> SAM으로 delamination/non-bond를 보고, daisy/Kelvin으로 open/short와 contact-R를 확인합니다.</li>
+              <li><strong>Reaction:</strong> 좌표를 공통 die map에 맞춰 AOI–X-ray–SAM–e-test를 상관하고, 반복 signature만 LIT/FIB/단면으로 내려가 원인을 닫습니다.</li>
+            </ol>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="quiz">
+      <div class="shell">
+        <div class="section-head">
+          <div>
+            <p class="kicker">Check yourself</p>
+            <h2>확인·적용 퀴즈</h2>
+          </div>
+          <p>정의에서 시작해 실제 공정 판단까지 난이도가 올라갑니다. 보기를 누르면 바로 정답과 해설이 나타납니다.</p>
+        </div>
+        <nav class="quiz-jump" aria-label="퀴즈 바로가기">
+          <a href="#quiz-easy">쉬움 5문항</a>
+          <a href="#quiz-medium">중간 5문항</a>
+          <a href="#quiz-hard">상위 5문항</a>
+          <a href="#glossary-quiz">용어집 10문항</a>
+        </nav>
+        <div class="quiz-summary">
+          <span aria-live="polite">본 퀴즈 진행: <strong id="main-progress">0 / 15</strong> · 정답 <strong id="main-score">0</strong></span>
+          <button class="reset-button" type="button" data-reset="main">본 퀴즈 다시 풀기</button>
+        </div>
+        <div id="main-quiz" class="quiz-list"></div>
+      </div>
+    </section>
+
+    <section class="section tint" id="glossary-quiz">
+      <div class="shell">
+        <div class="section-head">
+          <div>
+            <p class="kicker">Glossary drill</p>
+            <h2>용어집 퀴즈</h2>
+          </div>
+          <p>비슷해 보이지만 측정 대상이 다른 용어를 구분합니다. 특히 void, non-bond, overlay, warpage와 electrical continuity를 섞지 않는 것이 핵심입니다.</p>
+        </div>
+        <div class="quiz-summary">
+          <span aria-live="polite">용어집 진행: <strong id="glossary-progress">0 / 10</strong> · 정답 <strong id="glossary-score">0</strong></span>
+          <button class="reset-button" type="button" data-reset="glossary">용어집 다시 풀기</button>
+        </div>
+        <div id="glossary-list" class="quiz-list"></div>
+      </div>
+    </section>
+
+    <section class="section" id="sources">
+      <div class="shell">
+        <div class="section-head">
+          <div>
+            <p class="kicker">Evidence base</p>
+            <h2>핵심 문헌과 추적 가능한 근거</h2>
+          </div>
+          <p>ECTC의 개별 성능 수치는 해당 논문의 공개 초록 범위에서만 사용했습니다. 보편적인 중요도 판단은 roadmap·표준·리뷰와 여러 해의 반복 주제를 함께 근거로 삼았습니다.</p>
+        </div>
+        <div class="source-list">
+          <section class="source-group">
+            <h3>로드맵·표준·리뷰</h3>
+            <ol>
+              <li><a href="https://srcmapt.org/wp-content/uploads/2024/03/SRC-MAPT-Roadmap-2023-v4.pdf">SRC MAPT Roadmap 2023</a> — advanced packaging의 비파괴·고분해능 metrology gap.</li>
+              <li><a href="https://www.nist.gov/publications/international-roadmap-devices-and-systemstm-2023-edition-metrology">IRDS 2023 Metrology</a> — 계측 요구와 불확도·traceability 관점.</li>
+              <li><a href="https://eps.ieee.org/wp-content/uploads/2025/11/HIR_2024_ch17_Test_Technology.pdf">IEEE HIR 2024 Test Technology</a> — KGD, 적층 전·후 test와 접근성.</li>
+              <li><a href="https://standards.ieee.org/standard/1838-2019.html">IEEE 1838-2019</a> — die stack의 pre-bond·mid-bond·post-bond test access.</li>
+              <li><a href="https://store-us.semi.org/products/3d00400-semi-3d4-guide-for-metrology-for-measuring-thickness-total-thickness-variation-ttv-bow-warp-sori-and-flatness-of-bonded-wafer-stacks">SEMI 3D4</a> — bonded wafer stack의 thickness·TTV·bow·warp·flatness.</li>
+              <li><a href="https://store-us.semi.org/products/3d01200-semi-3d12-guide-for-measuring-flatness-and-shape-of-low-stiffness-wafers">SEMI 3D12</a> — low-stiffness wafer의 flatness와 shape 측정.</li>
+              <li><a href="https://store-us.semi.org/products/3d00500-semi-3d5-guide-for-metrology-techniques-to-be-used-in-measurement-of-geometrical-parameters-of-through-silicon-vias-tsvs-in-3ds-ic-structures">SEMI 3D5</a> — TSV geometry metrology.</li>
+              <li><a href="https://store-us.semi.org/products/3d00600-semi-3d6-guide-for-cmp-and-micro-bump-processes-for-frontside-through-silicon-via-tsv-integration">SEMI 3D6</a> — frontside TSV integration의 CMP·microbump 공정.</li>
+              <li><a href="https://store-us.semi.org/products/3d01300-semi-3d13-guide-for-measuring-voids-in-bonded-wafer-stacks">SEMI 3D13</a> — bonded wafer stack void 측정.</li>
+              <li><a href="https://store-us.semi.org/products/3d01500-semi-3d15-guide-for-overlay-performance-assessment-for-3ds-ic-process">SEMI 3D15</a> — 3DS-IC overlay performance assessment.</li>
+              <li><a href="https://eps.ieee.org/wp-content/uploads/2025/11/ch20_thermal.pdf">IEEE HIR Thermal Management</a> — heterogeneous integration의 열경로·계면·냉각 검증.</li>
+              <li><a href="https://doi.org/10.6117/kmeps.2025.32.4.001">HBM 하이브리드 본딩을 위한 계측 및 검사 최신 기술 동향</a>, 마이크로전자 및 패키징학회지 32(4), 2025.</li>
+              <li><a href="https://www.sciencedirect.com/science/article/pii/S0263224123016299">Volumetric nondestructive metrology for 3D semiconductor packaging: A review</a>, Measurement 225, 2024.</li>
+              <li><a href="https://www.sciencedirect.com/science/article/pii/S0026271424001367">A review on warpage measurement metrologies for advanced electronic packaging</a>, Microelectronics Reliability 160, 2024.</li>
+              <li><a href="https://www.mdpi.com/1424-8220/18/7/1981">An Overview of Non-Destructive Testing Methods for IC Packaging Inspection</a>, Sensors 18, 2018.</li>
+            </ol>
+          </section>
+          <section class="source-group">
+            <h3>ECTC 2023–2024 대표</h3>
+            <ol>
+              <li><a href="https://doi.org/10.1109/ectc51909.2023.00023">Fine Pitch Die-to-Wafer Hybrid Bonding</a> — alignment, CSAM, electrical, cross-section correlation.</li>
+              <li><a href="https://doi.org/10.1109/ectc51909.2023.00161">3D Defect Detection and Metrology of HBMs</a> — HBM 3D defect/metrology AI.</li>
+              <li><a href="https://doi.org/10.1109/ectc51909.2023.00240">CD Scatterometry for Hybrid Bonding Pad Recess</a> — scalable pad-height metrology.</li>
+              <li><a href="https://doi.org/10.1109/ectc51909.2023.00305">Review of In/Out-of-Plane Deformation Measurement</a> — warpage/deformation method map.</li>
+              <li><a href="https://doi.org/10.1109/ectc51529.2024.00157">High-Throughput Nanoscale Topography</a> — hybrid-bond surface interferometry.</li>
+              <li><a href="https://doi.org/10.1109/ectc51529.2024.00301">Micro Defect in Bump Interface for 2.5DIC</a> — correlative electrical/destructive FA.</li>
+              <li><a href="https://doi.org/10.1109/ectc51529.2024.00314">Feature Segmentation of Buried Packages in 3D XRM</a> — adaptive inspection AI.</li>
+            </ol>
+          </section>
+          <section class="source-group">
+            <h3>ECTC 2025 대표</h3>
+            <ol>
+              <li><a href="https://doi.org/10.1109/ectc51687.2025.00054">2 µm Pitch D2W Hybrid Bonding</a> — thinning/singulation 뒤 surface protection과 electrical yield.</li>
+              <li><a href="https://doi.org/10.1109/ectc51687.2025.00161">Visual Inspection of HBM Bumps with AI</a> — 3D bump inspection workflow.</li>
+              <li><a href="https://doi.org/10.1109/ectc51687.2025.00222">Are Voids Restricted to Cu-Cu Interface?</a> — X-ray microscopy로 본 interface 위치.</li>
+              <li><a href="https://doi.org/10.1109/ectc51687.2025.00277">3D Defect Detection of HBMs</a> — synthetic data와 segmentation.</li>
+              <li><a href="https://doi.org/10.1109/ectc51687.2025.00337">Fault Isolation of Nanoscale Fine-Line RDL Defect</a> — LIT·3D X-ray·FIB correlation.</li>
+              <li><a href="https://doi.org/10.1109/ectc51687.2025.00368">Physics-Informed SAM Enhancement</a> — acoustic inspection image improvement.</li>
+            </ol>
+          </section>
+          <section class="source-group">
+            <h3>ECTC 2026 대표</h3>
+            <ol>
+              <li><a href="https://doi.org/10.1109/ectc51846.2026.00141">Wafer-Level Sub-nm Surface Roughness by RHEED</a> — high-speed hybrid surface metrology.</li>
+              <li><a href="https://doi.org/10.1109/ectc51846.2026.00160">Time-Resolved 3D X-ray of EM Void Evolution</a> — 2.5D microbump in-situ 관찰.</li>
+              <li><a href="https://doi.org/10.1109/ectc51846.2026.00219">D2W Distortion Correction and Grid Measurement</a> — full-die placement/overlay 보정.</li>
+              <li><a href="https://doi.org/10.1109/ectc51846.2026.00239">Photon-Counting Nano-CT for Hybrid Copper Bonding</a> — 비파괴 3D 미세결함.</li>
+              <li><a href="https://doi.org/10.1109/ectc51846.2026.00242">Computational 3D X-ray Imaging of HBM</a> — fidelity와 검사 효율의 절충.</li>
+              <li><a href="https://doi.org/10.1109/ectc51846.2026.00352">High-Throughput CMP Topography by Fizeau Interferometry</a> — surface map.</li>
+              <li><a href="https://doi.org/10.1109/ectc51846.2026.00354">High-Speed 100% Bond Overlay Measurement</a> — chiplet 전수 coverage 방향.</li>
+            </ol>
+          </section>
+        </div>
+        <div class="method-note">
+          <strong>근거의 범위와 한계:</strong> ECTC 개별 결과는 공개 초록에서 확인되는 범위만 사용했으며, pitch·해상도·속도·수율은 해당 시험차량의 결과이지 보편적인 양산 spec이 아닙니다. 장비 업체 글은 원리와 현장 문제를 이해하는 보조 자료로만 사용했습니다. 더 깊게 보기: <a href="./research-db/2026-07-19-semiconductor-mi-papers/exports/advanced-packaging-mi-survey-report.md">전체 문헌 서베이</a> · <a href="./research-db/2026-07-19-semiconductor-mi-papers/exports/advanced-packaging-inspection-priority-matrix.csv">우선순위 CSV</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="shell">
+      <p><strong>한 문장 요약:</strong> 첨단 패키징의 핵심은 더 좋은 X-ray 한 대가 아니라, surface → overlay → interface → electrical → reliability를 같은 좌표계로 닫는 검사 체계입니다.</p>
+      <p><a href="./index.html">학습 가이드 홈으로 돌아가기</a></p>
+    </div>
+  </footer>
+
+  <script>
+    const mainQuestions = [
+      {
+        level: "쉬움", anchor: "quiz-easy",
+        question: "패드·범프가 ‘잘 붙었다’는 판정을 가장 정확하게 설명한 것은?",
+        options: ["X-ray에서 void가 없으면 충분하다", "기하·구조·전기·수명 관점을 함께 확인한다", "전기 continuity만 통과하면 충분하다", "단면 SEM만 보면 모든 항목을 알 수 있다"],
+        answer: 1,
+        explanation: "접합 품질은 정렬과 형상, 내부 void·박리, 전기 연결, 장기 강도·열·신뢰성의 교집합입니다. X-ray나 전기검사 하나만으로 나머지 물리량까지 증명할 수 없습니다."
+      },
+      {
+        level: "쉬움",
+        question: "다음 중 metrology의 예로 가장 알맞은 것은?",
+        options: ["불량 lot을 폐기한다", "Cu pad recess를 nm 단위로 측정하고 불확도를 관리한다", "FIB로 불량 부위를 절단한다", "BIST로 메모리 기능을 시험한다"],
+        answer: 1,
+        explanation: "Metrology는 recess, overlay, TTV, warpage 같은 물리량을 수치와 불확도로 재는 활동입니다. FIB는 주로 FA, BIST는 전기 test에 가깝습니다."
+      },
+      {
+        level: "쉬움",
+        question: "2D X-ray가 3D CT/XRM보다 특히 취약한 문제는?",
+        options: ["금속 대비를 전혀 만들 수 없다", "여러 층이 투영 방향으로 겹쳐 깊이 위치를 분리하기 어렵다", "범프 존재 여부를 볼 수 없다", "검사 속도가 항상 CT보다 느리다"],
+        answer: 1,
+        explanation: "2D X-ray는 빠른 screening에 유용하지만 다층 HBM 구조가 한 영상에 중첩되고 depth 정보가 없습니다. CT/XRM은 이를 3D로 분리하는 대신 시간·FOV·해상도 절충이 생깁니다."
+      },
+      {
+        level: "쉬움",
+        question: "Known Good Die(KGD) 검사가 최상위 게이트인 가장 큰 이유는?",
+        options: ["die 색상을 균일하게 만들기 위해", "불량 die가 이후 정상 die와 공정 가치를 함께 폐기시키는 것을 막기 위해", "X-ray 장비 수를 줄이기 위해", "warpage를 직접 낮추기 위해"],
+        answer: 1,
+        explanation: "적층 뒤 불량을 발견하면 이미 결합된 정상 die와 고가 공정까지 잃습니다. KGD는 value-at-risk를 가장 이른 시점에 줄이는 전기 게이트입니다."
+      },
+      {
+        level: "쉬움",
+        question: "하이브리드 본딩 전 표면 계측이 microbump 공정보다 더 엄격해지는 이유는?",
+        options: ["solder가 표면 높이차를 모두 흡수하기 때문에", "범프가 없어 광학 장비를 쓸 수 없기 때문에", "solder가 없어서 입자·roughness·Cu 높이차가 직접 non-bond로 이어지기 때문에", "전기 검사를 할 필요가 없기 때문에"],
+        answer: 2,
+        explanation: "Hybrid bonding은 solder의 변형과 젖음이 공차를 메워주지 않습니다. 작은 particle, oxide, roughness, recess가 접촉 면적·void·저항에 직접 영향을 줍니다."
+      },
+      {
+        level: "중간", anchor: "quiz-medium",
+        question: "Microbump HBM의 접합 직후, missing bump·bridge·큰 void를 빠르게 선별하려 한다. 가장 먼저 고려할 검사는?",
+        options: ["2D X-ray", "Raman stress mapping", "DCB bond-strength test", "TEM 단면"],
+        answer: 0,
+        explanation: "2D X-ray는 매몰된 high-Z 금속과 solder 형상의 빠른 screening 후보입니다. 전수 적용은 pitch·결함 크기·POD·cycle time을 검증한 뒤 정해야 하며, Raman은 응력, DCB는 강도, TEM은 국부 root cause에 적합합니다."
+      },
+      {
+        level: "중간",
+        question: "X-ray에서 void가 보이지 않았지만 daisy-chain 저항이 높다. 다음 판단으로 가장 타당한 것은?",
+        options: ["X-ray가 정상이므로 출하한다", "저항 측정 오류로 간주하고 무시한다", "고저항 contact나 미세 정렬·계면 문제를 의심해 overlay/SAM·국부 FA와 상관한다", "warpage만 다시 측정한다"],
+        answer: 2,
+        explanation: "void가 없다는 사실은 낮은 contact resistance를 보증하지 않습니다. electrical 이상을 기준으로 overlay, SAM/IR, 필요 시 LIT·FIB를 같은 좌표에서 상관해야 합니다."
+      },
+      {
+        level: "중간",
+        question: "대면적 2.5D package에서 warpage가 악화됐다. 가장 직접적으로 함께 흔들릴 가능성이 큰 조합은?",
+        options: ["lithography focus·die placement·bump contact", "TSV fill void·liner thickness·Cu grain texture", "surface particle count·Cu oxidation·CMP selectivity", "memory BIST coverage·repair fuse·retention time"],
+        answer: 0,
+        explanation: "Warpage는 표면 높이와 국부 gap을 바꿔 focus/overlay, pick-and-place, bump 접촉과 underfill flow에 연쇄 영향을 줍니다. 그래서 상위 원인 변수로 관리합니다."
+      },
+      {
+        level: "중간",
+        question: "TSV를 검사할 때 Raman spectroscopy가 주로 답하는 질문은?",
+        options: ["TSV 내부 void 부피가 정확히 얼마인가", "TSV 주변 Si의 stress/strain이 어떻게 분포하는가", "모든 TSV가 전기적으로 open인가", "underfill cure가 완료됐는가"],
+        answer: 1,
+        explanation: "Raman은 Si의 peak shift를 이용해 응력·변형률을 매핑하는 데 강합니다. TSV fill void는 X-ray/단면, continuity는 전기검사로 확인해야 합니다."
+      },
+      {
+        level: "중간",
+        question: "Underfill/MUF 공정의 void가 중요한 이유로 가장 적절한 것은?",
+        options: ["패키지 로고가 흐려지기 때문에", "열경로와 응력 분포를 바꾸고 박리·균열의 시작점이 될 수 있기 때문에", "overlay target을 크게 보이게 하기 때문에", "KGD 판정을 대신하기 때문에"],
+        answer: 1,
+        explanation: "void·미충전·미경화는 지지와 열전달을 불균일하게 만들어 thermal cycle과 reflow에서 crack/delamination으로 성장할 수 있습니다."
+      },
+      {
+        level: "상위", anchor: "quiz-hard",
+        question: "300 mm D2W hybrid-bond 라인에서 평균 overlay는 양호하지만 edge die에서 open이 반복된다. 가장 좋은 개선 순서는?",
+        options: ["평균값만 유지하고 final test를 강화한다", "edge를 제외하고 수율을 계산한다", "full-die/wafer grid distortion·warpage를 측정하고 local overlay와 contact-R를 좌표 상관한다", "X-ray 노출시간만 늘린다"],
+        answer: 2,
+        explanation: "평균 overlay는 edge의 local distortion·die rotation·wafer expansion을 숨길 수 있습니다. 전수 또는 고밀도 위치 맵과 electrical map을 연결해 보정 모델과 공정 조건을 고쳐야 합니다."
+      },
+      {
+        level: "상위",
+        question: "신규 hybrid-bond 공정의 inline 검사 예산이 제한돼 있다. 첫 번째 투자 조합으로 가장 타당한 것은?",
+        options: ["TEM 전수검사 + shear 전수검사", "pre-bond particle/topography + overlay + post-bond electrical, 고위험 lot에 SAM/고해상도 X-ray", "final 외관검사 하나", "Raman 하나로 모든 결함 판정"],
+        answer: 1,
+        explanation: "발생 원인을 접합 전에 제어하고, overlay와 electrical로 결과를 빠르게 닫는 조합이 피드백 가치가 큽니다. SAM/X-ray는 위험 기반 sampling, TEM·파괴시험은 root cause/qualification에 배치합니다."
+      },
+      {
+        level: "상위",
+        question: "3D XRM 결함 분할 AI가 정확도를 크게 개선했다. 양산 게이트로 전환하기 전 가장 중요한 추가 검증은?",
+        options: ["모델 이름을 더 길게 정한다", "서로 다른 lot·recipe·장비에서 MSA, false escape/false reject, drift와 traceability를 검증한다", "학습 이미지 수만 공개한다", "사람 검사를 즉시 전부 없앤다"],
+        answer: 1,
+        explanation: "논문 정확도는 특정 데이터셋 성능입니다. 양산 판정에는 lot/장비/시간 변화에 대한 재현성, 검출 한계, escape·reject 비용, golden sample과 drift 관리가 필요합니다."
+      },
+      {
+        level: "상위",
+        question: "2.5D fine-RDL open의 위치를 빠르게 좁히고 원인을 확증하려 한다. 가장 합리적인 correlative FA 순서는?",
+        options: ["TEM 전영역 관찰 → 육안검사", "전기 net 식별 → LIT/TDR 위치 추정 → 3D X-ray/planar 접근 → FIB/SEM·EDS", "warpage → DCB만 수행", "SAM 한 장으로 종료"],
+        answer: 1,
+        explanation: "비파괴·저비용 신호로 후보 영역을 줄인 뒤 점차 해상도와 파괴성을 높이는 것이 효율적입니다. 2025–2026 ECTC의 fine-RDL/bridge FA도 이런 multimodal correlation 방향을 보입니다."
+      },
+      {
+        level: "상위",
+        question: "중요도 순위를 자사 제품 control plan에 그대로 복사하면 안 되는 가장 정확한 이유는?",
+        options: ["논문은 전부 오래됐기 때문에", "모든 패키지 장비가 동일하기 때문에", "아키텍처·재료·pitch·발생도·공정능력·takt와 escape 비용이 제품마다 다르기 때문에", "검사 항목은 수율과 관계없기 때문에"],
+        answer: 2,
+        explanation: "이 페이지의 P0/P1은 공통 출발점입니다. 실제 sampling과 spec은 product FMEA, occurrence, MSA, 공정능력, 장비 coverage·throughput, downstream value를 넣어 재산정해야 합니다."
+      }
+    ];
+
+    const glossaryQuestions = [
+      { question: "Overlay는 무엇을 뜻하는가?", options: ["두 층 또는 두 die의 패턴 위치가 얼마나 정확히 겹치는지", "패키지 전체 무게", "underfill 경화 온도", "X-ray 영상 밝기"], answer: 0, explanation: "Overlay는 layer/die 간 위치 오차입니다. x-y뿐 아니라 rotation, scale, local distortion까지 관리 대상이 될 수 있습니다." },
+      { question: "Warpage와 TTV의 차이를 가장 잘 설명한 것은?", options: ["둘은 항상 같은 값이다", "warpage는 전체 형상 변형, TTV는 위치별 두께 차이", "warpage는 전기저항, TTV는 열저항", "TTV는 void 개수"], answer: 1, explanation: "Warpage는 기준면에서 휘어진 shape이고, TTV는 가장 두꺼운 지점과 얇은 지점의 두께 차이입니다. 서로 영향을 주지만 같은 물리량은 아닙니다." },
+      { question: "Non-wet bump는 어떤 상태인가?", options: ["solder가 pad에 충분히 젖어 접합하지 못한 상태", "범프 높이가 완벽히 동일한 상태", "Cu grain이 큰 상태", "메모리 BIST가 통과한 상태"], answer: 0, explanation: "Non-wet은 solder wetting이 부족해 실제 금속 접합 면적이 형성되지 않은 결함입니다. X-ray 형상과 전기 결과를 함께 봅니다." },
+      { question: "Daisy chain test의 주된 목적은?", options: ["표면 roughness 측정", "연속된 interconnect 경로의 open과 저항 변화를 감지", "void의 3D 부피 측정", "die edge 색상 검사"], answer: 1, explanation: "Daisy chain은 여러 interconnect를 연속 경로로 연결해 continuity와 열·기계 stress 뒤 저항 변화를 감지하는 test vehicle 구조입니다." },
+      { question: "Cu recess는 무엇인가?", options: ["Cu pad가 주변 dielectric보다 들어가 있는 높이차", "TSV가 옆으로 휜 각도", "package substrate의 색", "X-ray detector의 노이즈"], answer: 0, explanation: "Hybrid bonding에서는 Cu와 dielectric의 상대 높이가 접촉·Cu expansion·void에 중요합니다. protrusion은 반대로 Cu가 돌출된 상태입니다." },
+      { question: "C-SAM이 대비를 만드는 주된 물리 원리는?", options: ["음향 임피던스가 다른 계면의 초음파 반사", "금속의 X-ray 흡수", "전류에 의한 발열", "Si Raman peak shift"], answer: 0, explanation: "SAM은 acoustic impedance가 달라지는 계면에서 반사되는 초음파를 이용해 delamination, void, non-bond를 영상화합니다." },
+      { question: "KGD의 뜻과 역할은?", options: ["Known Good Die, 적층 전 기능이 확인된 die", "Keep Good Dimension, 범프 높이 규격", "Known Gap Defect, void 종류", "Kinetic Grain Diffraction, 결정 분석"], answer: 0, explanation: "Known Good Die는 적층 전에 전기적 기능을 확인한 die입니다. 고가 조립 뒤 불량 die 때문에 전체를 잃는 위험을 줄입니다." },
+      { question: "FOV–resolution trade-off는 무엇을 뜻하는가?", options: ["넓은 영역을 빠르게 볼수록 항상 더 미세하게 보인다", "넓은 영역과 높은 세부 분해능·속도를 동시에 얻기 어려운 절충", "전기와 열저항이 같다는 뜻", "모든 장비가 같은 FOV라는 뜻"], answer: 1, explanation: "특히 X-ray/CT는 시편 크기, 배율, voxel, scan time이 서로 얽힙니다. 작은 결함을 넓은 패키지에서 빠르게 찾는 것이 핵심 metrology gap입니다." },
+      { question: "MSA가 control plan에서 필요한 이유는?", options: ["측정 시스템의 반복성·재현성과 판정 능력을 검증하기 위해", "논문 수를 세기 위해", "패키지 층수를 늘리기 위해", "모든 샘플을 파괴하기 위해"], answer: 0, explanation: "Measurement System Analysis는 장비·작업자·시간에 따른 측정 변동과 분해능이 spec 판정에 충분한지 확인합니다. 정밀해 보이는 숫자도 MSA 없이는 공정 제어 근거가 약합니다." },
+      { question: "Correlative FA의 의미는?", options: ["한 장비 결과만 반복 측정하는 것", "전기·열·X-ray·단면 등 서로 다른 신호를 공통 좌표에서 연결해 원인을 찾는 것", "불량을 무작위로 절단하는 것", "AI가 모든 결정을 자동으로 하는 것"], answer: 1, explanation: "Correlative FA는 전기 net/열 hotspot으로 위치를 좁히고 X-ray·FIB·재료분석으로 구조 원인을 확증하는 식으로 여러 modality를 연결합니다." }
+    ];
+
+    const state = {
+      main: { answered: new Set(), score: 0 },
+      glossary: { answered: new Set(), score: 0 }
+    };
+
+    function renderQuiz(targetId, questions, kind) {
+      const target = document.getElementById(targetId);
+      const letters = ["A", "B", "C", "D"];
+      target.innerHTML = "";
+
+      questions.forEach((item, index) => {
+        const card = document.createElement("article");
+        card.className = "question-card";
+        if (item.anchor) card.id = item.anchor;
+
+        const meta = document.createElement("div");
+        meta.className = "question-meta";
+        meta.innerHTML = `<span class="pill ${kind === "main" ? "e" : "r"}">${kind === "main" ? item.level : "용어"}</span><span class="pill p2">Q${index + 1}</span>`;
+
+        const heading = document.createElement("h3");
+        heading.textContent = item.question;
+
+        const optionBox = document.createElement("div");
+        optionBox.className = "options";
+        optionBox.setAttribute("role", "group");
+        optionBox.setAttribute("aria-label", `${index + 1}번 문항 보기`);
+
+        const feedback = document.createElement("div");
+        feedback.className = "feedback";
+        feedback.setAttribute("aria-live", "polite");
+
+        item.options.forEach((option, optionIndex) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "option";
+          button.innerHTML = `<span class="letter">${letters[optionIndex]}</span><span>${option}</span>`;
+          button.addEventListener("click", () => answerQuestion(kind, index, optionIndex, item, optionBox, feedback));
+          optionBox.appendChild(button);
+        });
+
+        card.append(meta, heading, optionBox, feedback);
+        target.appendChild(card);
+      });
+    }
+
+    function answerQuestion(kind, questionIndex, selected, item, optionBox, feedback) {
+      if (state[kind].answered.has(questionIndex)) return;
+      state[kind].answered.add(questionIndex);
+      const correct = selected === item.answer;
+      if (correct) state[kind].score += 1;
+
+      [...optionBox.children].forEach((button, index) => {
+        button.disabled = true;
+        if (index === item.answer) button.classList.add("correct");
+        if (index === selected && !correct) button.classList.add("wrong");
+      });
+
+      feedback.className = `feedback show ${correct ? "correct" : "wrong"}`;
+      const labels = ["A", "B", "C", "D"];
+      feedback.innerHTML = `<strong>${correct ? "정답입니다." : "다시 짚어봅시다."} 정답: ${labels[item.answer]}</strong><p>${item.explanation}</p>`;
+      updateScore(kind);
+    }
+
+    function updateScore(kind) {
+      const total = kind === "main" ? mainQuestions.length : glossaryQuestions.length;
+      document.getElementById(`${kind}-progress`).textContent = `${state[kind].answered.size} / ${total}`;
+      document.getElementById(`${kind}-score`).textContent = state[kind].score;
+    }
+
+    document.querySelectorAll("[data-reset]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const kind = button.dataset.reset;
+        state[kind] = { answered: new Set(), score: 0 };
+        if (kind === "main") renderQuiz("main-quiz", mainQuestions, "main");
+        else renderQuiz("glossary-list", glossaryQuestions, "glossary");
+        updateScore(kind);
+      });
+    });
+
+    renderQuiz("main-quiz", mainQuestions, "main");
+    renderQuiz("glossary-list", glossaryQuestions, "glossary");
+  </script>
+</body>
+</html>

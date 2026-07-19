@@ -1,0 +1,8 @@
+# Local intermediate audit data and redundant drafts are not part of the published evidence set.
+datasets/
+figures/
+papers/
+paper-index.csv
+.gitkeep
+notes/20??-ectc-*-complete-program-index.md
+exports/semiconductor-packaging-mi-critical-priorities.md

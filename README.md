@@ -1,13 +1,15 @@
-# 개발 이해 가이드
+# 개념 학습 가이드
 
-비개발자에게 개발 흐름과 Git 협업을 설명하기 위한 정적 웹 페이지입니다.
+기술 개념과 실무 흐름을 이해하기 쉽게 설명하는 정적 웹 교육자료 모음입니다.
 
 ## 포함 페이지
 
 - `index.html`: 공유용 홈
+- `advanced-packaging-inspection-guide.html`: 2.xD·HBM 첨단 패키징 검사·계측 우선순위
 - `git-branch-pr-guide-v2.html`: Git 브랜치와 PR 학습 지도
 - `ai-harness-guide.html`: AI 개발에서 하네스 이해하기
 - `onesearch-ai-chat-tools-guide.html`: 원써치 AI Chat 툴 구조 이해하기
+- `claude-fable-5-guide.html`: Claude Fable 5와 Claude Code 학습 가이드
 
 ## GitHub Pages로 공유하기
 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>비개발자를 위한 개발 이해</title>
+  <title>개념 학습 가이드</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2320302d'/%3E%3Cpath d='M18 24l-7 8 7 8M46 24l7 8-7 8M37 16 27 48' stroke='white' stroke-width='5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
   <style>
     :root {
@@ -15,7 +15,7 @@
       --dark: #20302d;
       --green: #238362;
       --blue: #2563eb;
-      --amber: #d88916;
+      --amber: #855200;
       --violet: #6f58d9;
       --soft-green: #e8f7ee;
       --soft-blue: #e8f0ff;
@@ -63,6 +63,11 @@
       font-weight: 900;
     }
 
+    .brand h1 {
+      margin: 0;
+      font-size: inherit;
+    }
+
     .mark {
       width: 36px;
       height: 36px;
@@ -103,7 +108,7 @@
     .card:hover,
     .card:focus-visible {
       transform: translateY(-2px);
-      outline: 3px solid rgba(37, 99, 235, 0.18);
+      outline: 3px solid var(--blue);
       outline-offset: 2px;
     }
 
@@ -241,12 +246,29 @@
       <span class="mark" aria-hidden="true">
         <svg class="icon" viewBox="0 0 24 24"><path d="m8 9-4 3 4 3"></path><path d="m16 9 4 3-4 3"></path><path d="m14 5-4 14"></path></svg>
       </span>
-      <span>개발 이해 가이드</span>
+      <h1>개념 학습 가이드</h1>
     </div>
   </header>
 
   <main class="shell">
     <section class="cards" aria-label="교육 페이지 목록">
+      <a class="card" href="./advanced-packaging-inspection-guide.html" style="--badge-bg:var(--soft-amber);--badge-fg:var(--amber);--thumb-bg:var(--soft-amber);--accent:var(--amber)">
+        <div class="card-top">
+          <span class="badge">반도체 패키징</span>
+          <svg class="icon" viewBox="0 0 24 24"><path d="m12 3 8 4-8 4-8-4 8-4Z"></path><path d="m4 12 8 4 8-4"></path><path d="m4 17 8 4 8-4"></path></svg>
+        </div>
+        <div>
+          <h2>2.xD·HBM 검사·계측 우선순위</h2>
+          <p>ECTC 2023–2026과 핵심 리뷰를 바탕으로 단위 공정별 결함, 검사법, 사각지대와 관리 우선순위를 익힙니다.</p>
+        </div>
+        <div class="thumb" aria-hidden="true">
+          <span class="line"></span>
+          <span class="line"></span>
+          <span class="line"></span>
+        </div>
+        <span class="cta">열어보기 <svg class="icon" viewBox="0 0 24 24"><path d="M7 17 17 7"></path><path d="M7 7h10v10"></path></svg></span>
+      </a>
+
       <a class="card" href="./git-branch-pr-guide-v2.html" style="--badge-bg:var(--soft-blue);--badge-fg:var(--blue);--thumb-bg:var(--soft-blue);--accent:var(--blue)">
         <div class="card-top">
           <span class="badge">실무</span>
