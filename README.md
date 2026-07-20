@@ -5,6 +5,7 @@
 ## 포함 페이지
 
 - `index.html`: 공유용 홈
+- `advanced-packaging-mi-ai-seminar.html`: Advanced Packaging MI × AI 발표자료 — 공정별 필수 MI, ECTC의 위상, 2023–2026 패러다임 변화와 필독 논문 5편
 - `advanced-packaging-inspection-guide.html`: 2.xD·HBM 첨단 패키징 검사·계측 우선순위
 - `git-branch-pr-guide-v2.html`: Git 브랜치와 PR 학습 지도
 - `ai-harness-guide.html`: AI 개발에서 하네스 이해하기
