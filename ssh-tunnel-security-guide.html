@@ -1,0 +1,2488 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="SSH, Lightsail 방화벽, 키 인증, root 권한, SSH 터널링, age, Magic Wormhole, macOS LaunchAgent를 한 흐름으로 이해하는 교육자료">
+  <title>SSH·방화벽·터널링을 한 번에 이해하기</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23122f46'/%3E%3Cpath d='M10 32h14m16 0h14M24 20h16v24H24z' fill='none' stroke='%23fff' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='34' cy='32' r='2.5' fill='%23f09b45'/%3E%3C/svg%3E">
+  <style>
+    :root {
+      --ink: #18242d;
+      --muted: #586873;
+      --paper: #f4f7f8;
+      --panel: #ffffff;
+      --navy: #122f46;
+      --navy-2: #1b425f;
+      --teal: #087f89;
+      --teal-dark: #05636b;
+      --blue: #2466a8;
+      --amber: #df7b2d;
+      --red: #b83d45;
+      --green: #287956;
+      --line: #ccd7dc;
+      --soft-blue: #e7f0f7;
+      --soft-teal: #e1f3f2;
+      --soft-amber: #fff0df;
+      --soft-red: #fbe8e9;
+      --soft-green: #e7f3ec;
+      --soft-slate: #edf1f3;
+      --shadow: 0 18px 48px rgba(18, 47, 70, 0.11);
+      --radius: 16px;
+      color-scheme: light;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        linear-gradient(rgba(18, 47, 70, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(18, 47, 70, 0.035) 1px, transparent 1px),
+        var(--paper);
+      background-size: 32px 32px;
+      font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Segoe UI", sans-serif;
+      line-height: 1.66;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    button {
+      font: inherit;
+    }
+
+    img,
+    svg {
+      display: block;
+      max-width: 100%;
+    }
+
+    code,
+    pre,
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    code {
+      padding: 0.12em 0.36em;
+      border-radius: 5px;
+      background: rgba(18, 47, 70, 0.08);
+      font-size: 0.92em;
+    }
+
+    pre {
+      margin: 0;
+      overflow-x: auto;
+      padding: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 12px;
+      color: #edf8fb;
+      background: #102839;
+      font-size: 13px;
+      line-height: 1.7;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin-top: 0;
+    }
+
+    h1,
+    h2,
+    h3 {
+      letter-spacing: -0.035em;
+      text-wrap: balance;
+    }
+
+    h1 {
+      max-width: 900px;
+      margin-bottom: 18px;
+      font-family: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: clamp(2.35rem, 7vw, 5.15rem);
+      line-height: 0.98;
+    }
+
+    h2 {
+      margin-bottom: 12px;
+      font-family: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: clamp(1.75rem, 4vw, 2.8rem);
+      line-height: 1.08;
+    }
+
+    h3 {
+      margin-bottom: 8px;
+      font-size: 1.2rem;
+      line-height: 1.3;
+    }
+
+    p,
+    li,
+    th,
+    td {
+      word-break: keep-all;
+      overflow-wrap: anywhere;
+    }
+
+    .skip-link {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      z-index: 50;
+      padding: 10px 14px;
+      border-radius: 8px;
+      color: #fff;
+      background: var(--navy);
+      transform: translateY(-150%);
+    }
+
+    .skip-link:focus {
+      transform: translateY(0);
+    }
+
+    .shell {
+      width: min(1160px, calc(100% - 36px));
+      margin: 0 auto;
+    }
+
+    .page-head {
+      padding: 20px 0 10px;
+    }
+
+    .home-link {
+      min-height: 44px;
+      width: fit-content;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border: 1px solid rgba(18, 47, 70, 0.16);
+      border-radius: 9px;
+      background: rgba(255, 255, 255, 0.82);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .home-link:hover,
+    .home-link:focus-visible,
+    .jump-link:hover,
+    .jump-link:focus-visible,
+    .source-card:hover,
+    .source-card:focus-visible,
+    .reference-link:hover,
+    .reference-link:focus-visible {
+      outline: 3px solid var(--amber);
+      outline-offset: 3px;
+    }
+
+    .hero {
+      padding: clamp(32px, 6vw, 72px) 0 28px;
+    }
+
+    .hero-kicker {
+      margin-bottom: 16px;
+      color: var(--teal-dark);
+      font-weight: 900;
+    }
+
+    .hero .accent {
+      color: var(--teal-dark);
+    }
+
+    .hero-lead {
+      max-width: 790px;
+      margin-bottom: 0;
+      color: var(--muted);
+      font-size: clamp(1.05rem, 2.1vw, 1.28rem);
+    }
+
+    .source-zone {
+      padding: 22px 0 32px;
+    }
+
+    .source-head {
+      max-width: 760px;
+      margin-bottom: 14px;
+    }
+
+    .source-head h2 {
+      font-size: clamp(1.5rem, 3vw, 2rem);
+    }
+
+    .source-head p {
+      margin-bottom: 0;
+      color: var(--muted);
+    }
+
+    .source-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .source-card {
+      min-height: 186px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 18px;
+      border: 1px solid rgba(18, 47, 70, 0.14);
+      border-top: 5px solid var(--source-color, var(--teal));
+      border-radius: 12px;
+      background: var(--panel);
+      box-shadow: 0 10px 28px rgba(18, 47, 70, 0.07);
+      text-decoration: none;
+    }
+
+    .source-type {
+      color: var(--source-color, var(--teal));
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .source-card:nth-child(2) .source-type {
+      color: #9b470b;
+    }
+
+    .source-card strong {
+      display: block;
+      margin-top: 6px;
+      font-size: 17px;
+      line-height: 1.35;
+    }
+
+    .source-card small {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .jump-zone {
+      padding: 0 0 30px;
+    }
+
+    .jump-box {
+      padding: 18px;
+      border: 1px solid rgba(18, 47, 70, 0.15);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.85);
+    }
+
+    .jump-box strong {
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    .jump-list,
+    .pill-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .jump-link,
+    .reference-link {
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 12px;
+      border: 1px solid rgba(18, 47, 70, 0.14);
+      border-radius: 8px;
+      background: var(--panel);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .section {
+      padding: clamp(48px, 7vw, 84px) 0;
+      border-top: 1px solid rgba(18, 47, 70, 0.12);
+      scroll-margin-top: 18px;
+    }
+
+    .section-head {
+      max-width: 790px;
+      margin-bottom: 28px;
+    }
+
+    .section-head p {
+      margin-bottom: 0;
+      color: var(--muted);
+      font-size: 1.04rem;
+    }
+
+    .subsection-head {
+      margin-top: 42px;
+    }
+
+    .eyebrow {
+      width: fit-content;
+      margin-bottom: 12px;
+      padding: 5px 9px;
+      border-radius: 6px;
+      color: var(--teal-dark);
+      background: var(--soft-teal);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .goal-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .goal-card,
+    .use-card,
+    .info-card,
+    .warning-card,
+    .comparison-card,
+    .quiz-card,
+    .summary-card {
+      border: 1px solid rgba(18, 47, 70, 0.14);
+      background: var(--panel);
+    }
+
+    .goal-card {
+      padding: 20px;
+      border-radius: 12px;
+    }
+
+    .goal-card b {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      margin-bottom: 28px;
+      border-radius: 50%;
+      color: #fff;
+      background: var(--navy);
+    }
+
+    .goal-card p {
+      margin-bottom: 0;
+      color: var(--muted);
+    }
+
+    .corridor {
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 30px;
+      padding: 28px;
+      border-radius: var(--radius);
+      color: #eff9fb;
+      background: var(--navy);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .corridor::before {
+      content: "";
+      position: absolute;
+      top: 70px;
+      right: 8%;
+      left: 8%;
+      height: 3px;
+      background: repeating-linear-gradient(90deg, rgba(240, 155, 69, 0.9) 0 12px, transparent 12px 22px);
+    }
+
+    .gate {
+      position: relative;
+      z-index: 1;
+      min-height: 190px;
+      padding: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.17);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.07);
+      backdrop-filter: blur(6px);
+    }
+
+    .gate-number {
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      margin-bottom: 28px;
+      border: 3px solid var(--navy);
+      border-radius: 50%;
+      color: var(--navy);
+      background: var(--amber);
+      font-weight: 950;
+    }
+
+    .gate h3 {
+      color: #fff;
+    }
+
+    .gate p {
+      margin-bottom: 0;
+      color: #c9dce6;
+      font-size: 14px;
+    }
+
+    .gate code {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .key-idea {
+      margin-top: 18px;
+      padding: 18px 20px;
+      border-left: 5px solid var(--amber);
+      border-radius: 0 10px 10px 0;
+      background: var(--soft-amber);
+    }
+
+    .key-idea p:last-child {
+      margin-bottom: 0;
+    }
+
+    .terminal-stage {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(300px, 0.85fr);
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .terminal-window {
+      min-height: 360px;
+      padding: 20px;
+      border-radius: 14px;
+      color: #eaf8f8;
+      background: #0f2837;
+      box-shadow: var(--shadow);
+    }
+
+    .terminal-dots {
+      display: flex;
+      gap: 7px;
+      margin-bottom: 36px;
+    }
+
+    .terminal-dots span {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background: #ff6b64;
+    }
+
+    .terminal-dots span:nth-child(2) {
+      background: #f4c44f;
+    }
+
+    .terminal-dots span:nth-child(3) {
+      background: #55c56c;
+    }
+
+    .terminal-line {
+      margin-bottom: 22px;
+      color: #9ed7d7;
+      font-size: clamp(1rem, 2vw, 1.25rem);
+    }
+
+    .terminal-line strong {
+      color: #fff;
+    }
+
+    .terminal-line .prompt {
+      color: #f0a45a;
+    }
+
+    .layer-stack {
+      display: grid;
+      gap: 10px;
+    }
+
+    .layer-card {
+      padding: 18px;
+      border: 1px solid rgba(18, 47, 70, 0.14);
+      border-left: 6px solid var(--layer-color);
+      border-radius: 10px;
+      background: var(--panel);
+    }
+
+    .layer-card p {
+      margin-bottom: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .compare-table-wrap {
+      overflow-x: auto;
+      border: 1px solid rgba(18, 47, 70, 0.15);
+      border-radius: 12px;
+      background: var(--panel);
+      -webkit-overflow-scrolling: touch;
+    }
+
+    table {
+      width: 100%;
+      min-width: 720px;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      padding: 16px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      color: #fff;
+      background: var(--navy);
+      font-size: 14px;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    td:first-child {
+      font-weight: 900;
+    }
+
+    .callout-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .info-card,
+    .warning-card,
+    .comparison-card {
+      padding: 20px;
+      border-radius: 12px;
+    }
+
+    .info-card {
+      border-top: 5px solid var(--teal);
+      background: var(--soft-teal);
+    }
+
+    .warning-card {
+      border-top: 5px solid var(--red);
+      background: var(--soft-red);
+    }
+
+    .info-card p:last-child,
+    .warning-card p:last-child,
+    .comparison-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .source-note {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .source-note a {
+      font-weight: 800;
+    }
+
+    .use-grid {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .use-card {
+      min-height: 190px;
+      grid-column: span 4;
+      padding: 20px;
+      border-radius: 12px;
+    }
+
+    .use-card:nth-child(1),
+    .use-card:nth-child(5) {
+      grid-column: span 6;
+      background: var(--soft-blue);
+    }
+
+    .use-card:nth-child(2) {
+      background: var(--soft-teal);
+    }
+
+    .use-card:nth-child(3) {
+      background: var(--soft-amber);
+    }
+
+    .use-card:nth-child(4) {
+      background: var(--soft-slate);
+    }
+
+    .use-icon {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      margin-bottom: 34px;
+      border-radius: 9px;
+      color: #fff;
+      background: var(--navy);
+      font-weight: 950;
+    }
+
+    .use-card p {
+      margin-bottom: 0;
+      color: var(--muted);
+    }
+
+    .use-card code,
+    .safer-step code {
+      color: var(--navy);
+      background: rgba(18, 47, 70, 0.12);
+    }
+
+    .key-flow {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 64px minmax(0, 1fr);
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .key-card {
+      min-height: 238px;
+      padding: 22px;
+      border: 1px solid rgba(18, 47, 70, 0.16);
+      border-radius: 14px;
+      background: var(--panel);
+    }
+
+    .key-card.public {
+      border-top: 7px solid var(--teal);
+    }
+
+    .key-card.private {
+      border-top: 7px solid var(--red);
+    }
+
+    .key-tag {
+      display: inline-block;
+      margin-bottom: 28px;
+      padding: 4px 8px;
+      border-radius: 5px;
+      color: #fff;
+      background: var(--navy);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .key-card ul {
+      margin-bottom: 0;
+      padding-left: 20px;
+    }
+
+    .flow-arrow {
+      color: var(--amber);
+      font-size: 40px;
+      font-weight: 900;
+      text-align: center;
+    }
+
+    .permission-map {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .permission-card {
+      padding: 20px;
+      border: 1px solid rgba(18, 47, 70, 0.16);
+      border-radius: 12px;
+      background: var(--panel);
+    }
+
+    .permission-card.root {
+      color: #fff;
+      background: #7f2830;
+    }
+
+    .permission-card.tunnel {
+      background: var(--soft-green);
+    }
+
+    .permission-card p {
+      margin-bottom: 0;
+      color: var(--muted);
+    }
+
+    .permission-card.root p {
+      color: #f8dadd;
+    }
+
+    .risk-list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin: 18px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .risk-list li {
+      min-height: 76px;
+      padding: 14px 14px 14px 46px;
+      border: 1px solid rgba(184, 61, 69, 0.22);
+      border-radius: 10px;
+      background: var(--soft-red);
+      position: relative;
+    }
+
+    .risk-list li::before {
+      content: "!";
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      width: 24px;
+      height: 24px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: #fff;
+      background: var(--red);
+      font-weight: 950;
+    }
+
+    .tunnel-visual {
+      display: grid;
+      grid-template-columns: minmax(190px, 1fr) minmax(260px, 1.35fr) minmax(190px, 1fr);
+      gap: 14px;
+      align-items: center;
+      margin: 26px 0 18px;
+    }
+
+    .machine {
+      min-height: 230px;
+      padding: 20px;
+      border: 1px solid rgba(18, 47, 70, 0.16);
+      border-radius: 14px;
+      background: var(--panel);
+      box-shadow: 0 12px 32px rgba(18, 47, 70, 0.07);
+    }
+
+    .machine.server {
+      color: #fff;
+      background: var(--navy);
+    }
+
+    .machine h3 {
+      margin-bottom: 28px;
+    }
+
+    .machine.server p {
+      color: #c9dce6;
+    }
+
+    .port {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 8px;
+      padding: 10px;
+      border-radius: 8px;
+      background: var(--soft-blue);
+      font-size: 13px;
+    }
+
+    .machine.server .port {
+      color: #eff9fb;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .encrypted-tube {
+      position: relative;
+      min-height: 150px;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      border: 3px solid var(--teal);
+      border-radius: 999px;
+      background: var(--soft-teal);
+      text-align: center;
+      overflow: hidden;
+    }
+
+    .encrypted-tube::before,
+    .encrypted-tube::after {
+      content: "";
+      position: absolute;
+      width: 46px;
+      height: 3px;
+      background: var(--amber);
+    }
+
+    .encrypted-tube::before {
+      left: 0;
+    }
+
+    .encrypted-tube::after {
+      right: 0;
+    }
+
+    .encrypted-tube strong {
+      display: block;
+      color: var(--teal-dark);
+      font-size: 18px;
+    }
+
+    .encrypted-tube span {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .one-search-state {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .state-card {
+      padding: 20px;
+      border: 1px solid rgba(18, 47, 70, 0.16);
+      border-radius: 12px;
+      background: var(--panel);
+    }
+
+    .state-card.intent {
+      border-top: 6px solid var(--green);
+    }
+
+    .state-card.current {
+      border-top: 6px solid var(--amber);
+    }
+
+    .state-card ul {
+      margin-bottom: 0;
+      padding-left: 20px;
+    }
+
+    .launch-flow {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0;
+      margin: 26px 0 18px;
+      counter-reset: launch;
+    }
+
+    .launch-step {
+      position: relative;
+      min-height: 180px;
+      padding: 20px;
+      border: 1px solid rgba(18, 47, 70, 0.16);
+      background: var(--panel);
+      counter-increment: launch;
+    }
+
+    .launch-step:first-child {
+      border-radius: 14px 0 0 14px;
+    }
+
+    .launch-step:last-child {
+      border-radius: 0 14px 14px 0;
+    }
+
+    .launch-step::before {
+      content: counter(launch);
+      width: 32px;
+      height: 32px;
+      display: grid;
+      place-items: center;
+      margin-bottom: 28px;
+      border-radius: 50%;
+      color: #fff;
+      background: var(--teal-dark);
+      font-weight: 900;
+    }
+
+    .launch-step + .launch-step::after {
+      content: "→";
+      position: absolute;
+      top: 24px;
+      left: -13px;
+      z-index: 2;
+      width: 26px;
+      height: 26px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: var(--navy);
+      background: var(--amber);
+      font-weight: 950;
+    }
+
+    .launch-step p {
+      margin-bottom: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .windows-compare {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .windows-compare .comparison-card:nth-child(2) {
+      background: var(--soft-teal);
+    }
+
+    .windows-compare .comparison-card:nth-child(3) {
+      background: var(--soft-slate);
+    }
+
+    .delivery-map {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 60px minmax(0, 1fr) 60px minmax(0, 1fr);
+      gap: 8px;
+      align-items: center;
+      margin: 26px 0;
+    }
+
+    .delivery-card {
+      min-height: 230px;
+      padding: 20px;
+      border: 1px solid rgba(18, 47, 70, 0.16);
+      border-radius: 12px;
+      background: var(--panel);
+    }
+
+    .delivery-card:nth-child(1) {
+      border-top: 7px solid var(--red);
+    }
+
+    .delivery-card:nth-child(3) {
+      border-top: 7px solid var(--teal);
+    }
+
+    .delivery-card:nth-child(5) {
+      border-top: 7px solid var(--amber);
+    }
+
+    .delivery-card p {
+      margin-bottom: 0;
+      color: var(--muted);
+    }
+
+    .delivery-arrow {
+      color: var(--navy);
+      font-size: 36px;
+      font-weight: 950;
+      text-align: center;
+    }
+
+    .safer-flow {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .safer-step {
+      padding: 16px;
+      border-left: 5px solid var(--green);
+      border-radius: 0 10px 10px 0;
+      background: var(--soft-green);
+    }
+
+    .safer-step b {
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .safer-step p {
+      margin-bottom: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .quiz-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin: 20px 0;
+      padding: 16px 18px;
+      border: 1px solid rgba(18, 47, 70, 0.16);
+      border-radius: 12px;
+      background: var(--panel);
+    }
+
+    .quiz-toolbar p {
+      margin-bottom: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .quiz-score {
+      flex: 0 0 auto;
+      color: var(--teal-dark);
+      font-weight: 950;
+    }
+
+    .quiz-level {
+      margin-top: 34px;
+      scroll-margin-top: 18px;
+    }
+
+    .quiz-level-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 4px solid var(--level-color, var(--teal));
+    }
+
+    .quiz-level-head h3 {
+      margin-bottom: 0;
+      font-size: 1.45rem;
+    }
+
+    .quiz-level-head p {
+      margin-bottom: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .quiz-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .quiz-card {
+      padding: 20px;
+      border-radius: 12px;
+    }
+
+    .quiz-card h3 {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-family: inherit;
+      font-size: 1.05rem;
+      letter-spacing: -0.02em;
+    }
+
+    .q-number {
+      min-width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      border-radius: 7px;
+      color: #fff;
+      background: var(--navy);
+      font-size: 13px;
+      font-weight: 950;
+    }
+
+    .quiz-choices {
+      display: grid;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .quiz-choice {
+      min-height: 52px;
+      display: grid;
+      grid-template-columns: 32px minmax(0, 1fr);
+      gap: 10px;
+      align-items: center;
+      padding: 9px 12px;
+      border: 1px solid rgba(18, 47, 70, 0.18);
+      border-radius: 9px;
+      color: var(--ink);
+      background: var(--panel);
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .quiz-choice:hover {
+      border-color: var(--blue);
+      background: var(--soft-blue);
+    }
+
+    .quiz-choice:focus-visible {
+      outline: 3px solid var(--amber);
+      outline-offset: 2px;
+    }
+
+    .choice-letter {
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      border-radius: 7px;
+      color: var(--navy);
+      background: var(--soft-slate);
+      font-size: 13px;
+      font-weight: 950;
+    }
+
+    .quiz-choice.is-answer {
+      border-color: var(--green);
+      background: var(--soft-green);
+    }
+
+    .quiz-choice.is-selected-wrong {
+      border-color: var(--red);
+      background: var(--soft-red);
+    }
+
+    .quiz-choice.is-answer .choice-letter {
+      color: #fff;
+      background: var(--green);
+    }
+
+    .quiz-choice.is-selected-wrong .choice-letter {
+      color: #fff;
+      background: var(--red);
+    }
+
+    .feedback {
+      min-height: 72px;
+      margin: 12px 0 0;
+      padding: 12px;
+      border-radius: 8px;
+      color: var(--muted);
+      background: var(--soft-slate);
+      font-size: 14px;
+    }
+
+    .feedback.is-correct {
+      color: #184f37;
+      background: var(--soft-green);
+    }
+
+    .feedback.is-wrong {
+      color: #76262c;
+      background: var(--soft-red);
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 12px;
+    }
+
+    .summary-card {
+      padding: 24px;
+      border-radius: 14px;
+    }
+
+    .summary-card.primary {
+      color: #fff;
+      background: var(--navy);
+    }
+
+    .summary-card.primary p,
+    .summary-card.primary li {
+      color: #d7e7ee;
+    }
+
+    .summary-card ul {
+      margin-bottom: 0;
+      padding-left: 20px;
+    }
+
+    .reference-groups {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .reference-group {
+      padding: 20px;
+      border: 1px solid rgba(18, 47, 70, 0.14);
+      border-radius: 12px;
+      background: var(--panel);
+    }
+
+    .reference-group h3 {
+      margin-bottom: 12px;
+    }
+
+    .reference-group .pill-list {
+      align-items: stretch;
+    }
+
+    .reference-link {
+      flex: 1 1 220px;
+      justify-content: flex-start;
+    }
+
+    .footer {
+      padding: 30px 0 46px;
+      border-top: 1px solid rgba(18, 47, 70, 0.12);
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    @media (max-width: 980px) {
+      .source-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .corridor {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .corridor::before {
+        display: none;
+      }
+
+      .gate:last-child {
+        grid-column: 1 / -1;
+        min-height: 150px;
+      }
+
+      .use-card,
+      .use-card:nth-child(1),
+      .use-card:nth-child(5) {
+        grid-column: span 6;
+      }
+
+      .tunnel-visual {
+        grid-template-columns: 1fr;
+      }
+
+      .encrypted-tube {
+        min-height: 110px;
+        border-radius: 20px;
+      }
+
+      .encrypted-tube::before,
+      .encrypted-tube::after {
+        display: none;
+      }
+
+      .launch-flow {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .launch-step,
+      .launch-step:first-child,
+      .launch-step:last-child {
+        border-radius: 12px;
+      }
+
+      .launch-step + .launch-step::after {
+        display: none;
+      }
+
+      .delivery-map {
+        grid-template-columns: 1fr;
+      }
+
+      .delivery-arrow {
+        transform: rotate(90deg);
+      }
+
+      .safer-flow {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 720px) {
+      .shell {
+        width: min(100% - 24px, 1160px);
+      }
+
+      .page-head {
+        padding-top: 12px;
+      }
+
+      .hero {
+        padding-top: 34px;
+      }
+
+      .source-grid,
+      .goal-grid,
+      .terminal-stage,
+      .callout-row,
+      .permission-map,
+      .one-search-state,
+      .windows-compare,
+      .quiz-grid,
+      .summary-grid,
+      .reference-groups {
+        grid-template-columns: 1fr;
+      }
+
+      .source-card {
+        min-height: 0;
+      }
+
+      .corridor {
+        grid-template-columns: 1fr;
+        padding: 16px;
+      }
+
+      .gate,
+      .gate:last-child {
+        min-height: 0;
+        grid-column: auto;
+      }
+
+      .gate-number {
+        margin-bottom: 16px;
+      }
+
+      .terminal-window {
+        min-height: 300px;
+      }
+
+      .use-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .use-card,
+      .use-card:nth-child(1),
+      .use-card:nth-child(5) {
+        min-height: 0;
+        grid-column: auto;
+      }
+
+      .use-icon {
+        margin-bottom: 22px;
+      }
+
+      .key-flow {
+        grid-template-columns: 1fr;
+      }
+
+      .flow-arrow {
+        transform: rotate(90deg);
+      }
+
+      .risk-list,
+      .safer-flow,
+      .launch-flow {
+        grid-template-columns: 1fr;
+      }
+
+      .quiz-toolbar,
+      .quiz-level-head {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      table {
+        min-width: 640px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+
+      *,
+      *::before,
+      *::after {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">본문으로 바로가기</a>
+
+  <header class="page-head">
+    <div class="shell">
+      <a class="home-link" href="./index.html" aria-label="개념 학습 가이드 홈으로 이동">← 학습 가이드 홈</a>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero shell" aria-labelledby="page-title">
+      <p class="hero-kicker">원격 접속의 문부터 DB·Redis 터널까지</p>
+      <h1 id="page-title">SSH·방화벽·<span class="accent">터널링</span>을 한 번에 이해하기</h1>
+      <p class="hero-lead">SSH 키 하나가 왜 위험할 수도, 안전할 수도 있는지 알아봅니다. Lightsail의 IP 제한, root 권한, age와 Magic Wormhole, macOS Terminal·Zsh·LaunchAgent까지 한 흐름으로 연결합니다.</p>
+    </section>
+
+    <section class="section" id="quiz" aria-labelledby="quiz-title">
+      <div class="shell">
+        <div class="section-head">
+          <p class="eyebrow">확인 퀴즈</p>
+          <h2 id="quiz-title">쉬운 구분에서 실제 권한 설계까지</h2>
+          <p>각 보기에서 하나를 고르면 정답과 해설이 바로 나타납니다. 앞의 다섯 문제는 개념을, 다음 다섯 문제는 상황 판단을, 마지막 다섯 문제는 안전한 설계를 묻습니다.</p>
+        </div>
+        <nav class="jump-box" aria-label="퀴즈 블록 바로가기">
+          <strong>퀴즈 바로가기</strong>
+          <div class="jump-list">
+            <a class="jump-link" href="#quiz-easy">쉬움 5문제</a>
+            <a class="jump-link" href="#quiz-medium">중간 5문제</a>
+            <a class="jump-link" href="#quiz-hard">상위 5문제</a>
+            <a class="jump-link" href="#glossary-quiz">용어집 10문제</a>
+          </div>
+        </nav>
+        <div class="quiz-toolbar" aria-live="polite">
+          <p>틀려도 다시 선택할 수 있습니다. 정답 표시를 확인하고 해설까지 읽어 보세요.</p>
+          <div class="quiz-score"><span id="quiz-correct">0</span>개 정답 · <span id="quiz-answered">0</span>/<span id="quiz-total">25</span> 완료</div>
+        </div>
+
+        <section class="quiz-level" id="quiz-easy" style="--level-color:var(--green)" aria-labelledby="easy-title">
+          <div class="quiz-level-head">
+            <h3 id="easy-title">쉬움 · 핵심 구분</h3>
+            <p>정의, 역할, 가까운 개념의 차이</p>
+          </div>
+          <div class="quiz-grid">
+            <article class="quiz-card" data-answer="B">
+              <h3 id="q1-title"><span class="q-number">1</span>SSH를 가장 정확하게 설명한 것은?</h3>
+              <div class="quiz-choices" role="group" aria-labelledby="q1-title">
+                <button class="quiz-choice" type="button" data-option="A" aria-pressed="false"><span class="choice-letter">A</span><span>파일을 한 컴퓨터 안에서만 암호화하는 프로그램</span></button>
+                <button class="quiz-choice" type="button" data-option="B" aria-pressed="false"><span class="choice-letter">B</span><span>원격 컴퓨터에 암호화해 연결하고 명령·전송·포워딩을 하는 방식</span></button>
+                <button class="quiz-choice" type="button" data-option="C" aria-pressed="false"><span class="choice-letter">C</span><span>특정 공인 IP만 허용하는 Lightsail 규칙</span></button>
+                <button class="quiz-choice" type="button" data-option="D" aria-pressed="false"><span class="choice-letter">D</span><span>Mac 로그인 때 프로그램을 자동 실행하는 기능</span></button>
+              </div>
+              <p class="feedback" aria-live="polite">보기를 선택하면 정답과 해설이 표시됩니다.</p>
+              <p class="quiz-explanation" hidden>정답 B. SSH는 원격 로그인과 명령 실행뿐 아니라 파일 전송과 네트워크 포워딩도 제공합니다. C의 방화벽은 SSH 서버 앞의 도달성을 거르지만 SSH 자체는 아닙니다.</p>
+            </article>
+
+            <article class="quiz-card" data-answer="C">
+              <h3 id="q2-title"><span class="q-number">2</span>Lightsail 방화벽과 SSH 키의 역할을 올바르게 짝지은 것은?</h3>
+              <div class="quiz-choices" role="group" aria-labelledby="q2-title">
+                <button class="quiz-choice" type="button" data-option="A" aria-pressed="false"><span class="choice-letter">A</span><span>둘 다 파일 내용을 암호화한다.</span></button>
+                <button class="quiz-choice" type="button" data-option="B" aria-pressed="false"><span class="choice-letter">B</span><span>방화벽이 사람을 확인하고 키가 공인 IP를 확인한다.</span></button>
+                <button class="quiz-choice" type="button" data-option="C" aria-pressed="false"><span class="choice-letter">C</span><span>방화벽은 도달 가능한 IP를, 키는 승인된 개인키 소유를 확인한다.</span></button>
+                <button class="quiz-choice" type="button" data-option="D" aria-pressed="false"><span class="choice-letter">D</span><span>방화벽을 쓰면 SSH 키 인증은 자동으로 꺼진다.</span></button>
+              </div>
+              <p class="feedback" aria-live="polite">보기를 선택하면 정답과 해설이 표시됩니다.</p>
+              <p class="quiz-explanation" hidden>정답 C. 방화벽은 바깥쪽 네트워크 문이고 키 인증은 그 뒤의 신원 확인입니다. B는 두 역할을 반대로 설명했습니다. 허용 IP에서도 승인된 개인키가 없으면 로그인할 수 없습니다.</p>
+            </article>
+
+            <article class="quiz-card" data-answer="A">
+              <h3 id="q3-title"><span class="q-number">3</span>SSH 공개키와 개인키를 가장 안전하게 사용하는 방식은?</h3>
+              <div class="quiz-choices" role="group" aria-labelledby="q3-title">
+                <button class="quiz-choice" type="button" data-option="A" aria-pressed="false"><span class="choice-letter">A</span><span>공개키는 서버에 등록하고 개인키는 사용자 Mac에만 보관한다.</span></button>
+                <button class="quiz-choice" type="button" data-option="B" aria-pressed="false"><span class="choice-letter">B</span><span>개인키를 서버에 등록하고 공개키를 비밀 USB에 보관한다.</span></button>
+                <button class="quiz-choice" type="button" data-option="C" aria-pressed="false"><span class="choice-letter">C</span><span>두 키를 묶어 모든 팀원에게 전달한다.</span></button>
+                <button class="quiz-choice" type="button" data-option="D" aria-pressed="false"><span class="choice-letter">D</span><span>두 키 모두 Lightsail 방화벽 규칙에 입력한다.</span></button>
+              </div>
+              <p class="feedback" aria-live="polite">보기를 선택하면 정답과 해설이 표시됩니다.</p>
+              <p class="quiz-explanation" hidden>정답 A. 서버 승인 목록에는 공개키를 두고, 소유 증명에 쓰는 개인키는 사용자 기기 밖으로 내보내지 않는 것이 기본입니다. B는 두 키의 위치를 거꾸로 설명합니다.</p>
+            </article>
+
+            <article class="quiz-card" data-answer="D">
+              <h3 id="q4-title"><span class="q-number">4</span>Mac의 Terminal과 Zsh·Bash의 관계를 정확히 설명한 것은?</h3>
+              <div class="quiz-choices" role="group" aria-labelledby="q4-title">
+                <button class="quiz-choice" type="button" data-option="A" aria-pressed="false"><span class="choice-letter">A</span><span>Terminal은 운영체제이고 Zsh는 클라우드 서버다.</span></button>
+                <button class="quiz-choice" type="button" data-option="B" aria-pressed="false"><span class="choice-letter">B</span><span>Terminal과 Zsh는 이름만 다른 같은 앱이다.</span></button>
+                <button class="quiz-choice" type="button" data-option="C" aria-pressed="false"><span class="choice-letter">C</span><span>Zsh는 방화벽이고 Bash는 SSH 키 형식이다.</span></button>
+                <button class="quiz-choice" type="button" data-option="D" aria-pressed="false"><span class="choice-letter">D</span><span>Terminal은 입출력 앱이고 Zsh·Bash는 명령을 해석하는 셸이다.</span></button>
+              </div>
+              <p class="feedback" aria-live="polite">보기를 선택하면 정답과 해설이 표시됩니다.</p>
+              <p class="quiz-explanation" hidden>정답 D. Terminal은 명령을 입력하고 결과를 보는 앱이며 셸은 글자를 명령으로 해석합니다. 현재 Mac 로컬은 보통 Zsh지만 SSH로 들어간 Linux 서버는 Bash일 수 있어 B처럼 같은 것으로 보면 안 됩니다.</p>
+            </article>
+
+            <article class="quiz-card" data-answer="B">
+              <h3 id="q5-title"><span class="q-number">5</span>SSH 로컬 터널링을 가장 잘 설명한 것은?</h3>
+              <div class="quiz-choices" role="group" aria-labelledby="q5-title">
+                <button class="quiz-choice" type="button" data-option="A" aria-pressed="false"><span class="choice-letter">A</span><span>원격 DB 전체를 Mac으로 복사하는 기능</span></button>
+                <button class="quiz-choice" type="button" data-option="B" aria-pressed="false"><span class="choice-letter">B</span><span>Mac 로컬 포트의 연결을 SSH 통로로 서버 쪽 서비스에 전달하는 기능</span></button>
+                <button class="quiz-choice" type="button" data-option="C" aria-pressed="false"><span class="choice-letter">C</span><span>DB와 Redis 포트를 인터넷 전체에 직접 공개하는 기능</span></button>
+                <button class="quiz-choice" type="button" data-option="D" aria-pressed="false"><span class="choice-letter">D</span><span>SSH 개인키를 공개키로 바꾸는 기능</span></button>
+              </div>
+              <p class="feedback" aria-live="polite">보기를 선택하면 정답과 해설이 표시됩니다.</p>
+              <p class="quiz-explanation" hidden>정답 B. 앱은 Mac의 127.0.0.1 포트에 연결하지만 트래픽은 SSH를 지나 원격 목적지로 전달됩니다. C는 터널과 반대로 DB 자체를 외부에 노출합니다.</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="quiz-level" id="quiz-medium" style="--level-color:var(--amber)" aria-labelledby="medium-title">
+          <div class="quiz-level-head">
+            <h3 id="medium-title">중간 · 상황 판단</h3>
+            <p>짧은 실무 상황에서 원인과 도구 선택</p>
+          </div>
+          <div class="quiz-grid">
+            <article class="quiz-card" data-answer="C">
+              <h3 id="q6-title"><span class="q-number">6</span>root 직접 SSH 로그인을 막는 가장 중요한 이유는?</h3>
+              <div class="quiz-choices" role="group" aria-labelledby="q6-title">
+                <button class="quiz-choice" type="button" data-option="A" aria-pressed="false"><span class="choice-letter">A</span><span>root에서는 SSH 터널을 만들 수 없기 때문</span></button>
+                <button class="quiz-choice" type="button" data-option="B" aria-pressed="false"><span class="choice-letter">B</span><span>root 명령은 언제나 실행 전에 두 번 확인되기 때문</span></button>
+                <button class="quiz-choice" type="button" data-option="C" aria-pressed="false"><span class="choice-letter">C</span><span>키 탈취나 실수의 피해가 서버 전체로 커질 수 있기 때문</span></button>
+                <button class="quiz-choice" type="button" data-option="D" aria-pressed="false"><span class="choice-letter">D</span><span>root 로그인 시 AWS 계정 전체가 자동 삭제되기 때문</span></button>
+              </div>
+              <p class="feedback" aria-live="polite">보기를 선택하면 정답과 해설이 표시됩니다.</p>
+              <p class="quiz-explanation" hidden>정답 C. root는 서버 안의 거의 모든 파일·설정·프로세스를 다룰 수 있어 피해 반경이 큽니다. D와 달리 AWS 제어판 작업에는 별도 AWS 자격증명과 권한이 필요합니다.</p>
+            </article>
+
+            <article class="quiz-card" data-answer="A">
+              <h3 id="q7-title"><span class="q-number">7</span>집 공인 IP만 허용한 뒤 카페에서 올바른 키로 접속했는데 timeout이 났습니다. 가장 가능성 높은 원인은?</h3>
+              <div class="quiz-choices" role="group" aria-labelledby="q7-title">
+                <button class="quiz-choice" type="button" data-option="A" aria-pressed="false"><span class="choice-letter">A</span><span>카페 IP가 허용되지 않아 키 인증 전에 방화벽에서 막혔다.</span></button>
+                <button class="quiz-choice" type="button" data-option="B" aria-pressed="false"><span class="choice-letter">B</span><span>카페에서는 모든 SSH 개인키가 자동 만료된다.</span></button>
+                <button class="quiz-choice" type="button" data-option="C" aria-pressed="false"><span class="choice-letter">C</span><span>Mac 기본 셸이 Zsh라 Lightsail에 접속할 수 없다.</span></button>
+                <button class="quiz-choice" type="button" data-option="D" aria-pressed="false"><span class="choice-letter">D</span><span>LaunchAgent는 집 Wi-Fi에서만 실행된다.</span></button>
+              </div>
+              <p class="feedback" aria-live="polite">보기를 선택하면 정답과 해설이 표시됩니다.</p>
+              <p class="quiz-explanation" hidden>정답 A. source IP allowlist는 SSH 인증보다 앞에서 작동합니다. 출발 IP가 다르면 서버가 개인키를 확인할 단계에도 도달하지 못합니다. 키가 틀린 경우에는 보통 연결 뒤 인증 거부가 나타납니다.</p>
+            </article>
+
+            <article class="quiz-card" data-answer="D">
+              <h3 id="q8-title"><span class="q-number">8</span>Mac 로그인 후 터널을 시작하고 끊기면 다시 붙이려면 가장 알맞은 기능은?</h3>
+              <div class="quiz-choices" role="group" aria-labelledby="q8-title">
+                <button class="quiz-choice" type="button" data-option="A" aria-pressed="false"><span class="choice-letter">A</span><span>root LaunchDaemon만 사용할 수 있다.</span></button>
+                <button class="quiz-choice" type="button" data-option="B" aria-pressed="false"><span class="choice-letter">B</span><span>age 암호화 파일에 SSH 명령을 저장한다.</span></button>
+                <button class="quiz-choice" type="button" data-option="C" aria-pressed="false"><span class="choice-letter">C</span><span>Lightsail 방화벽에 Mac 앱 경로를 입력한다.</span></button>
+                <button class="quiz-choice" type="button" data-option="D" aria-pressed="false"><span class="choice-letter">D</span><span>사용자 LaunchAgent에 실행·재시작 조건과 터널 프로그램을 등록한다.</span></button>
+              </div>
+              <p class="feedback" aria-live="polite">보기를 선택하면 정답과 해설이 표시됩니다.</p>
+              <p class="quiz-explanation" hidden>정답 D. LaunchAgent는 해당 사용자의 로그인 세션에서 작업을 시작·유지하기에 적합합니다. A의 LaunchDaemon은 로그인 전부터 필요한 시스템 전역 서비스에 가까워 이 용도에는 필요 이상으로 큽니다.</p>
+            </article>
+
+            <article class="quiz-card" data-answer="B">
+              <h3 id="q9-title"><span class="q-number">9</span>SSH 키 파일을 age로 암호화하고 Magic Wormhole로 보냈습니다. 역할 설명으로 맞는 것은?</h3>
+              <div class="quiz-choices" role="group" aria-labelledby="q9-title">
+                <button class="quiz-choice" type="button" data-option="A" aria-pressed="false"><span class="choice-letter">A</span><span>둘 다 Lightsail 방화벽을 변경한다.</span></button>
+                <button class="quiz-choice" type="button" data-option="B" aria-pressed="false"><span class="choice-letter">B</span><span>age는 파일 자체를 암호화하고 Wormhole은 두 기기 사이로 암호화 전송한다.</span></button>
+                <button class="quiz-choice" type="button" data-option="C" aria-pressed="false"><span class="choice-letter">C</span><span>age는 root를 제거하고 Wormhole은 일반 사용자를 만든다.</span></button>
+                <button class="quiz-choice" type="button" data-option="D" aria-pressed="false"><span class="choice-letter">D</span><span>Wormhole이 파일을 영구 저장하고 age가 다운로드 URL을 만든다.</span></button>
+              </div>
+              <p class="feedback" aria-live="polite">보기를 선택하면 정답과 해설이 표시됩니다.</p>
+              <p class="quiz-explanation" hidden>정답 B. age는 내용물의 자물쇠, Wormhole은 일회용 코드로 연결되는 전달 통로에 가깝습니다. 두 도구 모두 Linux 계정 권한이나 Lightsail 방화벽을 바꾸지는 않습니다.</p>
+            </article>
+
+            <article class="quiz-card" data-answer="C">
+              <h3 id="q10-title"><span class="q-number">10</span>친구에게 SSH 접근을 새로 줄 때 가장 권장되는 키 흐름은?</h3>
+              <div class="quiz-choices" role="group" aria-labelledby="q10-title">
+                <button class="quiz-choice" type="button" data-option="A" aria-pressed="false"><span class="choice-letter">A</span><span>운영자가 root 계정에 등록할 개인키 하나를 만들어 평문으로 보낸다.</span></button>
+                <button class="quiz-choice" type="button" data-option="B" aria-pressed="false"><span class="choice-letter">B</span><span>모든 팀원이 같은 개인키를 복사해서 쓴다.</span></button>
+                <button class="quiz-choice" type="button" data-option="C" aria-pressed="false"><span class="choice-letter">C</span><span>친구 Mac에서 고유 키 쌍을 만들고 공개키만 운영자에게 보낸다.</span></button>
+                <button class="quiz-choice" type="button" data-option="D" aria-pressed="false"><span class="choice-letter">D</span><span>공개키와 개인키를 서버의 공개 폴더에 함께 둔다.</span></button>
+              </div>
+              <p class="feedback" aria-live="polite">보기를 선택하면 정답과 해설이 표시됩니다.</p>
+              <p class="quiz-explanation" hidden>정답 C. 사용자별 고유 키여야 한 사람만 따로 폐기하고 접속자를 구분할 수 있습니다. B처럼 키를 공유하면 한 번의 유출이 모두에게 영향을 주고 감사 기록도 흐려집니다.</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="quiz-level" id="quiz-hard" style="--level-color:var(--red)" aria-labelledby="hard-title">
+          <div class="quiz-level-head">
+            <h3 id="hard-title">상위 · 안전한 설계와 비판</h3>
+            <p>여러 제약을 함께 보고 피해 범위 줄이기</p>
+          </div>
+          <div class="quiz-grid">
+            <article class="quiz-card" data-answer="B">
+              <h3 id="q11-title"><span class="q-number">11</span>SSH 22를 전체 IPv4에 공개하는 정책을 선택했다면 DB·Redis 터널의 피해 범위를 가장 작게 만든 설계는?</h3>
+              <div class="quiz-choices" role="group" aria-labelledby="q11-title">
+                <button class="quiz-choice" type="button" data-option="A" aria-pressed="false"><span class="choice-letter">A</span><span>친구 공개키를 root에 등록하고 모든 SSH 기능을 허용한다.</span></button>
+                <button class="quiz-choice" type="button" data-option="B" aria-pressed="false"><span class="choice-letter">B</span><span>개인별 non-root/no-sudo 계정에서 셸·TTY를 막고 지정 local forwarding만 허용한다.</span></button>
+                <button class="quiz-choice" type="button" data-option="C" aria-pressed="false"><span class="choice-letter">C</span><span>PostgreSQL과 Redis 포트를 인터넷 전체에 직접 공개한다.</span></button>
+                <button class="quiz-choice" type="button" data-option="D" aria-pressed="false"><span class="choice-letter">D</span><span>팀 전체가 root 계정에 등록된 같은 개인키를 쓰고 파일 이름만 다르게 한다.</span></button>
+              </div>
+              <p class="feedback" aria-live="polite">보기를 선택하면 정답과 해설이 표시됩니다.</p>
+              <p class="quiz-explanation" hidden>정답 B. IP 장벽을 넓혔다면 키 분리, 계정 최소 권한, 세션 차단, 포워딩 방향과 목적지 제한을 겹쳐야 합니다. A도 키 인증은 있지만 유출이나 실수 즉시 root 전체 권한을 내주는 점이 결정적 문제입니다.</p>
+            </article>
+
+            <article class="quiz-card" data-answer="D">
+              <h3 id="q12-title"><span class="q-number">12</span>Codex가 root SSH 세션을 사용할 수 있을 때 가장 정확한 위험 설명은?</h3>
+              <div class="quiz-choices" role="group" aria-labelledby="q12-title">
+                <button class="quiz-choice" type="button" data-option="A" aria-pressed="false"><span class="choice-letter">A</span><span>AI가 만든 명령은 서버에서 자동으로 읽기 전용이 된다.</span></button>
+                <button class="quiz-choice" type="button" data-option="B" aria-pressed="false"><span class="choice-letter">B</span><span>SSH 뒤에도 Codex는 Mac 파일만 조작할 수 있다.</span></button>
+                <button class="quiz-choice" type="button" data-option="C" aria-pressed="false"><span class="choice-letter">C</span><span>AWS 자격증명 없이도 AWS 계정 전체를 삭제할 수 있다.</span></button>
+                <button class="quiz-choice" type="button" data-option="D" aria-pressed="false"><span class="choice-letter">D</span><span>서버 파일·서비스·OS를 root로 바꿀 수 있지만 AWS 제어판에는 별도 AWS 권한이 필요하다.</span></button>
+              </div>
+              <p class="feedback" aria-live="polite">보기를 선택하면 정답과 해설이 표시됩니다.</p>
+              <p class="quiz-explanation" hidden>정답 D. 서버는 사람이 썼는지 Codex가 보냈는지가 아니라 인증된 계정의 권한으로 명령을 처리합니다. C는 Linux 서버 내부 권한과 AWS 제어 영역 권한을 혼동합니다.</p>
+            </article>
+
+            <article class="quiz-card" data-answer="A">
+              <h3 id="q13-title"><span class="q-number">13</span>정배 Mac의 로컬 터널 입구를 같은 Mac의 프로그램만 쓰게 하려면?</h3>
+              <div class="quiz-choices" role="group" aria-labelledby="q13-title">
+                <button class="quiz-choice" type="button" data-option="A" aria-pressed="false"><span class="choice-letter">A</span><span>로컬 포트를 <code>127.0.0.1</code>에 명시적으로 bind한다.</span></button>
+                <button class="quiz-choice" type="button" data-option="B" aria-pressed="false"><span class="choice-letter">B</span><span>로컬 포트를 <code>0.0.0.0</code>에 bind한다.</span></button>
+                <button class="quiz-choice" type="button" data-option="C" aria-pressed="false"><span class="choice-letter">C</span><span>DB 포트를 Lightsail 공인 IP에 직접 연다.</span></button>
+                <button class="quiz-choice" type="button" data-option="D" aria-pressed="false"><span class="choice-letter">D</span><span>개인키를 읽기 가능한 공유 폴더에 둔다.</span></button>
+              </div>
+              <p class="feedback" aria-live="polite">보기를 선택하면 정답과 해설이 표시됩니다.</p>
+              <p class="quiz-explanation" hidden>정답 A. 127.0.0.1은 현재 Mac 자신을 가리켜 다른 기기의 직접 접근을 막습니다. B의 0.0.0.0은 모든 인터페이스에서 연결을 받아 같은 네트워크로 터널 입구를 다시 노출할 수 있습니다.</p>
+            </article>
+
+            <article class="quiz-card" data-answer="C">
+              <h3 id="q14-title"><span class="q-number">14</span>“정배는 DB·Redis 터널만 쓴다”와 현재 확인한 OneSearch helper의 차이를 정확히 말한 것은?</h3>
+              <div class="quiz-choices" role="group" aria-labelledby="q14-title">
+                <button class="quiz-choice" type="button" data-option="A" aria-pressed="false"><span class="choice-letter">A</span><span>현재 helper도 DB·Redis 두 포트만 기술적으로 허용한다.</span></button>
+                <button class="quiz-choice" type="button" data-option="B" aria-pressed="false"><span class="choice-letter">B</span><span>정배 계정은 root 셸과 모든 포트 전달을 허용한다.</span></button>
+                <button class="quiz-choice" type="button" data-option="C" aria-pressed="false"><span class="choice-letter">C</span><span>업무 목적은 shared DB·Redis이고 helper는 통합 앱 3개까지 총 5개를 포워딩한다.</span></button>
+                <button class="quiz-choice" type="button" data-option="D" aria-pressed="false"><span class="choice-letter">D</span><span>PostgreSQL 5432와 Redis 6379가 인터넷에 직접 공개돼 있다.</span></button>
+              </div>
+              <p class="feedback" aria-live="polite">보기를 선택하면 정답과 해설이 표시됩니다.</p>
+              <p class="quiz-explanation" hidden>정답 C. 일상 목적과 현재 helper의 기술적 허용 목록은 다릅니다. helper는 23100·23200·23300과 25432·26379를 포워딩하지만 계정은 여전히 no-shell, non-sudo, 지정 목적지 전용입니다. A는 목적을 구현 범위로 잘못 일반화합니다.</p>
+            </article>
+
+            <article class="quiz-card" data-answer="B">
+              <h3 id="q15-title"><span class="q-number">15</span>가정: root 계정에 공개키가 등록된 개인키를 age로 암호화해 Wormhole로 친구에게 보냈다면, 가장 정확한 평가는?</h3>
+              <div class="quiz-choices" role="group" aria-labelledby="q15-title">
+                <button class="quiz-choice" type="button" data-option="A" aria-pressed="false"><span class="choice-letter">A</span><span>두 번 보호했으므로 그 키는 root 권한을 잃는다.</span></button>
+                <button class="quiz-choice" type="button" data-option="B" aria-pressed="false"><span class="choice-letter">B</span><span>평문보다 낫지만 공유한 root 계정 접근 문제는 남으므로 개인별 키와 제한 계정으로 교체한다.</span></button>
+                <button class="quiz-choice" type="button" data-option="C" aria-pressed="false"><span class="choice-letter">C</span><span>Wormhole이 받은 개인키를 자동으로 일회용 공개키로 바꾼다.</span></button>
+                <button class="quiz-choice" type="button" data-option="D" aria-pressed="false"><span class="choice-letter">D</span><span>age 암호문은 누구나 개인키 없이 복호화할 수 있다.</span></button>
+              </div>
+              <p class="feedback" aria-live="polite">보기를 선택하면 정답과 해설이 표시됩니다.</p>
+              <p class="quiz-explanation" hidden>정답 B. age와 Wormhole은 전달 과정의 노출을 줄이지만 그 개인키의 서버 권한은 바꾸지 않습니다. A는 암호화와 권한 제한을 혼동합니다. 새 개인별 키를 검증한 뒤 이전 공유 키를 승인 목록에서 제거해야 합니다.</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="quiz-level" id="glossary-quiz" style="--level-color:var(--teal)" aria-labelledby="glossary-title">
+          <div class="quiz-level-head">
+            <h3 id="glossary-title">용어집 퀴즈 · 헷갈리는 말 10개</h3>
+            <p>용어의 쉬운 뜻과 가까운 개념의 차이</p>
+          </div>
+          <div class="quiz-grid">
+            <article class="quiz-card" data-answer="A">
+              <h3 id="q16-title"><span class="q-number">16</span>SSH의 핵심 의미는?</h3>
+              <div class="quiz-choices" role="group" aria-labelledby="q16-title">
+                <button class="quiz-choice" type="button" data-option="A" aria-pressed="false"><span class="choice-letter">A</span><span>신뢰하기 어려운 네트워크에서도 원격 통신을 암호화하고 인증하는 방식</span></button>
+                <button class="quiz-choice" type="button" data-option="B" aria-pressed="false"><span class="choice-letter">B</span><span>Mac 파일을 자동으로 휴지통에 넣는 기능</span></button>
+                <button class="quiz-choice" type="button" data-option="C" aria-pressed="false"><span class="choice-letter">C</span><span>AWS 요금을 계산하는 명령</span></button>
+                <button class="quiz-choice" type="button" data-option="D" aria-pressed="false"><span class="choice-letter">D</span><span>공인 IP를 고정하는 서비스</span></button>
+              </div>
+              <p class="feedback" aria-live="polite">보기를 선택하면 정답과 해설이 표시됩니다.</p>
+              <p class="quiz-explanation" hidden>정답 A. SSH는 암호화 채널과 사용자 인증을 제공하는 Secure Shell 계열 프로토콜입니다. D의 고정 IP는 주소를 안정적으로 유지할 뿐 통신 암호화나 인증을 대신하지 않습니다.</p>
+            </article>
+
+            <article class="quiz-card" data-answer="B">
+              <h3 id="q17-title"><span class="q-number">17</span>공개키와 개인키를 올바르게 설명한 것은?</h3>
+              <div class="quiz-choices" role="group" aria-labelledby="q17-title">
+                <button class="quiz-choice" type="button" data-option="A" aria-pressed="false"><span class="choice-letter">A</span><span>둘 다 인터넷에 공개해도 된다.</span></button>
+                <button class="quiz-choice" type="button" data-option="B" aria-pressed="false"><span class="choice-letter">B</span><span>공개키는 서버 승인에 쓰고 개인키는 소유 증명을 위해 비밀로 둔다.</span></button>
+                <button class="quiz-choice" type="button" data-option="C" aria-pressed="false"><span class="choice-letter">C</span><span>개인키는 포트 번호이고 공개키는 공인 IP다.</span></button>
+                <button class="quiz-choice" type="button" data-option="D" aria-pressed="false"><span class="choice-letter">D</span><span>공개키는 비밀번호이고 개인키는 사용자 이름이다.</span></button>
+              </div>
+              <p class="feedback" aria-live="polite">보기를 선택하면 정답과 해설이 표시됩니다.</p>
+              <p class="quiz-explanation" hidden>정답 B. 서버는 공개키로 개인키 소유자가 만든 증명을 검증합니다. A는 공개키에는 맞지만 개인키에는 틀립니다. 개인키가 새면 해당 키를 승인한 계정 접근이 위험해집니다.</p>
+            </article>
+
+            <article class="quiz-card" data-answer="C">
+              <h3 id="q18-title"><span class="q-number">18</span><code>authorized_keys</code>는 무엇인가요?</h3>
+              <div class="quiz-choices" role="group" aria-labelledby="q18-title">
+                <button class="quiz-choice" type="button" data-option="A" aria-pressed="false"><span class="choice-letter">A</span><span>접속한 서버의 host key 기록</span></button>
+                <button class="quiz-choice" type="button" data-option="B" aria-pressed="false"><span class="choice-letter">B</span><span>SSH 명령 실행 기록</span></button>
+                <button class="quiz-choice" type="button" data-option="C" aria-pressed="false"><span class="choice-letter">C</span><span>해당 Linux 계정으로 로그인하도록 승인한 공개키 목록</span></button>
+                <button class="quiz-choice" type="button" data-option="D" aria-pressed="false"><span class="choice-letter">D</span><span>Lightsail에 허용된 공인 IP 목록</span></button>
+              </div>
+              <p class="feedback" aria-live="polite">보기를 선택하면 정답과 해설이 표시됩니다.</p>
+              <p class="quiz-explanation" hidden>정답 C. 이 파일의 공개키는 바로 그 사용자 계정에 대한 승인을 뜻합니다. A는 클라이언트의 known_hosts와 가깝고, D는 Lightsail 방화벽 규칙입니다.</p>
+            </article>
+
+            <article class="quiz-card" data-answer="D">
+              <h3 id="q19-title"><span class="q-number">19</span>방화벽의 source IP allowlist는 무엇을 기준으로 연결을 허용하나요?</h3>
+              <div class="quiz-choices" role="group" aria-labelledby="q19-title">
+                <button class="quiz-choice" type="button" data-option="A" aria-pressed="false"><span class="choice-letter">A</span><span>사용자가 입력한 Linux 명령</span></button>
+                <button class="quiz-choice" type="button" data-option="B" aria-pressed="false"><span class="choice-letter">B</span><span>개인키 파일의 이름</span></button>
+                <button class="quiz-choice" type="button" data-option="C" aria-pressed="false"><span class="choice-letter">C</span><span>Mac의 사용자 표시 이름</span></button>
+                <button class="quiz-choice" type="button" data-option="D" aria-pressed="false"><span class="choice-letter">D</span><span>연결이 출발한 것으로 보이는 공인 IP 주소나 범위</span></button>
+              </div>
+              <p class="feedback" aria-live="polite">보기를 선택하면 정답과 해설이 표시됩니다.</p>
+              <p class="quiz-explanation" hidden>정답 D. allowlist는 어디에서 왔는지를 기준으로 네트워크 문 앞 접근을 거릅니다. B의 개인키는 방화벽 다음 SSH 인증 단계에서 사용합니다.</p>
+            </article>
+
+            <article class="quiz-card" data-answer="B">
+              <h3 id="q20-title"><span class="q-number">20</span>네트워크 포트를 초보자 관점에서 가장 알맞게 비유한 것은?</h3>
+              <div class="quiz-choices" role="group" aria-labelledby="q20-title">
+                <button class="quiz-choice" type="button" data-option="A" aria-pressed="false"><span class="choice-letter">A</span><span>서버의 실제 전원 버튼</span></button>
+                <button class="quiz-choice" type="button" data-option="B" aria-pressed="false"><span class="choice-letter">B</span><span>한 컴퓨터 안에서 특정 네트워크 서비스를 찾는 번호 붙은 출입구</span></button>
+                <button class="quiz-choice" type="button" data-option="C" aria-pressed="false"><span class="choice-letter">C</span><span>SSH 개인키의 암호</span></button>
+                <button class="quiz-choice" type="button" data-option="D" aria-pressed="false"><span class="choice-letter">D</span><span>Mac 사용자 폴더</span></button>
+              </div>
+              <p class="feedback" aria-live="polite">보기를 선택하면 정답과 해설이 표시됩니다.</p>
+              <p class="quiz-explanation" hidden>정답 B. 하나의 IP에서도 SSH, 웹, DB 등이 서로 다른 포트 번호를 씁니다. A와 달리 물리적 구멍이나 전원 스위치가 아니라 운영체제의 논리적 연결 지점입니다.</p>
+            </article>
+
+            <article class="quiz-card" data-answer="C">
+              <h3 id="q21-title"><span class="q-number">21</span><code>localhost</code> 또는 <code>127.0.0.1</code>은 무엇을 뜻하나요?</h3>
+              <div class="quiz-choices" role="group" aria-labelledby="q21-title">
+                <button class="quiz-choice" type="button" data-option="A" aria-pressed="false"><span class="choice-letter">A</span><span>항상 Lightsail 서버</span></button>
+                <button class="quiz-choice" type="button" data-option="B" aria-pressed="false"><span class="choice-letter">B</span><span>항상 정배 Mac</span></button>
+                <button class="quiz-choice" type="button" data-option="C" aria-pressed="false"><span class="choice-letter">C</span><span>그 표현을 해석하는 현재 컴퓨터 자기 자신</span></button>
+                <button class="quiz-choice" type="button" data-option="D" aria-pressed="false"><span class="choice-letter">D</span><span>인터넷의 모든 컴퓨터</span></button>
+              </div>
+              <p class="feedback" aria-live="polite">보기를 선택하면 정답과 해설이 표시됩니다.</p>
+              <p class="quiz-explanation" hidden>정답 C. Mac에서 해석하면 Mac 자신, SSH 서버 쪽에서 해석하면 서버 자신입니다. B처럼 언제나 정배 Mac이라고 외우면 터널의 출발지와 목적지를 혼동합니다.</p>
+            </article>
+
+            <article class="quiz-card" data-answer="C">
+              <h3 id="q22-title"><span class="q-number">22</span>최소 권한 원칙을 가장 잘 적용한 것은?</h3>
+              <div class="quiz-choices" role="group" aria-labelledby="q22-title">
+                <button class="quiz-choice" type="button" data-option="A" aria-pressed="false"><span class="choice-letter">A</span><span>모든 작업을 편하게 root로 수행한다.</span></button>
+                <button class="quiz-choice" type="button" data-option="B" aria-pressed="false"><span class="choice-letter">B</span><span>한 개인키를 모든 사용자와 서버에서 공유한다.</span></button>
+                <button class="quiz-choice" type="button" data-option="C" aria-pressed="false"><span class="choice-letter">C</span><span>사용자와 프로그램에 맡은 일을 하는 데 필요한 권한만 준다.</span></button>
+                <button class="quiz-choice" type="button" data-option="D" aria-pressed="false"><span class="choice-letter">D</span><span>모든 포트를 연 뒤 로그만 확인한다.</span></button>
+              </div>
+              <p class="feedback" aria-live="polite">보기를 선택하면 정답과 해설이 표시됩니다.</p>
+              <p class="quiz-explanation" hidden>정답 C. DB·Redis 터널만 필요하면 root 셸이 아니라 지정 목적지 포워딩만 주는 것이 최소 권한입니다. A는 편리하지만 실수와 키 유출의 피해를 서버 전체로 넓힙니다.</p>
+            </article>
+
+            <article class="quiz-card" data-answer="D">
+              <h3 id="q23-title"><span class="q-number">23</span>셸 shell의 역할은 무엇인가요?</h3>
+              <div class="quiz-choices" role="group" aria-labelledby="q23-title">
+                <button class="quiz-choice" type="button" data-option="A" aria-pressed="false"><span class="choice-letter">A</span><span>Mac 화면에 창 테두리만 그린다.</span></button>
+                <button class="quiz-choice" type="button" data-option="B" aria-pressed="false"><span class="choice-letter">B</span><span>Lightsail IPv4 방화벽을 대신한다.</span></button>
+                <button class="quiz-choice" type="button" data-option="C" aria-pressed="false"><span class="choice-letter">C</span><span>Wormhole 파일을 영구 저장한다.</span></button>
+                <button class="quiz-choice" type="button" data-option="D" aria-pressed="false"><span class="choice-letter">D</span><span>Terminal 등에 입력한 명령을 해석하고 프로그램을 실행한다.</span></button>
+              </div>
+              <p class="feedback" aria-live="polite">보기를 선택하면 정답과 해설이 표시됩니다.</p>
+              <p class="quiz-explanation" hidden>정답 D. Zsh와 Bash가 대표적인 셸입니다. Terminal은 입출력 창을 제공하고 셸은 그 안의 명령을 해석한다는 구분이 핵심입니다.</p>
+            </article>
+
+            <article class="quiz-card" data-answer="B">
+              <h3 id="q24-title"><span class="q-number">24</span>macOS 사용자 LaunchAgent를 가장 정확하게 설명한 것은?</h3>
+              <div class="quiz-choices" role="group" aria-labelledby="q24-title">
+                <button class="quiz-choice" type="button" data-option="A" aria-pressed="false"><span class="choice-letter">A</span><span>AWS 서버가 부팅될 때 root로 실행하는 작업</span></button>
+                <button class="quiz-choice" type="button" data-option="B" aria-pressed="false"><span class="choice-letter">B</span><span>특정 Mac 사용자가 로그인할 때 그 사용자 환경에서 launchd가 관리하는 작업</span></button>
+                <button class="quiz-choice" type="button" data-option="C" aria-pressed="false"><span class="choice-letter">C</span><span>SSH 공개키를 만드는 암호 알고리즘</span></button>
+                <button class="quiz-choice" type="button" data-option="D" aria-pressed="false"><span class="choice-letter">D</span><span>Lightsail의 고정 IP 기능</span></button>
+              </div>
+              <p class="feedback" aria-live="polite">보기를 선택하면 정답과 해설이 표시됩니다.</p>
+              <p class="quiz-explanation" hidden>정답 B. 사용자 LaunchAgent는 해당 로그인 세션과 연결됩니다. A는 Mac의 시스템 전역 LaunchDaemon과도 다르고 AWS 서버 작업도 아닙니다. 그래서 “부팅 즉시”보다 “사용자 로그인 후”가 정확합니다.</p>
+            </article>
+
+            <article class="quiz-card" data-answer="A">
+              <h3 id="q25-title"><span class="q-number">25</span>age와 Magic Wormhole의 차이를 정확히 설명한 것은?</h3>
+              <div class="quiz-choices" role="group" aria-labelledby="q25-title">
+                <button class="quiz-choice" type="button" data-option="A" aria-pressed="false"><span class="choice-letter">A</span><span>age는 파일 내용을 암호화하고 Wormhole은 일회용 코드로 암호화 전송한다.</span></button>
+                <button class="quiz-choice" type="button" data-option="B" aria-pressed="false"><span class="choice-letter">B</span><span>age는 공인 IP를 제한하고 Wormhole은 Linux 사용자를 만든다.</span></button>
+                <button class="quiz-choice" type="button" data-option="C" aria-pressed="false"><span class="choice-letter">C</span><span>age는 터널을 재시작하고 Wormhole은 root를 막는다.</span></button>
+                <button class="quiz-choice" type="button" data-option="D" aria-pressed="false"><span class="choice-letter">D</span><span>둘 다 서버의 authorized_keys를 자동 수정한다.</span></button>
+              </div>
+              <p class="feedback" aria-live="polite">보기를 선택하면 정답과 해설이 표시됩니다.</p>
+              <p class="quiz-explanation" hidden>정답 A. age는 암호화된 파일을 만들지만 상대에게 보내지는 않습니다. Wormhole은 전달을 담당하지만 Linux 계정 권한을 제한하지 않습니다. B는 네트워크 정책과 사용자 관리를 전혀 다른 도구에 연결했습니다.</p>
+            </article>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section class="section" id="lesson-summary" aria-labelledby="summary-title">
+      <div class="shell">
+        <div class="summary-grid">
+          <article class="summary-card primary">
+            <h2 id="summary-title">일곱 문장으로 다시 보기</h2>
+            <ul>
+              <li>Lightsail 방화벽은 누가 SSH 22 문 앞까지 오는지 정합니다.</li>
+              <li>SSH 키는 신원을 증명하고, 실제 권한은 서버 계정이 정합니다.</li>
+              <li>SSH 22를 전체 IPv4에 여는 것은 로그인 전체 공개나 DB 직접 공개와 다릅니다.</li>
+              <li>root 계정에 등록된 키는 서버 전체 피해로 이어질 수 있어 직접 root 로그인과 넓은 sudo를 피합니다.</li>
+              <li>정배의 터널 계정은 no-shell, non-sudo, 지정 local forwarding 전용이어야 합니다.</li>
+              <li>LaunchAgent는 Mac 사용자 로그인 후 터널을 시작하고 재연결합니다.</li>
+              <li>age와 Wormhole로 개인키를 보호해 전달했어도 개인별 키·공개키 등록 방식이 더 안전합니다.</li>
+            </ul>
+          </article>
+          <article class="summary-card">
+            <h2>나중에 다시 볼 질문</h2>
+            <ol>
+              <li><code>0.0.0.0/0 → 22</code>는 정확히 무엇을 허용하나요?</li>
+              <li>같은 SSH 키가 root와 tunnel-user에서 왜 다른 위험을 만드나요?</li>
+              <li>Mac과 서버 양쪽의 <code>127.0.0.1</code>은 각각 누구인가요?</li>
+              <li>공유 개인키를 개인별 키로 바꾸면 폐기와 감사가 어떻게 쉬워지나요?</li>
+            </ol>
+          </article>
+        </div>
+
+        <div class="reference-groups" role="group" aria-labelledby="refs-title">
+          <section class="reference-group">
+            <h3 id="refs-title">정확한 동작을 확인하는 공식 자료</h3>
+            <div class="pill-list">
+              <a class="reference-link" href="https://docs.aws.amazon.com/lightsail/latest/userguide/understanding-firewall-and-port-mappings-in-amazon-lightsail.html" target="_blank" rel="noopener noreferrer">AWS Lightsail 방화벽</a>
+              <a class="reference-link" href="https://man.openbsd.org/ssh.1" target="_blank" rel="noopener noreferrer">OpenSSH ssh</a>
+              <a class="reference-link" href="https://man.openbsd.org/sshd_config.5" target="_blank" rel="noopener noreferrer">OpenSSH sshd_config</a>
+              <a class="reference-link" href="https://documentation.ubuntu.com/server/how-to/security/user-management/" target="_blank" rel="noopener noreferrer">Ubuntu 사용자·root 관리</a>
+              <a class="reference-link" href="https://support.apple.com/guide/terminal/what-is-terminal-trmld4c92d55/mac" target="_blank" rel="noopener noreferrer">Apple Terminal</a>
+              <a class="reference-link" href="https://support.apple.com/guide/terminal/script-management-with-launchd-apdc6c1077b-5d5d-4d35-9c19-60f2397b2369/mac" target="_blank" rel="noopener noreferrer">Apple launchd</a>
+              <a class="reference-link" href="https://github.com/FiloSottile/age" target="_blank" rel="noopener noreferrer">age 공식 저장소</a>
+              <a class="reference-link" href="https://magic-wormhole.readthedocs.io/en/latest/welcome.html" target="_blank" rel="noopener noreferrer">Magic Wormhole 공식 문서</a>
+              <a class="reference-link" href="https://learn.chatgpt.com/docs/agent-approvals-security" target="_blank" rel="noopener noreferrer">Codex 권한·보안</a>
+            </div>
+          </section>
+          <section class="reference-group">
+            <h3>사례를 더 읽는 학습 자료</h3>
+            <div class="pill-list">
+              <a class="reference-link" href="https://www.digitalocean.com/community/tutorials/ssh-port-forwarding" target="_blank" rel="noopener noreferrer">SSH Port Forwarding</a>
+              <a class="reference-link" href="https://news.hada.io/topic?go=comments&amp;id=30804" target="_blank" rel="noopener noreferrer">GeekNews SSH 터널 실전 가이드</a>
+              <a class="reference-link" href="https://news.hada.io/topic?id=23473" target="_blank" rel="noopener noreferrer">GeekNews 초보 VPS 보안</a>
+              <a class="reference-link" href="https://news.hada.io/topic?id=16352" target="_blank" rel="noopener noreferrer">GeekNews Magic Wormhole</a>
+              <a class="reference-link" href="https://www.wevesolutions.co.kr/blog/ssh-tunneling" target="_blank" rel="noopener noreferrer">DB·Redis 터널 예시</a>
+              <a class="reference-link" href="https://library.gabia.com/contents/infrahosting/9002/" target="_blank" rel="noopener noreferrer">가비아 SSH 이해</a>
+            </div>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <section class="source-zone shell" aria-labelledby="source-title">
+      <div class="source-head">
+        <h2 id="source-title">먼저 읽으면 좋은 글</h2>
+        <p>SSH의 전체 그림, Lightsail 방화벽, 터미널과 셸을 더 깊게 이해할 때 출발점으로 쓰기 좋습니다.</p>
+      </div>
+      <div class="source-grid">
+        <a class="source-card" style="--source-color:var(--blue)" href="https://www.digitalocean.com/community/tutorials/ssh-essentials-working-with-ssh-servers-clients-and-keys" target="_blank" rel="noopener noreferrer">
+          <span><span class="source-type">SSH 전체 지도</span><strong>SSH Essentials: Servers, Clients, and Keys</strong></span>
+          <small>DigitalOcean · 키, 원격 명령, 터널, root 차단</small>
+        </a>
+        <a class="source-card" style="--source-color:var(--amber)" href="https://aws.amazon.com/blogs/compute/enhancing-site-security-with-new-lightsail-firewall-features/" target="_blank" rel="noopener noreferrer">
+          <span><span class="source-type">Lightsail 방화벽</span><strong>Enhancing site security with Lightsail firewall features</strong></span>
+          <small>AWS Compute Blog · 소스 IP 제한을 그림으로 설명</small>
+        </a>
+        <a class="source-card" style="--source-color:var(--teal)" href="https://www.cloudflare.com/ko-kr/learning/access-management/what-is-ssh/" target="_blank" rel="noopener noreferrer">
+          <span><span class="source-type">SSH 입문</span><strong>SSH란? 보안 셸 프로토콜</strong></span>
+          <small>Cloudflare · 원격 명령, 전송, 터널과 위험</small>
+        </a>
+        <a class="source-card" style="--source-color:var(--green)" href="https://core.today/blog/linux-terminal-beginners" target="_blank" rel="noopener noreferrer">
+          <span><span class="source-type">터미널과 셸</span><strong>Linux 터미널 입문: 마우스 없이 컴퓨터를 다루는 법</strong></span>
+          <small>코어닷투데이 · Terminal, Bash, Zsh 구분</small>
+        </a>
+      </div>
+    </section>
+
+    <nav class="jump-zone shell" aria-label="페이지 바로가기">
+      <div class="jump-box">
+        <strong>궁금한 곳부터 보기</strong>
+        <div class="jump-list">
+          <a class="jump-link" href="#big-picture">보안 관문 지도</a>
+          <a class="jump-link" href="#terminal-shell">Terminal·Bash·Zsh</a>
+          <a class="jump-link" href="#ssh-uses">SSH로 하는 일</a>
+          <a class="jump-link" href="#firewall">IP 제한과 전체 공개</a>
+          <a class="jump-link" href="#keys-permissions">키와 root 권한</a>
+          <a class="jump-link" href="#tunneling">DB·Redis 터널</a>
+          <a class="jump-link" href="#launch-agent">자동 연결</a>
+          <a class="jump-link" href="#safe-transfer">age·Wormhole</a>
+          <a class="jump-link" href="#quiz">확인 퀴즈</a>
+          <a class="jump-link" href="#glossary-quiz">용어집 퀴즈</a>
+        </div>
+      </div>
+    </nav>
+
+    <section class="section" aria-labelledby="goals-title">
+      <div class="shell">
+        <div class="section-head">
+          <p class="eyebrow">학습 목표</p>
+          <h2 id="goals-title">접속 가능과 권한 보유를 구분합니다.</h2>
+          <p>이 둘을 분리해 이해하면 “22번 포트를 모두에게 열면 누구나 들어오나?”, “SSH 키만 있으면 root인가?”, “터널은 서버 접속과 무엇이 다른가?”를 스스로 판단할 수 있습니다.</p>
+        </div>
+        <div class="goal-grid">
+          <article class="goal-card">
+            <b>1</b>
+            <h3>층을 나눠 말하기</h3>
+            <p>방화벽, 키 인증, Linux 계정, 터널 목적지가 각각 막는 것을 구분합니다.</p>
+          </article>
+          <article class="goal-card">
+            <b>2</b>
+            <h3>피해 범위 예측하기</h3>
+            <p>같은 SSH 키라도 root, 일반 사용자, 터널 전용 사용자의 위험이 왜 다른지 설명합니다.</p>
+          </article>
+          <article class="goal-card">
+            <b>3</b>
+            <h3>정배 Mac 흐름 그리기</h3>
+            <p>로컬 포트가 SSH 통로를 지나 서버의 PostgreSQL·Redis에 닿는 경로를 그립니다.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="big-picture" aria-labelledby="big-title">
+      <div class="shell">
+        <div class="section-head">
+          <h2 id="big-title">SSH 접속은 하나의 문이 아니라 다섯 관문입니다.</h2>
+          <p>어떤 관문을 통과했는지에 따라 “접속 시도 가능”, “로그인 성공”, “서버에서 명령 가능”, “특정 내부 서비스만 접근”이 달라집니다.</p>
+        </div>
+        <div class="corridor" role="group" aria-label="인터넷에서 내부 서비스까지의 다섯 보안 관문">
+          <article class="gate">
+            <span class="gate-number">1</span>
+            <h3>공개 인터넷</h3>
+            <p>친구 Mac의 현재 공인 IP가 서버를 향해 패킷을 보냅니다.</p>
+          </article>
+          <article class="gate">
+            <span class="gate-number">2</span>
+            <h3>Lightsail 방화벽</h3>
+            <p>누가 TCP <code>22</code>번 SSH 문 앞까지 올 수 있는지 거릅니다.</p>
+          </article>
+          <article class="gate">
+            <span class="gate-number">3</span>
+            <h3>SSH 키 인증</h3>
+            <p>접속자가 등록된 공개키와 짝인 개인키를 가졌는지 증명합니다.</p>
+          </article>
+          <article class="gate">
+            <span class="gate-number">4</span>
+            <h3>Linux 계정 권한</h3>
+            <p>root, 일반 사용자, no-shell 터널 계정 중 어떤 신분인지 결정합니다.</p>
+          </article>
+          <article class="gate">
+            <span class="gate-number">5</span>
+            <h3>허용 목적지</h3>
+            <p>명령 셸인지, PostgreSQL·Redis로 향하는 local forwarding만인지 제한합니다.</p>
+          </article>
+        </div>
+        <div class="key-idea">
+          <p><strong>핵심:</strong> 방화벽을 통과했다고 로그인한 것이 아니고, 키 인증에 성공했다고 root가 된 것도 아닙니다. 마지막 권한은 “그 공개키가 어느 계정에 등록됐고, 그 계정에 무엇이 허용됐는가”가 결정합니다.</p>
+          <p class="source-note">근거: <a href="https://docs.aws.amazon.com/lightsail/latest/userguide/understanding-firewall-and-port-mappings-in-amazon-lightsail.html" target="_blank" rel="noopener noreferrer">AWS Lightsail 방화벽 문서</a>, <a href="https://man.openbsd.org/ssh.1" target="_blank" rel="noopener noreferrer">OpenSSH ssh 매뉴얼</a></p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="terminal-shell" aria-labelledby="terminal-title">
+      <div class="shell">
+        <div class="section-head">
+          <p class="eyebrow">먼저 알아둘 말</p>
+          <h2 id="terminal-title">Terminal은 창, Zsh와 Bash는 명령 해석기입니다.</h2>
+          <p>셋을 같은 것으로 부르기 쉽지만 역할이 다릅니다. macOS의 Terminal.app 안에서 Zsh가 명령을 해석하고, SSH로 Linux 서버에 들어가면 그 서버의 Bash가 명령을 해석할 수 있습니다.</p>
+        </div>
+        <div class="terminal-stage">
+          <div class="terminal-window" role="group" aria-label="Mac Terminal에서 Zsh가 SSH를 실행하고 서버 Bash로 이어지는 예시">
+            <div class="terminal-dots" aria-hidden="true"><span></span><span></span><span></span></div>
+            <p class="terminal-line"><span class="prompt">Mac Terminal.app</span><br><strong>Zsh</strong>가 아래 글자를 명령으로 해석</p>
+            <p class="terminal-line mono"><span class="prompt">%</span> ssh tunnel-user@server</p>
+            <p class="terminal-line"><span class="prompt">암호화된 SSH 연결 뒤</span><br>서버가 셸을 허용했다면 <strong>Bash</strong> 프롬프트가 나타남</p>
+            <p class="terminal-line mono"><span class="prompt">$</span> whoami</p>
+          </div>
+          <div class="layer-stack">
+            <article class="layer-card" style="--layer-color:var(--blue)">
+              <h3>Terminal.app</h3>
+              <p>macOS에 기본 포함된 터미널 앱입니다. 글자를 입력하고 명령 결과를 보여주는 창입니다.</p>
+            </article>
+            <article class="layer-card" style="--layer-color:var(--teal)">
+              <h3>Zsh</h3>
+              <p>현재 macOS에서 새 Terminal 창이 기본으로 사용하는 셸입니다. 명령, 파이프, 변수, 스크립트를 해석합니다.</p>
+            </article>
+            <article class="layer-card" style="--layer-color:var(--amber)">
+              <h3>Bash</h3>
+              <p>또 다른 셸입니다. Linux 서버와 자동화 스크립트에서 흔히 만납니다. Zsh와 비슷하지만 문법·설정이 완전히 같지는 않습니다.</p>
+            </article>
+            <article class="layer-card" style="--layer-color:var(--red)">
+              <h3>SSH</h3>
+              <p>셸이 아니라 원격 컴퓨터에 암호화해 연결하는 프로토콜과 프로그램입니다.</p>
+            </article>
+          </div>
+        </div>
+        <p class="source-note">Apple은 Terminal을 CLI로 macOS와 소통하는 앱으로 설명하며, 현재 기본 셸은 Zsh라고 안내합니다. <a href="https://support.apple.com/guide/terminal/what-is-terminal-trmld4c92d55/mac" target="_blank" rel="noopener noreferrer">Terminal이란?</a> · <a href="https://support.apple.com/guide/terminal/change-the-default-shell-trml113/mac" target="_blank" rel="noopener noreferrer">기본 셸 변경</a></p>
+      </div>
+    </section>
+
+    <section class="section" id="ssh-uses" aria-labelledby="uses-title">
+      <div class="shell">
+        <div class="section-head">
+          <h2 id="uses-title">SSH로 보통 무엇을 할 수 있을까요?</h2>
+          <p>SSH는 “서버 터미널 열기”보다 넓습니다. 다만 서버와 계정이 각 기능을 허용해야 실제로 사용할 수 있습니다.</p>
+        </div>
+        <div class="use-grid">
+          <article class="use-card">
+            <span class="use-icon" aria-hidden="true">$</span>
+            <h3>원격 셸</h3>
+            <p>서버에 로그인해 파일을 보고, 프로그램을 실행하고, 로그와 프로세스를 확인합니다.</p>
+          </article>
+          <article class="use-card">
+            <span class="use-icon" aria-hidden="true">1×</span>
+            <h3>원격 명령 한 번 실행</h3>
+            <p>대화형 셸 없이 상태 확인이나 배포 스크립트처럼 정해진 명령만 실행할 수 있습니다.</p>
+          </article>
+          <article class="use-card">
+            <span class="use-icon" aria-hidden="true">⇄</span>
+            <h3>파일 전송</h3>
+            <p><code>scp</code>, <code>sftp</code>, <code>rsync</code> 등이 SSH의 암호화 통로를 이용합니다.</p>
+          </article>
+          <article class="use-card">
+            <span class="use-icon" aria-hidden="true">↪</span>
+            <h3>포트 포워딩</h3>
+            <p>로컬 포트로 들어온 연결을 서버 쪽 PostgreSQL, Redis, 내부 웹으로 전달합니다.</p>
+          </article>
+          <article class="use-card">
+            <span class="use-icon" aria-hidden="true">⚙</span>
+            <h3>자동화</h3>
+            <p>CI, 배포 도구, Codex 같은 프로그램도 허용된 키와 계정으로 SSH 명령을 실행할 수 있습니다. 자동화라고 권한이 약해지는 것은 아닙니다.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="firewall" aria-labelledby="firewall-title">
+      <div class="shell">
+        <div class="section-head">
+          <p class="eyebrow">첫 번째 관문</p>
+          <h2 id="firewall-title">“IP 제한”과 “키만 있으면 접근”은 서로 다른 정책입니다.</h2>
+          <p>Lightsail 방화벽은 서버의 공개 IP로 들어오는 연결을 먼저 거릅니다. SSH 키 인증은 그 다음 단계에서 신원을 확인합니다.</p>
+        </div>
+        <section class="compare-table-wrap" tabindex="0" aria-label="SSH IP 허용 목록과 전체 IPv4 공개 비교 표">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">질문</th>
+                <th scope="col">특정 공인 IP만 허용</th>
+                <th scope="col">SSH 22를 모든 IPv4에 허용</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>방화벽 규칙</td>
+                <td><code>203.0.113.10/32 → TCP 22</code></td>
+                <td><code>0.0.0.0/0 → TCP 22</code></td>
+              </tr>
+              <tr>
+                <td>문 앞까지 오는 사람</td>
+                <td>등록한 공인 IPv4 한 개</td>
+                <td>전 세계 IPv4 주소에서 접속 시도 가능</td>
+              </tr>
+              <tr>
+                <td>로그인 조건</td>
+                <td>IP 통과 후에도 승인된 개인키가 필요</td>
+                <td>여전히 승인된 개인키가 필요</td>
+              </tr>
+              <tr>
+                <td>장점</td>
+                <td>키가 새어도 출발 IP라는 두 번째 장벽이 남음</td>
+                <td>Wi-Fi·공인 IP가 바뀌어도 방화벽 재등록이 필요 없음</td>
+              </tr>
+              <tr>
+                <td>부담·위험</td>
+                <td>유동 IP가 바뀔 때 운영자가 갱신해야 함</td>
+                <td>스캔·로그인 시도·SSH 구현 공격에 노출되는 면이 넓어짐</td>
+              </tr>
+              <tr>
+                <td>필수 보완</td>
+                <td>키 전용 인증, root 차단, 계정 최소 권한</td>
+                <td>키 전용 인증, root 차단, 허용 사용자·목적지 제한, 모니터링을 더 엄격히</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+        <div class="callout-row">
+          <article class="info-card">
+            <h3>“다 연다”의 정확한 뜻</h3>
+            <p>여기서 모든 것을 연다는 뜻은 아닙니다. <strong>SSH용 TCP 22번 포트의 출발지 제한만 모든 IPv4로 넓히는 것</strong>입니다. DB 5432, Redis 6379와 다른 포트까지 공개하는 설정이 아닙니다.</p>
+          </article>
+          <article class="warning-card">
+            <h3>Lightsail에서 놓치기 쉬운 점</h3>
+            <p>IPv4와 IPv6 방화벽은 별도입니다. 같은 22번 포트에 특정 IP 규칙과 전체 허용 규칙이 함께 있으면 더 개방적인 규칙이 이깁니다.</p>
+          </article>
+        </div>
+        <p class="source-note">AWS는 SSH 22를 필요한 컴퓨터의 IP로 제한할 수 있다고 안내하고, 같은 포트에 여러 규칙이 있으면 가장 개방적인 규칙이 적용된다고 설명합니다. <a href="https://docs.aws.amazon.com/lightsail/latest/userguide/understanding-firewall-and-port-mappings-in-amazon-lightsail.html" target="_blank" rel="noopener noreferrer">공식 문서 보기</a></p>
+        <div class="key-idea">
+          <p><strong>현재 상태와 정책안을 구분하세요.</strong> 작성 시점의 <code>origin/master</code>는 여전히 <code>/32</code> 허용 정책입니다. <code>0.0.0.0/0 → TCP 22</code>로 바꾸는 스크립트는 로컬의 미커밋 변경이며, 실제 Lightsail 방화벽에 적용됐다고 확인된 상태는 아닙니다. 이 자료에서는 두 정책의 차이를 배우되, 운영 상태는 AWS에서 별도로 확인해야 합니다.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="keys-permissions" aria-labelledby="key-title">
+      <div class="shell">
+        <div class="section-head">
+          <h2 id="key-title">SSH 키는 신분증이고, 권한표는 서버 계정에 있습니다.</h2>
+          <p>키 쌍은 누군지를 증명합니다. 무엇을 할 수 있는지는 공개키가 등록된 Linux 계정과 SSH 서버 정책이 결정합니다.</p>
+        </div>
+        <div class="key-flow">
+          <article class="key-card private">
+            <span class="key-tag">친구 Mac에만</span>
+            <h3>개인키 private key</h3>
+            <ul>
+              <li>소유를 증명할 때 사용</li>
+              <li>서버로 전송하지 않음</li>
+              <li>다른 사람에게 복사하지 않음</li>
+              <li>가능하면 passphrase와 Keychain으로 보호</li>
+            </ul>
+          </article>
+          <div class="flow-arrow" aria-hidden="true">↔</div>
+          <article class="key-card public">
+            <span class="key-tag">운영자에게 전달</span>
+            <h3>공개키 public key</h3>
+            <ul>
+              <li>비밀 정보가 아님</li>
+              <li>서버의 승인 목록에 등록</li>
+              <li>개인키에서 공개키를 만들 수 있지만 반대는 사실상 불가능</li>
+              <li>바꿔치기 방지를 위해 fingerprint 확인 가능</li>
+            </ul>
+          </article>
+        </div>
+        <div class="permission-map">
+          <article class="permission-card tunnel">
+            <h3>터널 전용 계정</h3>
+            <p>셸 없음, sudo 없음, TTY 없음. 지정한 DB·Redis 목적지로 가는 local forwarding만 허용할 수 있습니다.</p>
+          </article>
+          <article class="permission-card">
+            <h3>일반 사용자</h3>
+            <p>자기 파일과 허용된 프로세스를 다룹니다. 필요한 관리 작업만 제한된 <code>sudo</code>로 올리는 방식이 좋습니다.</p>
+          </article>
+          <article class="permission-card root">
+            <h3>root</h3>
+            <p>Linux 안에서 사실상 모든 권한을 가집니다. 작은 실수와 키 탈취의 피해 범위가 서버 전체가 됩니다.</p>
+          </article>
+        </div>
+
+        <div class="section-head subsection-head">
+          <h2>Codex가 root SSH를 잡으면 무엇이 달라질까요?</h2>
+          <p>Codex가 특별한 root 권한을 만들어 내는 것은 아닙니다. 하지만 사용자가 SSH와 명령 실행을 허용했고 원격 세션의 계정이 root라면, 서버는 Codex가 보낸 명령도 root 명령으로 처리합니다.</p>
+        </div>
+        <ul class="risk-list">
+          <li>모든 애플리케이션·설정·데이터 파일을 읽고 바꾸거나 삭제</li>
+          <li>DB·Redis·웹·worker 서비스를 멈추고 재시작하거나 제거</li>
+          <li>사용자·SSH 키·권한·서버 방화벽 규칙을 변경</li>
+          <li>서버의 비밀값과 고객 데이터를 읽거나 외부로 전송</li>
+          <li>프로세스를 종료하고 OS를 재부팅·종료</li>
+          <li>잘못된 삭제·디스크 작업으로 부팅 불능이나 광범위한 손실 유발</li>
+        </ul>
+        <div class="callout-row">
+          <article class="warning-card">
+            <h3><code>PermitRootLogin no</code>만으로 끝나지 않습니다.</h3>
+            <p>일반 계정에 무제한 passwordless <code>sudo</code>가 있으면 사실상 root와 비슷합니다. 직접 root 로그인 차단과 함께 sudo 범위도 최소화해야 합니다.</p>
+          </article>
+          <article class="info-card">
+            <h3>SSH만으로 AWS 리소스까지 지워지지는 않습니다.</h3>
+            <p>root는 서버 OS를 끄고 망가뜨릴 수 있지만, Lightsail 인스턴스 자체 삭제나 AWS 콘솔 방화벽 변경에는 별도의 AWS API 자격증명과 권한이 필요합니다. 서버 안에 그런 자격증명이 있다면 위험 범위가 다시 넓어집니다.</p>
+          </article>
+        </div>
+        <p class="source-note">OpenSSH는 <code>PermitRootLogin no</code>, local forwarding만 허용하는 <code>AllowTcpForwarding local</code>, 목적지를 제한하는 <code>PermitOpen</code>을 제공합니다. <a href="https://man.openbsd.org/sshd_config.5" target="_blank" rel="noopener noreferrer">sshd_config 매뉴얼</a> · Codex의 로컬 명령 실행 범위는 sandbox와 approval 설정에 의해 제어됩니다. <a href="https://learn.chatgpt.com/docs/agent-approvals-security" target="_blank" rel="noopener noreferrer">OpenAI Docs</a></p>
+      </div>
+    </section>
+
+    <section class="section" id="tunneling" aria-labelledby="tunnel-title">
+      <div class="shell">
+        <div class="section-head">
+          <p class="eyebrow">정배 Mac의 현재 목적</p>
+          <h2 id="tunnel-title">터널링은 “내 Mac의 로컬 문”을 서버 안쪽 서비스에 잇는 일입니다.</h2>
+          <p>PostgreSQL과 Redis를 인터넷에 직접 공개하지 않습니다. 대신 정배 Mac의 <code>127.0.0.1</code> 포트로 들어온 연결만 SSH 암호화 통로를 지나 서버의 loopback 서비스로 전달합니다.</p>
+        </div>
+        <div class="tunnel-visual" role="group" aria-label="정배 Mac에서 Lightsail PostgreSQL과 Redis로 가는 SSH 로컬 포워딩 경로">
+          <article class="machine">
+            <h3>정배 Mac</h3>
+            <p><code>127.0.0.1</code>은 “이 Mac 자신”입니다.</p>
+            <div class="port"><span>PostgreSQL 입구</span><strong class="mono">25432</strong></div>
+            <div class="port"><span>Redis 입구</span><strong class="mono">26379</strong></div>
+          </article>
+          <div class="encrypted-tube">
+            <span><strong>SSH local forwarding</strong><span>공개 TCP 22를 지나는 암호화된 통로</span></span>
+          </div>
+          <article class="machine server">
+            <h3>Lightsail 서버</h3>
+            <p>여기서 <code>127.0.0.1</code>은 “서버 자신”입니다.</p>
+            <div class="port"><span>PostgreSQL</span><strong class="mono">5432</strong></div>
+            <div class="port"><span>Redis</span><strong class="mono">6379</strong></div>
+          </article>
+        </div>
+        <pre><code>ssh -N -T \
+  -L 127.0.0.1:25432:127.0.0.1:5432 \
+  -L 127.0.0.1:26379:127.0.0.1:6379 \
+  tunnel-user@server</code></pre>
+        <div class="callout-row">
+          <article class="info-card">
+            <h3><code>-L</code>은 local forwarding</h3>
+            <p><code>내 Mac 주소:내 포트:서버에서 볼 목적지:목적지 포트</code> 순서입니다. <code>-N</code>은 원격 명령을 실행하지 않고 포워딩만 하겠다는 뜻이고, <code>-T</code>는 터미널 화면을 할당하지 않습니다.</p>
+          </article>
+          <article class="info-card">
+            <h3>로컬 주소를 명시하는 이유</h3>
+            <p><code>127.0.0.1</code>에 묶으면 같은 Mac의 프로그램만 그 입구를 사용합니다. 빈 주소나 모든 인터페이스에 바인딩하면 같은 네트워크의 다른 기기까지 접근할 수 있어 의도치 않은 재공개가 될 수 있습니다.</p>
+          </article>
+        </div>
+        <div class="key-idea">
+          <p><strong>터널은 운반 통로일 뿐입니다.</strong> 터널 연결에 성공해도 PostgreSQL 사용자·비밀번호와 Redis 인증 같은 서비스 자체의 인증은 여전히 별개로 필요합니다. 터널이 DB 권한을 자동으로 주지는 않습니다.</p>
+        </div>
+
+        <div class="section-head subsection-head">
+          <h2>“DB·Redis만 쓴다”는 목적과 실제 허용 범위는 따로 확인해야 합니다.</h2>
+          <p>말로 정한 사용 목적과 기술적으로 가능한 범위가 일치해야 최소 권한이 됩니다.</p>
+        </div>
+        <div class="one-search-state">
+          <article class="state-card intent">
+            <h3>정배 Mac의 업무 목적</h3>
+            <ul>
+              <li>로컬 API가 shared PostgreSQL·Redis 사용</li>
+              <li>Mac에서는 worker를 실행하지 않음</li>
+              <li>SSH 셸·sudo·임의 서버 명령은 필요 없음</li>
+            </ul>
+          </article>
+          <article class="state-card current">
+            <h3>현재 확인한 helper의 허용 범위</h3>
+            <ul>
+              <li>DB <code>25432</code>, Redis <code>26379</code></li>
+              <li>통합 확인용 API·관리자·고객 웹 <code>23100</code>·<code>23200</code>·<code>23300</code>도 함께 포워딩</li>
+              <li>그래도 개발자 계정은 no-shell, non-sudo, 지정 목적지 전용</li>
+            </ul>
+          </article>
+        </div>
+        <div class="key-idea">
+          <p><strong>판단 기준:</strong> 업무상 정말 DB·Redis 두 목적지만 필요하다면 SSH 서버의 <code>PermitOpen</code>, 개인키의 <code>authorized_keys</code> 제한, Mac의 LaunchAgent 포워드 목록까지 두 서비스만 남아야 “기술적으로도 DB·Redis 전용”이라고 말할 수 있습니다.</p>
+        </div>
+        <div class="key-idea">
+          <p><strong>운영 권한도 분리합니다.</strong> 정배 Mac은 AWS CLI·운영자 자격증명·관리자 키를 받지 않습니다. 애플리케이션 연결에 필요한 별도 profile만 비공개로 받아 macOS Keychain에 보관하며, SSH 인증과 DB·Redis 인증은 서로 다른 경계로 유지합니다.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="launch-agent" aria-labelledby="launch-title">
+      <div class="shell">
+        <div class="section-head">
+          <h2 id="launch-title">LaunchAgent는 로그인 후 터널을 켜고, 끊기면 다시 붙입니다.</h2>
+          <p>“맥북 전원을 켜면 자동”이라고 줄여 말하지만, 사용자용 LaunchAgent는 정확히는 그 사용자가 macOS에 로그인한 뒤 실행됩니다.</p>
+        </div>
+        <div class="launch-flow" role="group" aria-label="Mac 로그인 뒤 SSH 터널이 자동 유지되는 네 단계">
+          <article class="launch-step">
+            <h3>사용자 로그인</h3>
+            <p>macOS 사용자 세션이 시작됩니다.</p>
+          </article>
+          <article class="launch-step">
+            <h3>launchd가 plist 읽기</h3>
+            <p><code>~/Library/LaunchAgents</code>의 사용자 작업을 불러옵니다.</p>
+          </article>
+          <article class="launch-step">
+            <h3>SSH 터널 시작</h3>
+            <p><code>RunAtLoad</code>가 설정된 SSH 포워딩 프로세스를 실행합니다.</p>
+          </article>
+          <article class="launch-step">
+            <h3>끊기면 재실행</h3>
+            <p><code>KeepAlive</code>가 종료된 프로세스를 다시 띄워 통로를 회복합니다.</p>
+          </article>
+        </div>
+        <div class="windows-compare">
+          <article class="comparison-card">
+            <h3>Windows 시작프로그램</h3>
+            <p>사용자가 로그인할 때 앱을 한 번 실행한다는 점이 비슷합니다.</p>
+          </article>
+          <article class="comparison-card">
+            <h3>macOS LaunchAgent</h3>
+            <p>사용자 권한으로 로그인 때 시작하고, 설정에 따라 백그라운드 유지·재시작까지 합니다. <strong>시작프로그램과 사용자 서비스의 중간</strong>으로 이해하면 가깝습니다.</p>
+          </article>
+          <article class="comparison-card">
+            <h3>LaunchDaemon / Windows 서비스</h3>
+            <p>사용자 로그인 전 시스템 부팅 단계부터 실행될 수 있는 시스템 전역 작업입니다. SSH 개인 터널에는 보통 LaunchAgent가 더 맞습니다.</p>
+          </article>
+        </div>
+        <p class="source-note">Apple은 <code>~/Library/LaunchAgents</code>를 로그인한 사용자에게만 적용되는 agent 위치로 설명합니다. <a href="https://support.apple.com/guide/terminal/script-management-with-launchd-apdc6c1077b-5d5d-4d35-9c19-60f2397b2369/mac" target="_blank" rel="noopener noreferrer">launchd로 스크립트 관리</a></p>
+        <div class="key-idea">
+          <p><strong>LaunchAgent에 개인키 내용을 넣지 않습니다.</strong> 개인키 파일은 보통 <code>~/.ssh</code>에 두고 소유자만 읽도록 보호합니다. LaunchAgent는 그 키의 경로와 터널 실행 방법을 가리키며, passphrase 사용 시 macOS Keychain·SSH agent가 잠금 해제를 도울 수 있습니다.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="safe-transfer" aria-labelledby="transfer-title">
+      <div class="shell">
+        <div class="section-head">
+          <p class="eyebrow">키 전달 경험 이해하기</p>
+          <h2 id="transfer-title">age는 파일을 잠그고, Magic Wormhole은 파일을 옮깁니다.</h2>
+          <p>둘을 함께 썼다면 “암호화된 파일을 일회용 연결로 전달”한 것입니다. 평문 개인키를 메신저에 첨부하는 것보다 낫지만, 친구에게 같은 개인키를 복사한다는 근본 문제는 남습니다.</p>
+        </div>
+        <div class="delivery-map" role="group" aria-label="개인키 파일을 age로 암호화하고 Magic Wormhole로 전달한 흐름">
+          <article class="delivery-card">
+            <h3>SSH 개인키 파일</h3>
+            <p>서버에 로그인할 수 있는 비밀 신분증입니다. 복사본도 원본과 같은 인증 능력을 가집니다.</p>
+          </article>
+          <div class="delivery-arrow" aria-hidden="true">→</div>
+          <article class="delivery-card">
+            <h3>age</h3>
+            <p>recipient 공개키나 passphrase로 파일 내용을 암호문으로 만듭니다. 파일이 전달 전후에도 바로 읽히지 않게 합니다.</p>
+          </article>
+          <div class="delivery-arrow" aria-hidden="true">→</div>
+          <article class="delivery-card">
+            <h3>Magic Wormhole</h3>
+            <p>짧은 일회용 코드로 두 컴퓨터를 만나게 하고, PAKE에서 만든 키로 종단간 암호화해 파일을 전달합니다.</p>
+          </article>
+        </div>
+        <div class="callout-row">
+          <article class="info-card">
+            <h3>좋아진 점</h3>
+            <p>Wormhole 연결과 별개로 파일 자체도 age 암호문입니다. age passphrase를 별도 안전한 채널로 전달했다면 한 겹이 더 생깁니다.</p>
+          </article>
+          <article class="warning-card">
+            <h3>남은 문제</h3>
+            <p>친구와 운영자가 같은 개인키를 가지면 누가 접속했는지 구분하기 어렵고, 친구 한 명만 접근 해제하기도 어렵습니다. 한 복사본이 새면 같은 신분 전체가 위험합니다.</p>
+          </article>
+        </div>
+
+        <div class="section-head subsection-head">
+          <h2>다음부터는 개인키를 보내지 않는 흐름이 더 안전합니다.</h2>
+          <p>공개키는 배포해도 되는 승인표 재료이고, 개인키는 친구 Mac에서 한 번도 나오지 않아야 합니다.</p>
+        </div>
+        <div class="safer-flow">
+          <article class="safer-step">
+            <b>1. 친구가 생성</b>
+            <p>친구 Mac에서 친구 전용 SSH 키 쌍을 만듭니다.</p>
+          </article>
+          <article class="safer-step">
+            <b>2. 공개키만 전달</b>
+            <p><code>.pub</code> 한 줄과 fingerprint만 운영자에게 보냅니다.</p>
+          </article>
+          <article class="safer-step">
+            <b>3. 제한 계정에 등록</b>
+            <p>운영자가 no-shell, non-sudo, 지정 포워딩 전용 계정에 공개키를 등록합니다.</p>
+          </article>
+          <article class="safer-step">
+            <b>4. 개인별 폐기</b>
+            <p>접근을 끊을 때 그 친구 공개키만 제거하면 다른 사람 키는 유지됩니다.</p>
+          </article>
+        </div>
+        <div class="key-idea">
+          <p><strong>이미 개인키를 공유했다면:</strong> 친구가 새 개인 키 쌍을 만들고 새 공개키로 접속을 검증한 뒤, 서버 승인 목록에서 공유했던 이전 공개키를 제거하는 방향으로 교체합니다. 그 키의 공개키가 root·관리자 계정에 등록돼 있었다면 더 긴급하게 별도 개인 키와 제한 계정으로 바꿔야 합니다.</p>
+        </div>
+        <p class="source-note"><a href="https://github.com/FiloSottile/age" target="_blank" rel="noopener noreferrer">age 공식 문서</a>는 recipient 공개키 암호화와 SSH 공개키 지원을 설명합니다. <a href="https://magic-wormhole.readthedocs.io/en/latest/welcome.html" target="_blank" rel="noopener noreferrer">Magic Wormhole 공식 문서</a>는 일회용 코드, PAKE, 직접 연결과 암호화 relay를 설명합니다.</p>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="worked-title">
+      <div class="shell">
+        <div class="section-head">
+          <h2 id="worked-title">상황을 만나면 이 순서로 판단하세요.</h2>
+          <p>“키가 있으니 안전하다”에서 멈추지 말고, 다섯 관문을 차례로 확인합니다.</p>
+        </div>
+        <section class="compare-table-wrap" tabindex="0" aria-label="SSH 접근 안전성 판단 예시">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">확인 순서</th>
+                <th scope="col">질문</th>
+                <th scope="col">정배 터널에서 바람직한 답</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1. 도달성</td>
+                <td>어느 IP가 TCP 22에 도달하는가?</td>
+                <td>정책에 따라 <code>/32</code> 또는 전체 IPv4. 다른 포트는 공개하지 않음.</td>
+              </tr>
+              <tr>
+                <td>2. 인증</td>
+                <td>비밀번호도 허용하는가?</td>
+                <td>개인별 공개키 인증만 허용.</td>
+              </tr>
+              <tr>
+                <td>3. 계정</td>
+                <td>root나 sudo가 가능한가?</td>
+                <td>아니요. 개인별 non-sudo 터널 계정.</td>
+              </tr>
+              <tr>
+                <td>4. 세션</td>
+                <td>셸, TTY, agent·reverse forwarding이 가능한가?</td>
+                <td>아니요. local forwarding만 허용.</td>
+              </tr>
+              <tr>
+                <td>5. 목적지</td>
+                <td>임의의 서버·포트로 전달할 수 있는가?</td>
+                <td>현재 helper는 loopback의 앱 3개와 DB·Redis, 총 5개 지정 목적지만 허용. DB·Redis 전용으로 줄이려면 세 계층의 목록을 함께 축소.</td>
+              </tr>
+              <tr>
+                <td>6. 자동화</td>
+                <td>터널을 누가 언제 유지하는가?</td>
+                <td>사용자 로그인 후 LaunchAgent가 시작·재연결.</td>
+              </tr>
+              <tr>
+                <td>7. 폐기</td>
+                <td>친구 한 명만 따로 접근 해제할 수 있는가?</td>
+                <td>개인별 공개키와 서버 계정이라 가능.</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="shell">
+      <p>방화벽은 도달성을, 키는 신원을, 계정과 SSH 정책은 권한을 정합니다.</p>
+    </div>
+  </footer>
+
+  <script>
+    const mainContent = document.querySelector("#main");
+    const quizSection = document.querySelector("#quiz");
+    const lessonSummary = document.querySelector("#lesson-summary");
+
+    if (mainContent && quizSection && lessonSummary) {
+      mainContent.append(quizSection, lessonSummary);
+
+      const requestedTarget = location.hash
+        ? document.querySelector(location.hash)
+        : null;
+
+      if (requestedTarget) {
+        requestAnimationFrame(() => {
+          const previousBehavior = document.documentElement.style.scrollBehavior;
+          document.documentElement.style.scrollBehavior = "auto";
+          requestedTarget.scrollIntoView({ block: "start" });
+          document.documentElement.style.scrollBehavior = previousBehavior;
+        });
+      }
+    }
+
+    const quizCards = Array.from(document.querySelectorAll(".quiz-card"));
+    const totalOutput = document.querySelector("#quiz-total");
+    const answeredOutput = document.querySelector("#quiz-answered");
+    const correctOutput = document.querySelector("#quiz-correct");
+
+    if (totalOutput) {
+      totalOutput.textContent = String(quizCards.length);
+    }
+
+    const updateScore = () => {
+      const answered = quizCards.filter((card) => card.dataset.selected).length;
+      const correct = quizCards.filter(
+        (card) => card.dataset.selected === card.dataset.answer
+      ).length;
+
+      if (answeredOutput) answeredOutput.textContent = String(answered);
+      if (correctOutput) correctOutput.textContent = String(correct);
+    };
+
+    quizCards.forEach((card) => {
+      const answer = card.dataset.answer;
+      const choices = Array.from(card.querySelectorAll(".quiz-choice"));
+      const feedback = card.querySelector(".feedback");
+      const explanation = card.querySelector(".quiz-explanation");
+
+      choices.forEach((choice) => {
+        choice.addEventListener("click", () => {
+          const selected = choice.dataset.option;
+          const isCorrect = selected === answer;
+          card.dataset.selected = selected;
+
+          choices.forEach((candidate) => {
+            const isSelected = candidate === choice;
+            candidate.setAttribute("aria-pressed", String(isSelected));
+            candidate.classList.toggle("is-answer", candidate.dataset.option === answer);
+            candidate.classList.toggle(
+              "is-selected-wrong",
+              isSelected && candidate.dataset.option !== answer
+            );
+          });
+
+          if (feedback) {
+            feedback.textContent = isCorrect
+              ? "정답입니다. 아래 해설로 이유를 확인하세요."
+              : `오답입니다. 정답은 ${answer}입니다. 아래 해설을 읽고 다시 선택해 보세요.`;
+            feedback.classList.toggle("is-correct", isCorrect);
+            feedback.classList.toggle("is-wrong", !isCorrect);
+          }
+
+          if (explanation) explanation.hidden = false;
+          updateScore();
+        });
+      });
+    });
+  </script>
+</body>
+</html>

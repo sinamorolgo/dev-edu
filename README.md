@@ -5,6 +5,7 @@
 ## 포함 페이지
 
 - `index.html`: 공유용 홈
+- `ssh-tunnel-security-guide.html`: SSH, Lightsail 방화벽, 키 권한, 터널링, LaunchAgent 학습 가이드
 - `git-branch-pr-guide-v2.html`: Git 브랜치와 PR 학습 지도
 - `ai-harness-guide.html`: AI 개발에서 하네스 이해하기
 - `onesearch-ai-chat-tools-guide.html`: 원써치 AI Chat 툴 구조 이해하기
