@@ -155,6 +155,23 @@
       background: var(--thumb-bg);
     }
 
+    .thumb-picture {
+      grid-column: 2;
+      grid-row: 1 / 4;
+      min-height: 146px;
+      overflow: hidden;
+      border-radius: 8px;
+      background: var(--thumb-bg);
+    }
+
+    .thumb-picture img {
+      width: 100%;
+      height: 100%;
+      min-height: 146px;
+      display: block;
+      object-fit: cover;
+    }
+
     .line {
       height: 12px;
       border-radius: 999px;
@@ -231,7 +248,8 @@
         line-height: 1.48;
       }
 
-      .thumb {
+      .thumb,
+      .thumb-picture {
         display: none;
       }
 
@@ -254,6 +272,22 @@
 
   <main class="shell">
     <section class="cards" aria-label="교육 페이지 목록">
+      <a class="card" href="./onesearch-lightsail-dev-guide.html" style="--badge-bg:var(--soft-blue);--badge-fg:var(--blue);--thumb-bg:var(--soft-blue);--accent:var(--blue)">
+        <div class="card-top">
+          <span class="badge">OneSearch</span>
+          <span aria-hidden="true" style="font:900 12px/1 ui-monospace,monospace;color:var(--blue)">SSH</span>
+        </div>
+        <div>
+          <h2>Lightsail dev 연결 가이드</h2>
+          <p>테스트용 웹 배포와 로컬 앱을 구분하고, SSH 터널·공유 DB·Redis·worker의 안전 경계를 실제 명령과 퀴즈로 익힙니다.</p>
+        </div>
+        <picture class="thumb-picture" aria-hidden="true">
+          <source srcset="./assets/onesearch-lightsail-tunnel.avif" type="image/avif">
+          <img src="./assets/onesearch-lightsail-tunnel.jpg" width="1200" height="900" alt="">
+        </picture>
+        <span class="cta">열어보기 <svg class="icon" viewBox="0 0 24 24"><path d="M7 17 17 7"></path><path d="M7 7h10v10"></path></svg></span>
+      </a>
+
       <a class="card" href="./ssh-tunnel-security-guide.html" style="--badge-bg:var(--soft-teal);--badge-fg:var(--teal);--thumb-bg:var(--soft-teal);--accent:var(--teal)">
         <div class="card-top">
           <span class="badge">서버 기초</span>

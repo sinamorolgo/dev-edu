@@ -1,0 +1,1923 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="OneSearch 개발자가 SSH 터널을 통해 Lightsail dev의 웹, PostgreSQL, Redis에 안전하게 연결하는 방법을 설명합니다.">
+  <title>OneSearch Lightsail dev 연결 가이드</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231857b6'/%3E%3Cpath d='M16 32h32M32 16v32' stroke='white' stroke-width='6' stroke-linecap='round'/%3E%3Ccircle cx='32' cy='32' r='9' fill='%231857b6' stroke='white' stroke-width='4'/%3E%3C/svg%3E">
+  <style>
+    :root {
+      --paper: #f6f8fb;
+      --surface: #ffffff;
+      --surface-soft: #edf3ff;
+      --surface-strong: #dce8ff;
+      --ink: #182234;
+      --muted: #58677d;
+      --line: #cbd6e6;
+      --accent: #1857b6;
+      --accent-strong: #0d4295;
+      --accent-ink: #ffffff;
+      --safe: #187054;
+      --safe-soft: #e4f4ed;
+      --warn: #8a4b08;
+      --warn-soft: #fff0d4;
+      --danger: #a73535;
+      --danger-soft: #fdeaea;
+      --code: #111b2a;
+      --code-ink: #e7eef9;
+      --focus: #ffbf47;
+      --radius: 14px;
+      --shadow: 0 18px 50px rgba(37, 60, 96, 0.1);
+      color-scheme: light;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --paper: #101722;
+        --surface: #172130;
+        --surface-soft: #1c2b42;
+        --surface-strong: #263c5d;
+        --ink: #edf3fb;
+        --muted: #b5c1d2;
+        --line: #34445b;
+        --accent: #79aaff;
+        --accent-strong: #a6c6ff;
+        --accent-ink: #101722;
+        --safe: #79d2ad;
+        --safe-soft: #163c31;
+        --warn: #ffd08a;
+        --warn-soft: #422f16;
+        --danger: #ffaaa5;
+        --danger-soft: #482323;
+        --code: #09101a;
+        --code-ink: #edf3fb;
+        --focus: #ffd166;
+        --shadow: 0 22px 58px rgba(0, 0, 0, 0.28);
+        color-scheme: dark;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Segoe UI", sans-serif;
+      line-height: 1.7;
+      word-break: keep-all;
+    }
+
+    a {
+      color: var(--accent-strong);
+      text-underline-offset: 0.2em;
+    }
+
+    a:hover {
+      text-decoration-thickness: 2px;
+    }
+
+    button,
+    a {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    :focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 3px;
+    }
+
+    .shell {
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .site-header {
+      min-height: 64px;
+      display: flex;
+      align-items: center;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .home-link {
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--ink);
+      font-size: 0.94rem;
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    .home-mark {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 10px;
+      color: var(--accent-ink);
+      background: var(--accent);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-weight: 900;
+    }
+
+    .hero {
+      min-height: min(780px, calc(100dvh - 64px));
+      display: grid;
+      grid-template-columns: minmax(0, 0.92fr) minmax(360px, 1.08fr);
+      align-items: center;
+      gap: clamp(28px, 6vw, 76px);
+      padding: clamp(52px, 9vw, 92px) 0;
+    }
+
+    .hero-copy {
+      max-width: 620px;
+    }
+
+    .hero-kicker {
+      margin: 0 0 14px;
+      color: var(--accent-strong);
+      font-size: 0.83rem;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin-top: 0;
+    }
+
+    h1 {
+      margin-bottom: 22px;
+      font-size: clamp(2.5rem, 6vw, 5.4rem);
+      line-height: 0.98;
+      letter-spacing: -0.065em;
+    }
+
+    h2 {
+      margin-bottom: 18px;
+      font-size: clamp(1.9rem, 4vw, 3.4rem);
+      line-height: 1.08;
+      letter-spacing: -0.045em;
+    }
+
+    h3 {
+      margin-bottom: 10px;
+      font-size: clamp(1.15rem, 2vw, 1.42rem);
+      line-height: 1.3;
+      letter-spacing: -0.02em;
+    }
+
+    .hero-lead {
+      max-width: 34rem;
+      margin-bottom: 24px;
+      color: var(--muted);
+      font-size: clamp(1.04rem, 1.8vw, 1.24rem);
+      line-height: 1.65;
+    }
+
+    .hero-note {
+      max-width: 34rem;
+      margin-bottom: 0;
+      padding-left: 14px;
+      border-left: 4px solid var(--accent);
+      color: var(--ink);
+      font-size: 0.94rem;
+    }
+
+    .hero-visual {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #f7f8fa;
+      box-shadow: var(--shadow);
+    }
+
+    .hero-visual img {
+      width: 100%;
+      height: auto;
+      display: block;
+      aspect-ratio: 4 / 3;
+      object-fit: cover;
+    }
+
+    .section {
+      padding: clamp(66px, 9vw, 112px) 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .section-head {
+      max-width: 760px;
+      margin-bottom: 36px;
+    }
+
+    .section-head p,
+    .lead {
+      color: var(--muted);
+      font-size: 1.05rem;
+    }
+
+    .sources {
+      padding-top: 0;
+      border-top: 0;
+    }
+
+    .source-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr 1fr;
+      gap: 12px;
+    }
+
+    .source-card {
+      min-height: 168px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      color: var(--ink);
+      background: var(--surface);
+      text-decoration: none;
+      transition: transform 160ms ease, border-color 160ms ease;
+    }
+
+    .source-card:first-child {
+      grid-row: span 2;
+      min-height: 348px;
+      background: var(--surface-soft);
+    }
+
+    .source-card:nth-child(4) {
+      grid-column: 2 / 4;
+    }
+
+    .source-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--accent);
+    }
+
+    .source-lang {
+      color: var(--accent-strong);
+      font-size: 0.78rem;
+      font-weight: 900;
+    }
+
+    .source-card strong {
+      display: block;
+      margin-top: 8px;
+      font-size: 1.15rem;
+      line-height: 1.36;
+    }
+
+    .source-card:first-child strong {
+      font-size: clamp(1.45rem, 3vw, 2.2rem);
+    }
+
+    .source-card p {
+      margin-bottom: 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .jump-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 28px;
+    }
+
+    .jump-links a {
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      padding: 9px 13px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--ink);
+      background: var(--surface);
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    .jump-links a:hover {
+      border-color: var(--accent);
+      color: var(--accent-strong);
+    }
+
+    .goal-band {
+      display: grid;
+      grid-template-columns: 0.8fr 1.2fr;
+      gap: clamp(26px, 6vw, 72px);
+      align-items: start;
+    }
+
+    .goal-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .goal-item {
+      min-height: 150px;
+      padding: 20px;
+      border-radius: var(--radius);
+      background: var(--surface);
+      border: 1px solid var(--line);
+    }
+
+    .goal-item strong {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 1.05rem;
+    }
+
+    .goal-item p {
+      margin-bottom: 0;
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+
+    .mode-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .mode {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+
+    .mode-head {
+      padding: 22px;
+      background: var(--surface-soft);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .mode-head p,
+    .mode-body p {
+      color: var(--muted);
+    }
+
+    .mode-body {
+      padding: 22px;
+    }
+
+    .mode-path {
+      display: grid;
+      gap: 12px;
+      margin: 22px 0;
+    }
+
+    .path-node {
+      position: relative;
+      padding: 13px 14px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--paper);
+      font-weight: 800;
+    }
+
+    .path-node:not(:last-child)::after {
+      content: "↓";
+      position: absolute;
+      left: 18px;
+      bottom: -18px;
+      color: var(--accent-strong);
+    }
+
+    .port-list {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .port {
+      padding: 10px;
+      border-radius: 10px;
+      background: var(--surface-strong);
+      text-align: center;
+    }
+
+    .port code {
+      display: block;
+      margin-bottom: 3px;
+      color: var(--accent-strong);
+      font-size: 1.02rem;
+      font-weight: 900;
+    }
+
+    .port small {
+      color: var(--muted);
+    }
+
+    .worker-rule {
+      margin-top: 22px;
+      padding: 18px 20px;
+      border-left: 5px solid var(--safe);
+      border-radius: 0 var(--radius) var(--radius) 0;
+      background: var(--safe-soft);
+    }
+
+    .worker-rule strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .role-table,
+    .endpoint-table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+
+    .role-table th,
+    .role-table td,
+    .endpoint-table th,
+    .endpoint-table td {
+      padding: 15px 16px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .role-table th,
+    .endpoint-table th {
+      color: var(--accent-strong);
+      background: var(--surface-soft);
+      font-size: 0.86rem;
+    }
+
+    .role-table tr:last-child td,
+    .endpoint-table tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .role-table td:first-child {
+      width: 24%;
+      font-weight: 900;
+    }
+
+    .rule-pair {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      margin-top: 28px;
+    }
+
+    .rule-box {
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+    }
+
+    .rule-box.safe {
+      background: var(--safe-soft);
+    }
+
+    .rule-box.danger {
+      background: var(--danger-soft);
+    }
+
+    .rule-box ul {
+      margin: 12px 0 0;
+      padding-left: 1.2rem;
+    }
+
+    .rule-box li + li {
+      margin-top: 8px;
+    }
+
+    .setup-flow {
+      display: grid;
+      gap: 22px;
+    }
+
+    .setup-step {
+      display: grid;
+      grid-template-columns: 180px minmax(0, 1fr);
+      gap: 24px;
+      padding: 26px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .setup-step > * {
+      min-width: 0;
+    }
+
+    .setup-step:last-child {
+      border-bottom: 0;
+    }
+
+    .step-label {
+      color: var(--accent-strong);
+      font-size: 0.9rem;
+      font-weight: 900;
+    }
+
+    .setup-step p:last-child {
+      margin-bottom: 0;
+    }
+
+    .code-block {
+      position: relative;
+      margin: 16px 0 0;
+      overflow: hidden;
+      border-radius: var(--radius);
+      background: var(--code);
+      box-shadow: var(--shadow);
+    }
+
+    .code-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+      color: #b7c5d8;
+      font-size: 0.78rem;
+      font-weight: 800;
+    }
+
+    .copy-button {
+      min-height: 38px;
+      padding: 7px 10px;
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      border-radius: 9px;
+      color: #ffffff;
+      background: transparent;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .copy-button:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    pre {
+      margin: 0;
+      padding: 18px;
+      overflow-x: auto;
+      color: var(--code-ink);
+      font: 0.88rem/1.7 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      white-space: pre;
+      tab-size: 2;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    :not(pre) > code {
+      padding: 0.12em 0.36em;
+      border-radius: 5px;
+      color: var(--accent-strong);
+      background: var(--surface-strong);
+      font-size: 0.9em;
+      word-break: break-all;
+    }
+
+    .secret-note {
+      margin-top: 16px;
+      padding: 17px 18px;
+      border-radius: var(--radius);
+      color: var(--danger);
+      background: var(--danger-soft);
+      font-weight: 800;
+    }
+
+    .daily-layout {
+      display: grid;
+      grid-template-columns: 0.78fr 1.22fr;
+      gap: 40px;
+      align-items: start;
+    }
+
+    .daily-command {
+      align-self: start;
+    }
+
+    .daily-steps {
+      counter-reset: daily;
+    }
+
+    .daily-step {
+      position: relative;
+      padding: 0 0 30px 56px;
+    }
+
+    .daily-step::before {
+      counter-increment: daily;
+      content: counter(daily);
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: var(--accent-ink);
+      background: var(--accent);
+      font-weight: 900;
+    }
+
+    .daily-step:not(:last-child)::after {
+      content: "";
+      position: absolute;
+      left: 18px;
+      top: 42px;
+      bottom: 4px;
+      width: 2px;
+      background: var(--line);
+    }
+
+    .daily-step p {
+      margin-bottom: 0;
+      color: var(--muted);
+    }
+
+    .callout {
+      padding: 20px 22px;
+      border-radius: var(--radius);
+      background: var(--warn-soft);
+      color: var(--warn);
+    }
+
+    .callout strong {
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .truth-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 28px;
+    }
+
+    .truth-item {
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+
+    .truth-item b {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--accent-strong);
+    }
+
+    .truth-item p {
+      margin-bottom: 0;
+      color: var(--muted);
+    }
+
+    .decision-list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .decision {
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+
+    .decision strong {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 1.08rem;
+    }
+
+    .decision p {
+      margin-bottom: 0;
+      color: var(--muted);
+    }
+
+    .ban-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .ban-item {
+      padding: 20px;
+      border-left: 5px solid var(--danger);
+      border-radius: 0 var(--radius) var(--radius) 0;
+      background: var(--danger-soft);
+    }
+
+    .ban-item code {
+      color: var(--danger);
+      background: transparent;
+    }
+
+    .troubleshoot {
+      display: grid;
+      gap: 10px;
+    }
+
+    details {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+
+    summary {
+      min-height: 54px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 14px 18px;
+      cursor: pointer;
+      font-weight: 900;
+      list-style: none;
+    }
+
+    summary::-webkit-details-marker {
+      display: none;
+    }
+
+    summary::after {
+      content: "+";
+      flex: 0 0 auto;
+      color: var(--accent-strong);
+      font-size: 1.35rem;
+    }
+
+    details[open] summary::after {
+      content: "−";
+    }
+
+    .detail-body {
+      padding: 0 18px 18px;
+      color: var(--muted);
+    }
+
+    .detail-body p:last-child,
+    .detail-body ul:last-child {
+      margin-bottom: 0;
+    }
+
+    .quiz-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 26px 0 36px;
+    }
+
+    .quiz-nav a {
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      padding: 9px 13px;
+      border: 1px solid var(--accent);
+      border-radius: 999px;
+      color: var(--accent-strong);
+      background: var(--surface);
+      font-weight: 900;
+      text-decoration: none;
+    }
+
+    .quiz-group {
+      margin-top: 52px;
+      scroll-margin-top: 24px;
+    }
+
+    .quiz-group-head {
+      max-width: 720px;
+      margin-bottom: 20px;
+    }
+
+    .quiz-group-head p {
+      color: var(--muted);
+    }
+
+    .quiz-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .quiz-card {
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+
+    .quiz-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+      color: var(--accent-strong);
+      font-size: 0.82rem;
+      font-weight: 900;
+    }
+
+    .quiz-question {
+      margin-bottom: 16px;
+      font-weight: 850;
+    }
+
+    .quiz-choices {
+      display: grid;
+      gap: 8px;
+    }
+
+    .quiz-choice {
+      min-height: 48px;
+      width: 100%;
+      display: grid;
+      grid-template-columns: 28px minmax(0, 1fr);
+      gap: 9px;
+      align-items: start;
+      padding: 11px 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      color: var(--ink);
+      background: var(--paper);
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .quiz-choice:hover {
+      border-color: var(--accent);
+    }
+
+    .quiz-choice.correct {
+      border-color: var(--safe);
+      background: var(--safe-soft);
+    }
+
+    .quiz-choice.wrong {
+      border-color: var(--danger);
+      background: var(--danger-soft);
+    }
+
+    .choice-letter {
+      display: inline-grid;
+      place-items: center;
+      width: 26px;
+      height: 26px;
+      border-radius: 7px;
+      color: var(--accent-strong);
+      background: var(--surface-strong);
+      font-size: 0.8rem;
+      font-weight: 900;
+    }
+
+    .quiz-feedback {
+      display: none;
+      margin-top: 14px;
+      padding: 14px;
+      border-radius: 10px;
+      background: var(--surface-soft);
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .quiz-feedback.show {
+      display: block;
+    }
+
+    .quiz-feedback strong {
+      color: var(--ink);
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 22px;
+    }
+
+    .summary-card {
+      padding: 24px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+
+    .summary-card ul {
+      margin: 12px 0 0;
+      padding-left: 1.2rem;
+    }
+
+    .summary-card li + li {
+      margin-top: 8px;
+    }
+
+    footer {
+      padding: 36px 0 64px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    footer p {
+      max-width: 760px;
+      margin-bottom: 0;
+    }
+
+    @media (max-width: 920px) {
+      .hero {
+        min-height: 0;
+        grid-template-columns: 1fr;
+        gap: 34px;
+      }
+
+      .hero-copy {
+        max-width: 760px;
+      }
+
+      .hero-visual {
+        max-width: 760px;
+      }
+
+      .source-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .source-card:first-child {
+        grid-row: auto;
+        min-height: 188px;
+      }
+
+      .source-card:nth-child(4) {
+        grid-column: auto;
+      }
+
+      .goal-band,
+      .daily-layout,
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+
+    }
+
+    @media (max-width: 720px) {
+      .shell {
+        width: min(100% - 22px, 1120px);
+      }
+
+      .site-header {
+        min-height: 58px;
+      }
+
+      .hero {
+        padding: 42px 0 60px;
+      }
+
+      h1 {
+        font-size: clamp(2.5rem, 14vw, 4.2rem);
+        line-height: 1.02;
+      }
+
+      .section {
+        padding: 60px 0;
+      }
+
+      .source-grid,
+      .goal-list,
+      .mode-grid,
+      .rule-pair,
+      .truth-grid,
+      .decision-list,
+      .ban-grid,
+      .quiz-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .source-card,
+      .source-card:first-child {
+        min-height: 0;
+      }
+
+      .setup-step {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      .port-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .role-table,
+      .endpoint-table,
+      .role-table tbody,
+      .endpoint-table tbody,
+      .role-table tr,
+      .endpoint-table tr,
+      .role-table th,
+      .endpoint-table th,
+      .role-table td,
+      .endpoint-table td {
+        display: block;
+        width: 100%;
+      }
+
+      .role-table thead,
+      .endpoint-table thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+      }
+
+      .role-table tr,
+      .endpoint-table tr {
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .role-table tr:last-child,
+      .endpoint-table tr:last-child {
+        border-bottom: 0;
+      }
+
+      .role-table td,
+      .endpoint-table td {
+        padding: 4px 0;
+        border: 0;
+      }
+
+      .role-table td:first-child,
+      .endpoint-table td:first-child {
+        color: var(--accent-strong);
+        font-weight: 900;
+      }
+
+      pre {
+        font-size: 0.79rem;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+
+      *,
+      *::before,
+      *::after {
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="shell">
+      <a class="home-link" href="./index.html">
+        <span class="home-mark" aria-hidden="true">&lt;/&gt;</span>
+        <span>개념 학습 가이드</span>
+      </a>
+    </div>
+  </header>
+
+  <main>
+    <section class="shell hero" aria-labelledby="page-title">
+      <div class="hero-copy">
+        <p class="hero-kicker">OneSearch shared development</p>
+        <h1 id="page-title">Lightsail dev 연결 가이드</h1>
+        <p class="hero-lead">SSH 터널을 열고, 올바른 프로세스를 올바른 데이터에 연결하는 원써치 공동 개발 가이드.</p>
+        <p class="hero-note">터널이 열렸다는 사실만으로는 충분하지 않습니다. 실행 위치, 포트, <code>.env</code>, worker 경계가 함께 맞아야 합니다.</p>
+      </div>
+      <picture class="hero-visual">
+        <source srcset="./assets/onesearch-lightsail-tunnel.avif" type="image/avif">
+        <img src="./assets/onesearch-lightsail-tunnel.jpg" width="1200" height="900" alt="개발자 노트북과 비공개 서버 서비스가 하나의 보호된 SSH 경로로 연결된 모습">
+      </picture>
+    </section>
+
+    <section class="shell section sources" aria-labelledby="sources-title">
+      <div class="section-head">
+        <h2 id="sources-title">먼저 읽으면 좋은 글</h2>
+        <p>SSH 터널의 방향, loopback, 키 인증을 먼저 이해하면 원써치 명령이 외울 것이 아니라 구조로 보입니다.</p>
+      </div>
+      <div class="source-grid" aria-label="추천 참고 글 목록">
+        <a class="source-card" href="https://fedoramagazine.org/using-ssh-port-forwarding-on-fedora/" target="_blank" rel="noreferrer" lang="en">
+          <div>
+            <span class="source-lang">English</span>
+            <strong>Using SSH port forwarding on Fedora</strong>
+          </div>
+          <p>로컬 포워딩에서 왜 원격 목적지를 <code>localhost</code>로 쓰는지 가장 선명하게 설명합니다.</p>
+        </a>
+        <a class="source-card" href="https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-tunneling-on-a-vps" target="_blank" rel="noreferrer" lang="en">
+          <div>
+            <span class="source-lang">English</span>
+            <strong>How To Set Up SSH Tunneling on a VPS</strong>
+          </div>
+          <p>loopback과 로컬 포트가 원격 서비스로 이어지는 과정을 예제로 확인할 수 있습니다.</p>
+        </a>
+        <a class="source-card" href="https://news.hada.io/topic?id=16859" target="_blank" rel="noreferrer">
+          <div>
+            <span class="source-lang">한국어</span>
+            <strong>SSH 터널링 및 포트 포워딩 시각 가이드</strong>
+          </div>
+          <p><code>-L</code>, <code>-R</code>, <code>-D</code>의 방향 차이를 그림처럼 비교해 볼 수 있습니다.</p>
+        </a>
+        <a class="source-card" href="https://docs.aws.amazon.com/ko_kr/lightsail/latest/userguide/lightsail-how-to-set-up-ssh.html" target="_blank" rel="noreferrer">
+          <div>
+            <span class="source-lang">한국어</span>
+            <strong>Lightsail에 대한 SSH 키 설정</strong>
+          </div>
+          <p>AWS 공식 문서에서 public key와 private key의 역할, Lightsail 키 관리의 기본 경계를 확인합니다.</p>
+        </a>
+      </div>
+      <nav class="jump-links" aria-label="본문 바로가기">
+        <a href="#big-picture">큰 그림</a>
+        <a href="#roles">권한 경계</a>
+        <a href="#setup">한 번 설정</a>
+        <a href="#daily">매일 실행</a>
+        <a href="#safety">금지 행동</a>
+        <a href="#quiz">퀴즈</a>
+      </nav>
+    </section>
+
+    <section class="section" aria-labelledby="goals-title">
+      <div class="shell goal-band">
+        <div>
+          <h2 id="goals-title">이 자료를 마치면</h2>
+          <p class="lead">명령을 따라 치는 데서 멈추지 않고, 지금 어떤 컴퓨터의 어떤 프로세스가 어떤 데이터에 연결되는지 설명할 수 있습니다.</p>
+        </div>
+        <div class="goal-list">
+          <article class="goal-item">
+            <strong>두 사용 방식 구분</strong>
+            <p>서버에 배포된 웹을 보는 방식과 로컬 앱이 공유 DB를 쓰는 방식을 혼동하지 않습니다.</p>
+          </article>
+          <article class="goal-item">
+            <strong>권한을 역할별로 분리</strong>
+            <p>관리자만 하는 일과 일반 개발자가 하는 일을 구분하고 AWS 권한을 넘기지 않습니다.</p>
+          </article>
+          <article class="goal-item">
+            <strong>연결을 증거로 확인</strong>
+            <p>포트가 열렸다는 추측 대신 <code>pnpm shared:check</code>로 실제 DB, Redis, 환경 계약을 확인합니다.</p>
+          </article>
+          <article class="goal-item">
+            <strong>공유 환경을 보호</strong>
+            <p>worker 중복 실행과 reset, seed, flush처럼 다른 개발자에게 피해를 주는 행동을 피합니다.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="shell section" id="big-picture" aria-labelledby="picture-title">
+      <div class="section-head">
+        <h2 id="picture-title">먼저, 두 방식은 실행 위치가 다릅니다</h2>
+        <p>같은 Lightsail 서버와 같은 SSH 터널을 써도 브라우저가 바라보는 앱이 어디서 실행되는지에 따라 작업 목적이 달라집니다.</p>
+      </div>
+
+      <div class="mode-grid">
+        <article class="mode">
+          <div class="mode-head">
+            <h3>테스트용 웹 배포</h3>
+            <p>커밋된 <code>master</code>의 API, 관리자 웹, 고객 웹을 Lightsail 서버 프로세스로 확인합니다.</p>
+          </div>
+          <div class="mode-body">
+            <div class="mode-path" aria-label="테스트용 웹 배포 연결 흐름">
+              <div class="path-node">개발자 브라우저</div>
+              <div class="path-node">SSH local forwarding</div>
+              <div class="path-node">Lightsail의 API, 관리자 웹, 고객 웹</div>
+            </div>
+            <div class="port-list" aria-label="테스트용 웹 배포 포트">
+              <div class="port"><code>23100</code><small>API</small></div>
+              <div class="port"><code>23200</code><small>관리자 웹</small></div>
+              <div class="port"><code>23300</code><small>고객 웹</small></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="mode">
+          <div class="mode-head">
+            <h3>로컬 앱 + Lightsail DB·Redis</h3>
+            <p>API와 두 웹은 개발자 컴퓨터에서 실행하고 PostgreSQL과 Redis만 Lightsail의 공용 개발 데이터를 씁니다.</p>
+          </div>
+          <div class="mode-body">
+            <div class="mode-path" aria-label="로컬 앱과 공유 데이터 연결 흐름">
+              <div class="path-node">로컬 웹 13200, 13300</div>
+              <div class="path-node">로컬 API 13100</div>
+              <div class="path-node">터널 25432, 26379을 거친 Lightsail 데이터</div>
+            </div>
+            <div class="port-list" aria-label="로컬 앱과 데이터 터널 포트">
+              <div class="port"><code>13100</code><small>로컬 API</small></div>
+              <div class="port"><code>13200</code><small>로컬 관리자</small></div>
+              <div class="port"><code>13300</code><small>로컬 고객</small></div>
+              <div class="port"><code>25432</code><small>PostgreSQL</small></div>
+              <div class="port"><code>26379</code><small>Redis</small></div>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <div class="worker-rule">
+        <strong>worker는 두 방식 모두 Lightsail에서 하나만 실행합니다.</strong>
+        개발자 컴퓨터에서 worker를 추가로 켜면 같은 <code>shared_dev:</code> queue를 중복 소비할 수 있습니다.
+      </div>
+    </section>
+
+    <section class="section" id="roles" aria-labelledby="roles-title">
+      <div class="shell">
+        <div class="section-head">
+          <h2 id="roles-title">권한은 연결보다 먼저 나눕니다</h2>
+          <p>일반 개발자가 필요한 것은 제한된 SSH forwarding 계정과 앱 실행용 설정입니다. AWS 운영 권한이나 서버 shell은 필요하지 않습니다.</p>
+        </div>
+
+        <table class="role-table">
+          <thead>
+            <tr>
+              <th>역할</th>
+              <th>가지는 것</th>
+              <th>하지 않는 것</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>레포 관리자</td>
+              <td>AWS CLI와 profile, 서버 관리자 key, 개발자 등록과 해제, 배포, backup, migration</td>
+              <td>자기 전체 <code>.env</code>나 서버 관리자 key를 개발자에게 전달하지 않음</td>
+            </tr>
+            <tr>
+              <td>일반 개발자</td>
+              <td>자기 private key, Git 제외 루트 <code>.env</code>, <code>dev-lightsail</code> SSH profile</td>
+              <td>AWS CLI, <code>sudo</code>, <code>systemctl</code>, 서버 생성과 삭제를 하지 않음</td>
+            </tr>
+            <tr>
+              <td>제한된 SSH 계정</td>
+              <td>정해진 다섯 loopback 목적지로 가는 local forwarding</td>
+              <td>shell, TTY, sudo, 임의 목적지 forwarding을 사용하지 않음</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="rule-pair">
+          <article class="rule-box safe">
+            <h3>전달해도 되는 것</h3>
+            <ul>
+              <li>개발자의 public key 한 줄</li>
+              <li><code>age</code>로 암호화한 최소 앱 설정 파일</li>
+              <li>SSH host와 제한된 서버 사용자명</li>
+            </ul>
+          </article>
+          <article class="rule-box danger">
+            <h3>전달하면 안 되는 것</h3>
+            <ul>
+              <li>private key 내용</li>
+              <li>관리자의 전체 <code>.env</code></li>
+              <li>AWS credential과 profile</li>
+              <li>서버 관리자 key, root, sudo 권한</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="shell section" id="setup" aria-labelledby="setup-title">
+      <div class="section-head">
+        <h2 id="setup-title">한 번 설정하는 흐름</h2>
+        <p>경로와 이름은 개발자마다 다를 수 있습니다. 아래 placeholder를 실제 값으로 바꾸되, 비밀값을 문서나 공개 채널에 복사하지 않습니다.</p>
+      </div>
+
+      <div class="setup-flow">
+        <article class="setup-step">
+          <div class="step-label">관리자: 계정 등록</div>
+          <div>
+            <h3>개발자의 public key로 제한된 계정을 만듭니다</h3>
+            <p>private key는 개발자 컴퓨터에서 나오지 않습니다. 관리자는 public key 파일만 받아 등록합니다.</p>
+            <div class="code-block">
+              <div class="code-title"><span>repository root</span><button class="copy-button" type="button">복사</button></div>
+              <pre><code>infra/lightsail/dev-data/register-developer.sh \
+  "&lt;developer-user&gt;" "/absolute/path/to/developer.pub"</code></pre>
+            </div>
+          </div>
+        </article>
+
+        <article class="setup-step">
+          <div class="step-label">관리자와 개발자: 앱 설정 전달</div>
+          <div>
+            <h3>최소 <code>.env</code> 블록을 먼저 암호화합니다</h3>
+            <p>Magic Wormhole이나 croc은 전달 수단입니다. 파일 내용 보호는 <code>age</code>가 담당하므로 암호화된 <code>.age</code> 파일만 보냅니다.</p>
+            <div class="code-block">
+              <div class="code-title"><span>developer Mac</span><button class="copy-button" type="button">복사</button></div>
+              <pre><code>age --decrypt \
+  -i "/absolute/path/to/private-key" \
+  -o .env lightsail-dev.env.age
+chmod 600 .env
+rm -f -- lightsail-dev.env.age</code></pre>
+            </div>
+            <div class="secret-note">공개 페이지, Git, 이슈, 채팅방에 실제 <code>.env</code> 값이나 private key 내용을 붙여넣지 않습니다.</div>
+          </div>
+        </article>
+
+        <article class="setup-step">
+          <div class="step-label">개발자: SSH profile</div>
+          <div>
+            <h3>SSH 좌표와 다섯 forwarding을 <code>dev-lightsail</code>에 모읍니다</h3>
+            <p>앱 설정은 루트 <code>.env</code>, SSH 접속 정보는 사용자 <code>~/.ssh/config</code>에 둡니다. 둘을 섞지 않습니다.</p>
+            <div class="code-block">
+              <div class="code-title"><span>~/.ssh/config</span><button class="copy-button" type="button">복사</button></div>
+              <pre><code>Host dev-lightsail
+  HostName &lt;administrator-provided-host&gt;
+  User &lt;developer-user&gt;
+  IdentityFile /absolute/path/to/private-key
+  IdentitiesOnly yes
+  BatchMode yes
+  ConnectTimeout 15
+  ServerAliveInterval 30
+  ServerAliveCountMax 3
+  ExitOnForwardFailure yes
+  StrictHostKeyChecking yes
+  UserKnownHostsFile ~/.ssh/onesearch-platform-lightsail-known-hosts
+  LocalForward 127.0.0.1:23100 127.0.0.1:23100
+  LocalForward 127.0.0.1:23200 127.0.0.1:23200
+  LocalForward 127.0.0.1:23300 127.0.0.1:23300
+  LocalForward 127.0.0.1:25432 127.0.0.1:5432
+  LocalForward 127.0.0.1:26379 127.0.0.1:6379</code></pre>
+            </div>
+          </div>
+        </article>
+
+        <article class="setup-step">
+          <div class="step-label">개발자: host key 고정</div>
+          <div>
+            <h3>저장소의 pinned host key를 사용자 SSH 경로로 복사합니다</h3>
+            <p><code>StrictHostKeyChecking yes</code>는 예상한 서버의 host key와 실제 서버가 일치해야 연결을 허용합니다.</p>
+            <div class="code-block">
+              <div class="code-title"><span>macOS or Linux</span><button class="copy-button" type="button">복사</button></div>
+              <pre><code>mkdir -p ~/.ssh
+chmod 700 ~/.ssh
+install -m 600 \
+  infra/lightsail/dev-data/shared-dev-known-hosts \
+  ~/.ssh/onesearch-platform-lightsail-known-hosts
+chmod 600 ~/.ssh/config
+ssh -G dev-lightsail &gt;/dev/null</code></pre>
+            </div>
+          </div>
+        </article>
+
+        <article class="setup-step">
+          <div class="step-label">macOS 선택 사항</div>
+          <div>
+            <h3>암호가 있는 key를 로그인 후 자동 tunnel에도 사용합니다</h3>
+            <p>Keychain은 SSH private key의 암호 해제만 담당합니다. DB, Redis, JWT 값은 여전히 루트 <code>.env</code>에만 둡니다.</p>
+            <div class="code-block">
+              <div class="code-title"><span>dev-lightsail profile and shell</span><button class="copy-button" type="button">복사</button></div>
+              <pre><code>  IgnoreUnknown UseKeychain
+  UseKeychain yes
+  AddKeysToAgent yes
+
+ssh-add --apple-use-keychain /absolute/path/to/private-key</code></pre>
+            </div>
+            <p>로그인 후 자동 연결이 꼭 필요할 때만 <code>infra/lightsail/dev-data/tunnel-launch-agent.sh install</code>을 사용합니다.</p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="daily" aria-labelledby="daily-title">
+      <div class="shell daily-layout">
+        <div class="daily-command">
+          <h2 id="daily-title">매일 실행하는 최소 흐름</h2>
+          <p class="lead">최초 설정이 끝난 뒤에는 터널, 연결 검사, 코드 동기화, 로컬 앱 실행만 기억하면 됩니다.</p>
+          <div class="code-block">
+            <div class="code-title"><span>everyday flow</span><button class="copy-button" type="button">복사</button></div>
+            <pre><code>pnpm tunnel:shared
+
+# 새 터미널에서
+pnpm shared:check
+git pull --ff-only origin master
+pnpm dev:shared</code></pre>
+          </div>
+        </div>
+
+        <div class="daily-steps">
+          <article class="daily-step">
+            <h3>터널 터미널을 엽니다</h3>
+            <p><code>pnpm tunnel:shared</code>는 <code>.env</code>를 읽지 않고 <code>ssh -N -T dev-lightsail</code>을 실행합니다. foreground 터미널을 닫으면 터널도 끊깁니다.</p>
+          </article>
+          <article class="daily-step">
+            <h3>실제 연결 계약을 확인합니다</h3>
+            <p><code>pnpm shared:check</code>로 PostgreSQL 인증, Redis read/write/publish 권한, 포트, prefix, adapter 설정을 확인합니다.</p>
+          </article>
+          <article class="daily-step">
+            <h3>코드를 fast-forward로 맞춥니다</h3>
+            <p><code>git pull --ff-only origin master</code>는 예상하지 못한 merge commit을 만들지 않고 현재 작업 기준을 맞춥니다.</p>
+          </article>
+          <article class="daily-step">
+            <h3>로컬 앱 세 개만 실행합니다</h3>
+            <p><code>pnpm dev:shared</code>는 API, 관리자 웹, 고객 웹만 켭니다. worker와 mobile은 실행하지 않습니다.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="shell section" aria-labelledby="endpoints-title">
+      <div class="section-head">
+        <h2 id="endpoints-title">어디를 열어야 하는지 빠르게 확인하기</h2>
+        <p>주소의 앞자리가 비슷해도 13xxx는 로컬 앱, 23xxx는 Lightsail 테스트용 웹 배포입니다.</p>
+      </div>
+
+      <table class="endpoint-table">
+        <thead>
+          <tr>
+            <th>목적</th>
+            <th>개발자 컴퓨터 주소</th>
+            <th>실행 위치</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>로컬 API와 Socket.IO</td><td><code>http://127.0.0.1:13100</code></td><td>개발자 컴퓨터</td></tr>
+          <tr><td>로컬 관리자 웹</td><td><code>http://127.0.0.1:13200</code></td><td>개발자 컴퓨터</td></tr>
+          <tr><td>로컬 고객 웹</td><td><code>http://127.0.0.1:13300</code></td><td>개발자 컴퓨터</td></tr>
+          <tr><td>공유 PostgreSQL</td><td><code>127.0.0.1:25432</code></td><td>터널 뒤 Lightsail</td></tr>
+          <tr><td>공유 Redis DB 1</td><td><code>127.0.0.1:26379</code></td><td>터널 뒤 Lightsail</td></tr>
+          <tr><td>배포된 API와 Socket.IO</td><td><code>http://127.0.0.1:23100</code></td><td>Lightsail</td></tr>
+          <tr><td>배포된 관리자 웹</td><td><code>http://127.0.0.1:23200</code></td><td>Lightsail</td></tr>
+          <tr><td>배포된 고객 웹</td><td><code>http://127.0.0.1:23300</code></td><td>Lightsail</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout" style="margin-top: 22px;">
+        <strong>포트가 listening 상태라는 사실은 앱이 그 포트를 사용한다는 증거가 아닙니다.</strong>
+        일반 <code>pnpm dev</code>가 개인 local 데이터로 실행될 수도 있습니다. Lightsail dev를 쓸 때는 반드시 <code>pnpm shared:check</code>와 <code>pnpm dev:shared</code>를 사용합니다.
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="truth-title">
+      <div class="shell">
+        <div class="section-head">
+          <h2 id="truth-title">헷갈리기 쉬운 경계를 정확히 잡기</h2>
+          <p>겉으로 비슷해 보여도 아래 구분을 놓치면 다른 환경을 수정하거나 파일 테스트를 잘못 해석할 수 있습니다.</p>
+        </div>
+        <div class="truth-grid">
+          <article class="truth-item">
+            <b>SSH 터널과 앱 설정은 별개</b>
+            <p>터널은 길을 만들고 <code>.env</code>는 앱이 그 길을 쓰도록 지정합니다. 하나만 맞으면 연결이 완성되지 않습니다.</p>
+          </article>
+          <article class="truth-item">
+            <b>local과 shared-dev는 포트만 다른 것이 아님</b>
+            <p>DB URL, Redis URL, prefix, JWT와 암호화 호환, adapter 설정이 함께 바뀌어야 합니다.</p>
+          </article>
+          <article class="truth-item">
+            <b>실시간 채팅과 worker는 다른 경로</b>
+            <p>실시간 메시지는 로컬 API와 Socket.IO Redis adapter로 오갈 수 있습니다. worker는 알림과 후속 작업을 한 번만 처리합니다.</p>
+          </article>
+          <article class="truth-item">
+            <b>첨부 파일은 DB처럼 공유되지 않음</b>
+            <p>현재 파일 저장소는 API별 local disk입니다. 첨부 생성과 삭제는 같은 테스트용 웹 배포 흐름 안에서 처음부터 검증합니다.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="shell section" id="safety" aria-labelledby="safety-title">
+      <div class="section-head">
+        <h2 id="safety-title">공유 환경에서는 하지 않는 행동</h2>
+        <p>Lightsail dev는 여러 개발자가 같은 PostgreSQL, Redis DB 1, <code>shared_dev:</code> namespace를 사용합니다. 개인 local처럼 다루면 안 됩니다.</p>
+      </div>
+
+      <div class="ban-grid">
+        <article class="ban-item">
+          <h3><code>pnpm dev</code></h3>
+          <p>worker와 mobile까지 포함할 수 있습니다. 공유 데이터에는 <code>pnpm dev:shared</code>만 사용합니다.</p>
+        </article>
+        <article class="ban-item">
+          <h3><code>pnpm env:up</code> / <code>env:down</code></h3>
+          <p>개인 local 인프라용 흐름입니다. Lightsail dev를 쓰는 checkout에서 실행하지 않습니다.</p>
+        </article>
+        <article class="ban-item">
+          <h3>reset / db push</h3>
+          <p><code>prisma migrate reset</code>과 <code>prisma db push</code>는 공유 schema와 데이터를 망가뜨릴 수 있습니다.</p>
+        </article>
+        <article class="ban-item">
+          <h3>seed / restore / truncate</h3>
+          <p>공유 데이터를 대량 변경하는 명령은 개인 local에서만 실험하고 관리자 절차 없이 실행하지 않습니다.</p>
+        </article>
+        <article class="ban-item">
+          <h3>Redis flush</h3>
+          <p><code>FLUSHDB</code>와 <code>FLUSHALL</code>은 세션, presence, queue, adapter 상태를 한꺼번에 지울 수 있습니다.</p>
+        </article>
+        <article class="ban-item">
+          <h3>개발자 worker 추가 실행</h3>
+          <p>서버 worker와 같은 queue를 중복 소비해 알림이나 후속 작업이 두 번 처리될 수 있습니다.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="trouble-title">
+      <div class="shell">
+        <div class="section-head">
+          <h2 id="trouble-title">문제가 생기면 증상에서 경계로 거슬러 올라갑니다</h2>
+          <p>추측으로 설정을 더 넣기 전에 SSH, 터널, 앱 환경, 서버 서비스 중 어디서 끊겼는지 분리합니다.</p>
+        </div>
+
+        <div class="troubleshoot">
+          <details>
+            <summary>SSH timeout이 납니다</summary>
+            <div class="detail-body">
+              <p>인터넷 연결과 <code>ssh -G dev-lightsail</code> 출력을 먼저 확인합니다. SSH profile의 host, 사용자, key 경로와 서버 상태는 관리자와 확인합니다. 일반 개발자는 AWS CLI를 실행하지 않습니다.</p>
+            </div>
+          </details>
+          <details>
+            <summary><code>Permission denied (publickey)</code>가 나옵니다</summary>
+            <div class="detail-body">
+              <p><code>IdentityFile</code> 경로, <code>IdentitiesOnly yes</code>, 등록된 public key와 현재 private key의 짝을 확인합니다. private key 내용을 관리자에게 보내지 않습니다.</p>
+            </div>
+          </details>
+          <details>
+            <summary>local port가 이미 사용 중이라고 나옵니다</summary>
+            <div class="detail-body">
+              <p>기존 foreground tunnel이나 macOS LaunchAgent tunnel이 이미 실행 중인지 확인합니다. 같은 23100, 23200, 23300, 25432, 26379를 두 프로세스가 동시에 열 수 없습니다.</p>
+            </div>
+          </details>
+          <details>
+            <summary><code>shared:check</code>가 15432 또는 16379를 감지합니다</summary>
+            <div class="detail-body">
+              <p>현재 checkout의 루트 <code>.env</code>가 개인 local 설정을 가리키고 있습니다. shared-dev 설정은 25432, 26379, <code>shared_dev:</code> prefix를 함께 써야 하며 local DB로 자동 fallback하지 않습니다.</p>
+            </div>
+          </details>
+          <details>
+            <summary>채팅은 되는데 첨부 파일이 다른 방식에서 보이지 않습니다</summary>
+            <div class="detail-body">
+              <p>DB와 Redis는 공유되지만 파일은 API별 local disk입니다. 로컬 API에서 만든 첨부와 Lightsail API의 파일을 교차 검증하지 말고, 테스트용 웹 배포의 고객 웹과 API 안에서 첨부 시나리오를 처음부터 실행합니다.</p>
+            </div>
+          </details>
+          <details>
+            <summary>key 또는 <code>.env</code>가 유출되었습니다</summary>
+            <div class="detail-body">
+              <p>즉시 관리자에게 알립니다. 관리자는 개발자 접근을 제거하고 Lightsail dev 앱 credential을 회전합니다. 단순히 공개 메시지를 지우는 것으로 끝내지 않습니다.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="shell section" id="quiz" aria-labelledby="quiz-title">
+      <div class="section-head">
+        <h2 id="quiz-title">연결 가이드 확인 퀴즈</h2>
+        <p>보기는 처음부터 열려 있습니다. 답을 누르면 정답과 해설이 바로 표시됩니다. 쉬운 구분부터 여러 제약이 겹친 실무 판단까지 올라갑니다.</p>
+      </div>
+
+      <nav class="quiz-nav" aria-label="퀴즈 바로가기">
+        <a href="#quiz-easy">쉬운 문제 5개</a>
+        <a href="#quiz-medium">중간 문제 5개</a>
+        <a href="#quiz-hard">상위 문제 5개</a>
+        <a href="#glossary-quiz">용어집 10개</a>
+      </nav>
+
+      <div id="quiz-root">
+        <p class="callout">퀴즈를 불러오는 중입니다. JavaScript가 꺼져 있다면 브라우저 설정을 확인하세요.</p>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="summary-title">
+      <div class="shell">
+        <div class="section-head">
+          <h2 id="summary-title">마지막으로 다섯 문장만 기억하기</h2>
+        </div>
+        <div class="summary-grid">
+          <article class="summary-card">
+            <h3>핵심 요약</h3>
+            <ul>
+              <li>테스트용 웹 배포는 23xxx, 로컬 앱은 13xxx 주소를 엽니다.</li>
+              <li>PostgreSQL과 Redis tunnel은 25432와 26379입니다.</li>
+              <li>SSH 터널, 루트 <code>.env</code>, <code>pnpm dev:shared</code>가 모두 맞아야 shared-dev입니다.</li>
+              <li>worker는 Lightsail에서 하나만 실행합니다.</li>
+              <li>reset, seed, restore, truncate, Redis flush는 개인 local에서만 실험합니다.</li>
+            </ul>
+          </article>
+          <article class="summary-card">
+            <h3>나중에 다시 볼 질문</h3>
+            <ul>
+              <li>지금 브라우저가 로컬 앱과 서버 배포 중 어느 쪽을 보고 있는가?</li>
+              <li>터널뿐 아니라 앱 환경도 shared-dev를 가리키는가?</li>
+              <li>이 명령이 공용 DB, Redis, queue를 바꿀 수 있는가?</li>
+              <li>첨부 파일 테스트가 같은 API 저장소 안에서 시작됐는가?</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="shell">
+      <p>실행 명령과 보안 정책의 최종 기준은 OneSearch 저장소의 <code>docs/development/lightsail-dev-guide.md</code>입니다. 원본이 바뀌면 이 설명보다 원본을 우선합니다.</p>
+    </div>
+  </footer>
+
+  <script>
+    const quizGroups = [
+      {
+        id: "quiz-easy",
+        title: "쉬운 문제",
+        description: "두 사용 방식, 포트, worker, 권한의 기본 경계를 복습합니다.",
+        label: "기초",
+        questions: [
+          {
+            question: "커밋된 master의 API와 두 웹을 Lightsail 서버 프로세스로 확인하려면 어느 주소 묶음을 사용해야 할까요?",
+            choices: ["13100, 13200, 13300", "23100, 23200, 23300", "15432, 16379", "25432, 26379"],
+            answer: 1,
+            explanation: "정답은 B입니다. 23100, 23200, 23300은 테스트용 웹 배포의 API, 관리자 웹, 고객 웹입니다. 13xxx는 개발자 컴퓨터에서 실행되는 로컬 앱이므로 실행 위치가 다릅니다."
+          },
+          {
+            question: "로컬 API가 Lightsail PostgreSQL에 연결할 때 사용하는 개발자 컴퓨터의 포트는 무엇인가요?",
+            choices: ["13100", "15432", "23100", "25432"],
+            answer: 3,
+            explanation: "정답은 D입니다. 25432는 로컬에서 열리는 PostgreSQL tunnel 포트이고 원격의 5432로 이어집니다. 15432는 개인 local PostgreSQL 포트라 shared-dev와 섞으면 안 됩니다."
+          },
+          {
+            question: "Lightsail dev를 쓰는 개발자 컴퓨터에서 worker는 어디서 실행해야 할까요?",
+            choices: ["각 개발자 컴퓨터에서 하나씩", "관리자 웹과 같은 터미널에서", "Lightsail 서버에서 하나만", "Redis를 쓰지 않을 때만 로컬에서"],
+            answer: 2,
+            explanation: "정답은 C입니다. 공용 queue는 Lightsail worker 하나만 소비합니다. 개발자별 worker를 켜면 같은 작업이 중복 처리될 수 있어 알림과 후속 작업의 신뢰성이 깨집니다."
+          },
+          {
+            question: "일반 개발자에게 제공하지 않는 것은 무엇인가요?",
+            choices: ["개인 SSH private key", "Git 제외 루트 .env", "dev-lightsail SSH profile", "AWS CLI credential과 서버 관리자 key"],
+            answer: 3,
+            explanation: "정답은 D입니다. 일반 개발자는 제한된 SSH forwarding과 앱 실행에 필요한 범위만 가집니다. AWS credential과 서버 관리자 key는 배포, 방화벽, systemd 같은 운영 권한까지 넓히므로 관리자에게만 남겨야 합니다."
+          },
+          {
+            question: "SSH 터널과 루트 .env의 관계를 가장 정확히 설명한 것은 무엇인가요?",
+            choices: ["터널만 열리면 앱은 자동으로 shared-dev를 사용한다", ".env만 있으면 SSH 없이 원격 DB를 쓸 수 있다", "터널은 경로를 만들고 .env는 앱이 그 경로를 쓰게 한다", "둘은 같은 정보를 중복 저장한다"],
+            answer: 2,
+            explanation: "정답은 C입니다. SSH tunnel은 로컬 포트에서 원격 loopback 서비스까지의 길을 만듭니다. .env는 DATABASE_URL, REDIS_URL, prefix 같은 앱 대상을 정합니다. 둘 중 하나만 맞으면 실제 shared-dev 연결이 완성되지 않습니다."
+          }
+        ]
+      },
+      {
+        id: "quiz-medium",
+        title: "중간 문제",
+        description: "짧은 개발 상황을 보고 올바른 명령과 점검 순서를 고릅니다.",
+        label: "실무 판단",
+        questions: [
+          {
+            question: "터널 포트 25432가 listening 상태입니다. 앱이 실제 Lightsail DB를 쓰는지 확인할 다음 행동으로 가장 좋은 것은?",
+            choices: ["listening이면 충분하므로 바로 개발한다", "pnpm shared:check를 실행한다", "pnpm env:up을 실행한다", "Redis를 FLUSHDB 한다"],
+            answer: 1,
+            explanation: "정답은 B입니다. listening은 SSH가 로컬 포트를 열었다는 증거일 뿐 앱의 .env와 DB 인증이 맞다는 증거가 아닙니다. shared:check가 PostgreSQL, Redis, 포트, prefix, adapter 계약을 함께 검증합니다."
+          },
+          {
+            question: "Lightsail의 배포된 고객 웹에서 첨부를 만들고 로컬 고객 웹에서 같은 파일 삭제를 확인하려 합니다. 가장 올바른 판단은?",
+            choices: ["DB가 같으니 파일도 자동 공유된다", "Redis prefix만 같으면 삭제할 수 있다", "첨부 시나리오는 같은 테스트용 웹 배포 API 안에서 처음부터 검증한다", "로컬 API의 삭제 보호를 끈다"],
+            answer: 2,
+            explanation: "정답은 C입니다. 현재 파일은 API별 local disk라 DB와 Redis처럼 공유되지 않습니다. 서로 다른 API 저장소를 건너뛰어 검증하면 파일 부재를 기능 오류로 오해할 수 있습니다."
+          },
+          {
+            question: "개발자가 터널을 연 뒤 공동 채팅 기능을 수정하려고 합니다. 올바른 실행 명령은?",
+            choices: ["pnpm dev", "pnpm env:up && pnpm dev", "pnpm dev:shared", "pnpm smoke:local"],
+            answer: 2,
+            explanation: "정답은 C입니다. dev:shared는 API와 두 웹만 로컬에서 실행하고 worker와 mobile을 제외합니다. 일반 dev는 worker를 포함할 수 있어 공용 queue와 충돌할 위험이 있습니다."
+          },
+          {
+            question: "새 Mac에서 SSH profile을 만들 때 앱 비밀값과 SSH 좌표를 어디에 두는 것이 맞나요?",
+            choices: ["모두 shell profile에 둔다", "모두 macOS Keychain에 둔다", "앱 설정은 루트 .env, SSH 좌표는 ~/.ssh/config에 둔다", "모두 README에 적는다"],
+            answer: 2,
+            explanation: "정답은 C입니다. 앱 설정과 SSH 접속 정보는 수명과 사용 주체가 다릅니다. 분리하면 자동 tunnel이나 shell 설정에 DB, Redis, JWT 값이 중복되는 일을 막을 수 있습니다."
+          },
+          {
+            question: "shared:check가 15432와 16379를 감지했습니다. 가장 먼저 고칠 것은?",
+            choices: ["Lightsail 방화벽", "루트 .env의 local DB와 Redis 대상", "Git remote", "브라우저 쿠키"],
+            answer: 1,
+            explanation: "정답은 B입니다. 15432와 16379는 개인 local PostgreSQL과 Redis 포트입니다. shared-dev는 25432와 26379와 shared_dev: prefix를 사용해야 하며 local로 자동 fallback하지 않습니다."
+          }
+        ]
+      },
+      {
+        id: "quiz-hard",
+        title: "상위 문제",
+        description: "여러 제약이 동시에 있는 상황에서 공유 환경을 보호하는 설계를 판단합니다.",
+        label: "설계와 비판",
+        questions: [
+          {
+            question: "두 개발자가 서로 다른 브랜치에서 queue contract를 바꿨습니다. 둘 다 shared-dev Redis에 로컬 worker를 붙이자는 제안의 가장 큰 문제는?",
+            choices: ["로컬 포트가 보기 싫어진다", "서로 다른 worker 버전이 같은 queue를 중복 또는 불일치 처리한다", "Git pull이 느려진다", "관리자 웹 쿠키가 사라진다"],
+            answer: 1,
+            explanation: "정답은 B입니다. queue payload와 worker 구현이 다르면 같은 작업을 다르게 해석하거나 중복 처리할 수 있습니다. schema, worker, queue 변경은 개인 local에서 먼저 검증하고 shared-dev 반영은 관리자 절차로 묶어야 합니다."
+          },
+          {
+            question: "개발자 편의를 위해 관리자 전체 .env와 AWS profile을 복사해 주자는 제안을 어떻게 개선해야 할까요?",
+            choices: ["압축 파일에 비밀번호만 건다", "공개 Slack 대신 개인 메신저로 보낸다", "제한된 SSH 계정과 최소 앱 설정만 역할별로 전달한다", "모든 개발자에게 sudo를 주고 책임을 맡긴다"],
+            answer: 2,
+            explanation: "정답은 C입니다. 전달 채널만 바꿔도 권한 과잉은 해결되지 않습니다. 일반 개발자에게 필요한 것은 자기 key, 제한된 forwarding, 최소 앱 설정뿐이며 AWS와 서버 관리자 권한은 분리해야 합니다."
+          },
+          {
+            question: "터널 자동 연결을 만들면서 DB, Redis, JWT 값을 LaunchAgent plist에도 복사하자는 설계의 문제는?",
+            choices: ["plist는 XML이라 읽기 어렵다", "비밀값의 단일 원본이 깨지고 회전과 유출 대응이 어려워진다", "터널이 너무 빨리 연결된다", "SSH port가 22가 아니게 된다"],
+            answer: 1,
+            explanation: "정답은 B입니다. 자동 tunnel은 ssh -N -T dev-lightsail만 실행하면 됩니다. 앱 비밀값을 plist, Keychain, shell profile에 복제하면 어느 값이 최신인지 모호해지고 credential 회전 시 누락이 생깁니다."
+          },
+          {
+            question: "공유 DB에 schema 변경이 필요합니다. 가장 안전한 순서는?",
+            choices: ["shared-dev에서 migrate reset 후 데이터를 다시 넣는다", "개인 local에서 schema와 worker를 검증한 뒤 관리자가 backup, migration, 재시작, 실제 기능을 확인한다", "각 개발자가 prisma db push를 한 번씩 실행한다", "Redis flush 후 migration을 실행한다"],
+            answer: 1,
+            explanation: "정답은 B입니다. 공유 환경 변경은 되돌릴 지점과 단일 실행 주체가 필요합니다. 개인 local 검증, backup, 관리자 migration, 서비스와 실제 시나리오 확인 순서가 피해 반경과 경쟁 상태를 줄입니다."
+          },
+          {
+            question: "터널은 정상이고 shared:check도 통과했지만 다른 개발자의 실시간 메시지가 보이지 않습니다. 가장 먼저 볼 설계 경계는?",
+            choices: ["모니터 해상도", "각 로컬 API의 호환되는 JWT와 암호화 설정, shared_dev prefix, required Socket.IO Redis adapter", "GitHub Pages 설정", "첨부 파일 디렉터리"],
+            answer: 1,
+            explanation: "정답은 B입니다. 여러 로컬 API가 같은 DB와 Redis를 써도 실시간 fan-out에 필요한 prefix, 인증 호환, Socket.IO Redis adapter 계약이 맞지 않으면 서로 다른 섬처럼 동작합니다. 터널 하나만으로 애플리케이션 계약까지 자동 일치하지 않습니다."
+          }
+        ]
+      },
+      {
+        id: "glossary-quiz",
+        title: "용어집 퀴즈",
+        description: "연결 판단을 좌우하는 핵심 용어의 쉬운 뜻과 정확한 역할을 확인합니다.",
+        label: "핵심 용어",
+        questions: [
+          {
+            question: "SSH local forwarding의 핵심 뜻은 무엇인가요?",
+            choices: ["원격 서버의 파일을 Git으로 복사하는 기능", "내 컴퓨터의 포트를 SSH 경로를 통해 원격 서비스로 이어 주는 기능", "모든 인터넷 트래픽을 공개하는 기능", "AWS 계정을 자동 생성하는 기능"],
+            answer: 1,
+            explanation: "정답은 B입니다. local forwarding은 SSH 클라이언트 쪽에 listening 포트를 만들고, 그 연결을 SSH 서버가 도달할 수 있는 목적지로 전달합니다. 원써치에서는 25432가 원격 PostgreSQL 5432로 이어지는 식입니다."
+          },
+          {
+            question: "loopback 또는 127.0.0.1이 뜻하는 것은?",
+            choices: ["현재 컴퓨터 자기 자신을 가리키는 네트워크 주소", "항상 Lightsail의 공인 IP", "GitHub 서버 주소", "모든 LAN 장비를 가리키는 broadcast 주소"],
+            answer: 0,
+            explanation: "정답은 A입니다. 127.0.0.1은 각 컴퓨터가 자기 자신을 가리키는 loopback 주소입니다. 서버의 DB가 loopback에만 bind되면 인터넷에서 직접 접근할 수 없고 SSH tunnel 같은 승인된 경로가 필요합니다."
+          },
+          {
+            question: "public key와 private key의 관계를 바르게 설명한 것은?",
+            choices: ["둘 다 관리자에게 보내야 한다", "private key는 서버에, public key는 공개 저장소에 둔다", "public key는 등록할 수 있고 private key는 개발자 컴퓨터에만 보관한다", "둘은 같은 파일 이름만 다른 복사본이다"],
+            answer: 2,
+            explanation: "정답은 C입니다. 서버는 등록된 public key에 대응하는 private key를 사용자가 가진지 확인합니다. private key가 유출되면 그 사용자를 가장할 수 있으므로 내용을 전달하지 않습니다."
+          },
+          {
+            question: "pinned host key가 막으려는 위험은 무엇인가요?",
+            choices: ["다른 서버를 원래 서버로 착각해 연결하는 위험", "개발자가 코드를 늦게 받는 위험", "Redis 메모리가 부족한 위험", "브라우저 캐시가 남는 위험"],
+            answer: 0,
+            explanation: "정답은 A입니다. 사용자 인증 key는 내가 누구인지 증명하고 host key는 접속한 서버가 누구인지 확인합니다. StrictHostKeyChecking과 pinned host key는 예상하지 못한 서버로의 연결을 거부합니다."
+          },
+          {
+            question: "foreground tunnel이란 무엇인가요?",
+            choices: ["터널 프로세스가 현재 터미널에 붙어 있어 터미널을 닫으면 종료되는 방식", "브라우저 앞쪽에 항상 표시되는 버튼", "DB를 공개 인터넷에 노출하는 방식", "터널을 Git commit에 저장하는 방식"],
+            answer: 0,
+            explanation: "정답은 A입니다. pnpm tunnel:shared는 현재 터미널에서 SSH 프로세스를 유지합니다. 상태가 눈에 보이고 종료가 명확하지만, 그 터미널을 닫으면 forwarding도 함께 끝납니다."
+          },
+          {
+            question: "Redis prefix shared_dev:의 역할에 가장 가까운 것은?",
+            choices: ["Redis 서버의 비밀번호", "공유 개발 환경의 key namespace를 구분하는 접두사", "SSH private key 형식", "PostgreSQL schema 이름"],
+            answer: 1,
+            explanation: "정답은 B입니다. prefix는 Redis key와 channel을 환경별로 구분하는 namespace입니다. 하지만 prefix만 맞는다고 충분하지 않고 URL, DB 번호, 인증, adapter 설정도 함께 맞아야 합니다."
+          },
+          {
+            question: "Socket.IO Redis adapter가 필요한 이유는?",
+            choices: ["서로 다른 API 프로세스의 실시간 이벤트를 Redis를 통해 fan-out하기 위해서", "정적 HTML을 GitHub Pages에 올리기 위해서", "SSH host key를 만들기 위해서", "PostgreSQL migration을 자동 reset하기 위해서"],
+            answer: 0,
+            explanation: "정답은 A입니다. 여러 개발자의 로컬 API와 서버 API는 서로 다른 프로세스입니다. required Redis adapter가 공용 channel을 사용해야 한 프로세스의 실시간 이벤트가 다른 프로세스의 클라이언트까지 전달됩니다."
+          },
+          {
+            question: "Git 제외 루트 .env가 단일 원본이라는 말은 무엇을 뜻하나요?",
+            choices: ["비밀값을 Git에 한 번만 commit한다", "shared-dev 앱 설정을 Keychain, plist, shell profile에 중복 저장하지 않는다", "모든 worktree가 같은 파일을 강제로 공유한다", "SSH config도 .env 안에 적는다"],
+            answer: 1,
+            explanation: "정답은 B입니다. 한 checkout의 shared-dev 앱 설정은 루트 .env 한 곳에서 관리합니다. 중복 저장을 피하면 값 회전과 문제 해결 때 무엇이 실제 기준인지 분명해집니다."
+          },
+          {
+            question: "git pull --ff-only의 목적은 무엇인가요?",
+            choices: ["원격 변경을 받을 때 예상하지 못한 merge commit 생성을 거부한다", "모든 로컬 변경을 삭제한다", "Lightsail 서버를 재부팅한다", "SSH key를 새로 만든다"],
+            answer: 0,
+            explanation: "정답은 A입니다. fast-forward가 가능한 경우에만 branch pointer를 앞으로 옮깁니다. 로컬과 원격이 갈라졌다면 자동 merge로 덮지 않고 먼저 상황을 확인하게 합니다."
+          },
+          {
+            question: "credential rotation이 필요한 대표 상황은?",
+            choices: ["화면 너비가 바뀌었을 때", "브라우저를 새로고침했을 때", ".env 또는 private key가 유출되었을 때", "Git commit 메시지가 길 때"],
+            answer: 2,
+            explanation: "정답은 C입니다. 이미 노출된 credential은 삭제 메시지나 파일 권한 수정만으로 다시 안전해지지 않습니다. 접근을 제거하고 새 값으로 교체해야 기존 값의 재사용을 막을 수 있습니다."
+          }
+        ]
+      }
+    ];
+
+    const letters = ["A", "B", "C", "D"];
+
+    function renderQuizzes() {
+      const root = document.querySelector("#quiz-root");
+      root.innerHTML = "";
+      let questionNumber = 0;
+
+      quizGroups.forEach((group) => {
+        const section = document.createElement("section");
+        section.className = "quiz-group";
+        section.id = group.id;
+
+        const head = document.createElement("div");
+        head.className = "quiz-group-head";
+        const heading = document.createElement("h3");
+        heading.textContent = group.title;
+        const description = document.createElement("p");
+        description.textContent = group.description;
+        head.append(heading, description);
+
+        const grid = document.createElement("div");
+        grid.className = "quiz-grid";
+
+        group.questions.forEach((item) => {
+          questionNumber += 1;
+          const card = document.createElement("article");
+          card.className = "quiz-card";
+
+          const meta = document.createElement("div");
+          meta.className = "quiz-meta";
+          meta.innerHTML = `<span>문제 ${questionNumber}</span><span>${group.label}</span>`;
+
+          const question = document.createElement("p");
+          question.className = "quiz-question";
+          question.textContent = item.question;
+
+          const choices = document.createElement("div");
+          choices.className = "quiz-choices";
+          choices.setAttribute("role", "group");
+          choices.setAttribute("aria-label", `문제 ${questionNumber} 보기`);
+
+          const feedback = document.createElement("div");
+          feedback.className = "quiz-feedback";
+          feedback.setAttribute("aria-live", "polite");
+
+          item.choices.forEach((choice, choiceIndex) => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "quiz-choice";
+            button.innerHTML = `<span class="choice-letter">${letters[choiceIndex]}</span><span>${choice}</span>`;
+            button.addEventListener("click", () => {
+              const allButtons = choices.querySelectorAll(".quiz-choice");
+              allButtons.forEach((option, optionIndex) => {
+                option.classList.remove("correct", "wrong");
+                option.setAttribute("aria-pressed", "false");
+                if (optionIndex === item.answer) option.classList.add("correct");
+              });
+
+              const isCorrect = choiceIndex === item.answer;
+              if (!isCorrect) button.classList.add("wrong");
+              button.setAttribute("aria-pressed", "true");
+              feedback.innerHTML = `<strong>${isCorrect ? "정답입니다." : "오답입니다."}</strong> ${item.explanation}`;
+              feedback.classList.add("show");
+            });
+            button.setAttribute("aria-pressed", "false");
+            choices.append(button);
+          });
+
+          card.append(meta, question, choices, feedback);
+          grid.append(card);
+        });
+
+        section.append(head, grid);
+        root.append(section);
+      });
+    }
+
+    function bindCopyButtons() {
+      document.querySelectorAll(".copy-button").forEach((button) => {
+        button.addEventListener("click", async () => {
+          const code = button.closest(".code-block").querySelector("code").textContent;
+          try {
+            await navigator.clipboard.writeText(code);
+            const original = button.textContent;
+            button.textContent = "복사됨";
+            window.setTimeout(() => {
+              button.textContent = original;
+            }, 1400);
+          } catch {
+            button.textContent = "복사 실패";
+          }
+        });
+      });
+    }
+
+    renderQuizzes();
+    bindCopyButtons();
+  </script>
+</body>
+</html>
